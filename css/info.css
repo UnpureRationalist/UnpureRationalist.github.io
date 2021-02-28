@@ -1,0 +1,155 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+#main{
+	width: 1510px;
+	height: 2780px;
+	/* margin-top: 50px; */
+	margin: 50px auto;
+	/* background: skyblue; */
+}
+#main .section1{
+	width: 1100px;
+	height: 450px;
+	margin: 30px auto;
+	/* background: #7FFFD4; */
+	margin-bottom: 50px;
+}
+#main .section1 div{
+	float: left;
+}
+#main div .title{
+	font-size: 24px;
+	margin: 30px 0 0 50px;
+	line-height: 60px;
+}
+#main .section1 .photo{
+	margin: 30px 50px;
+}
+#main .section1 .char{
+	margin: 60px 0 0 50px;
+	font-size: 18px;
+	line-height: 60px;
+}
+#main .section2{
+	width: 1100px;
+	height: 380px;
+	margin: 30px auto;
+	/* background: blueviolet; */
+	margin-bottom: 50px;
+}
+#main .section2 div{
+	float: left;
+	margin-left: 60px;
+	margin-top: 30px;
+	width: 200px;
+	height: 300px;
+}
+#main .section2 div img{
+	width: 200px;
+	height: 200px;
+	/* padding: 0 10px; */
+}
+#main .section2 div p{
+	text-align: center;
+	font-size: 16px;
+	line-height: 60px;
+	padding-right: 10px;
+}
+#main .section3{
+	width: 1100px;
+	height: 350px;
+	margin: 30px auto;
+	/* background: #7FFFD4; */
+	margin-bottom: 50px;
+}
+#main .section3 div{
+	float: left;
+}
+#main .section3 img{
+	width: 240px;
+	height: 240px;
+	margin-top: 30px;
+	margin-left: 100px;
+}
+#main .section3 .char p{
+	margin: 60px 300px;
+}
+#main .section4{
+	width: 1100px;
+	height: 350px;
+	margin: 30px auto;
+	/* background: #7FFFD4; */
+	margin-bottom: 50px;
+}
+#main .section4 img{
+	margin-left: 75px;
+	margin-top: 30px;
+}
+#main .section4 .write form{
+	margin-top: 50px;
+	padding-left: 75px;
+}
+#main .section4 .write textarea{
+	width: 980px;
+	height: 120px;
+	font-size: 16px;
+	padding: 10px 10px;
+}
+#main .section4 .write button{
+	width: 120px;
+	height: 50px;
+	float: right;
+	margin-right: 25px;
+	margin-top: 30px;
+	background: rgb(255,127,33);
+	border: none;
+	border: 10px;
+	color: white;
+	font-size: 18px;
+	line-height: 50px;
+	border-radius: 6px;
+}
+#main .section4 .all{
+	margin: 100px 50px;
+	font-size: 14px;
+}
+#main .section4 .liuyan{
+	margin: 10px 50px;
+	width: 1070px;
+	height: 200px;
+	/* background: #7FFFD4; */
+	border-bottom: gray 2px solid;
+	margin-bottom: 100px;
+}
+#main .section4 .liuyan div{
+	float: left;
+}
+#main .section4 .liuyan img{
+	width: 95px;
+	height: 160px;
+	margin-left: 0;
+	margin-top: 20px;
+}
+#main .section4 .liuyan .review{
+	margin: 10px 20px;
+	width: 930px;
+	height: 180px;
+	margin-bottom: 40px;
+	/* background: #808080; */
+}
+#main .section4 .liuyan .review .userName{
+	margin-top: 10px;
+	font-size: 18px;
+	line-height: 24px;
+}
+#main .section4 .liuyan .review span{
+	float: right;
+	color: #89898B;
+}
+#main .section4 .liuyan .review .reviewContent{
+	margin-top: 40px;
+	font-size: 15px;
+	line-height: 28px;
+}

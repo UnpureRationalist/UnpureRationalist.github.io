@@ -1,0 +1,80 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+#main{
+	width: 1510px;
+	/* height: 3000px; */
+	/* background: lightblue; */
+	margin: 20px auto;
+}
+#main .content{
+	margin: 0 100px;
+	/* background-color: #A9A9A9; */
+}
+#main .content .title strong{
+	font-size: 30px;
+	line-height: 32px;
+	font-weight: 400;
+	color: black;
+}
+#main .content p{
+	font-size: 24px;
+	line-height: 24px;
+	padding-top: 50px;
+	padding-left: 50px;
+}
+#main .content ul{
+	margin: 50px 100px;
+}
+#main .content ul li{
+	display: inline-block;
+	margin-bottom: 100px;
+	border: deepskyblue 1px solid;
+}
+#main .content ul li div{
+	float: left;
+}
+#main .content .write .backImage{
+	width: 500px;
+	height: 350px;
+	background-color: red;
+	margin-right: 100px;
+}
+#main .content .write .backImage img{
+	width: 500px;
+	height: 350px;
+}
+#main .content .write .char{
+	width: 500px;
+	height: 350px;
+	/* background: yellow; */
+}
+#main .content .write .char h3{
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: normal;
+	padding-left: 50px;
+	margin-top: 20px;
+}
+#main .content .write .char .tag{
+	font-size: 16px;
+	line-height: 24px;
+	color: red;
+	margin-top: -20px;
+}
+#main .content .write .char .tag i{
+	color: blue;
+}
+#main .content .write .char .abstract{
+	/* background-color: red; */
+	height: 150px;
+	font-size: 18px;
+	margin-top: -20px;
+	line-height: 28px;
+	color: gray;
+	padding-bottom: 30px;
+}
+#main .content .write .char a{
+	float: right;
+}

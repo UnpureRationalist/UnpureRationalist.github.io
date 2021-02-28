@@ -1,0 +1,127 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+#main {
+	width: 1510px;
+	height: 2400px;
+	margin: 50px auto;
+	/* background: gainsboro; */
+}
+#main .good{
+	width: 1200px;
+	height: 880px;
+	margin: 0 auto;
+}
+#main .good .title{
+	margin-top: 30px;
+	font-size: 40px;
+	text-align: center;
+	line-height: 48px;
+	color: crimson;
+	padding-top: 30px;
+}
+table {
+	width: 1000px;
+	/* height: 240px; */
+	border: 1px solid blue;
+	margin: 30px auto 0;
+	border-spacing: 0;
+	caption-side: top;
+}
+table caption {
+	line-height: 40px;
+	font-size: 24px;
+}
+table thead {
+	background: deepskyblue;
+	color: white;
+	text-align: center;
+}
+table thead .firstrow td{
+	line-height: 40px;
+	font-size: 20px;
+}
+table tbody .title td{
+	text-align: center;
+	height: 36px;
+	color: black;
+	background: cornflowerblue;
+	font-size: 20px;
+}
+table tbody td {
+	font-size: 16px;
+	text-align: center;
+	line-height: 32px;
+}
+table tbody tr:nth-child(2n+1) {
+	background: #fef0f5;
+}
+table tbody tr td div{
+	float: right;
+	width: 50px;
+	height: 30px;
+	background: red;
+	/* margin: 0 auto; */
+	margin-right: 40px;
+}
+table tbody tr td div a{
+	font-size: 12px;
+	line-height: 16px;
+	color: white;
+	display: inline-block;
+	margin-top: -10px;
+}
+#main .detail{
+	width: 1200px;
+	height: 2000px;
+	margin: 0 auto;
+	/* background: #00BFFF; */
+}
+#main .detail .title{
+	margin-top: 30px;
+	font-size: 40px;
+	text-align: center;
+	line-height: 48px;
+	color: crimson;
+	padding-top: 30px;
+}
+#main .detail ul{
+	margin: 70px 10px 0 50px;
+}
+#main .detail ul li{
+	width: 300px;
+	height: 550px;
+	float: left;
+	margin-right: 80px;
+	margin-bottom: 140px;
+	/* border: #7FFFD4 solid 1px; */
+}
+#main .detail ul li .photo{
+	width: 300px;
+	height: 400px;
+}
+#main .detail ul li .photo img{
+	width: 300px;
+	height: 400px;
+}
+#main .detail ul li .char{
+	padding-top: 15px;
+	/* height: 30px; */
+	width: 300px;
+}
+#main .detail ul li .char .abstract{
+	text-align: center;
+	font-size: 18px;
+	color: blue;
+}
+#main .detail ul li .char  .introduction{
+	display: block;
+	overflow: auto;
+	height: 150px;
+	width: 310px;
+	margin-top: 10px;
+	font-size: 14px;
+	line-height: 24px;
+	color: gray;
+}

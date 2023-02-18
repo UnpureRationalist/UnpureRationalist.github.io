@@ -24,7 +24,7 @@
 <meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-02-18T10:05:01.738Z">
-<meta property="article:modified_time" content="2023-02-18T12:40:33.639Z">
+<meta property="article:modified_time" content="2023-02-18T12:45:25.639Z">
 <meta property="article:author" content="arcsin2">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -334,9 +334,6 @@ E=mc^2
 i=1,2,\dots,K
 \]</span></p>
 <p><span class="math display">\[
-\epsilon \sim \mathcal{N}(0, \textbf{I})   \\
-\vec{z} \sim \mathcal{N}(\vec{\mu}, \sigma^2 \textbf{I})  \\
-\sum_{i=1}^{D}|x_i-y_i|  \\
 L_{\delta}=
     \left\{\begin{matrix}
         \frac{1}{2}(y - \hat{y})^{2} &amp; if \left | (y -
@@ -345,9 +342,24 @@ L_{\delta}=
     \end{matrix}\right.
 \]</span></p>
 <p><span class="math display">\[
-Accuracy = \frac{TP+TN}{TP+TN+FP+FN}  \\
-Precision = \frac{TP}{TP+FP}  \\
-Recall = \frac{TP}{TP+FN}  \\
+\epsilon \sim \mathcal{N}(0, \textbf{I})
+\]</span></p>
+<p><span class="math display">\[
+\vec{z} \sim \mathcal{N}(\vec{\mu}, \sigma^2 \textbf{I})
+\]</span></p>
+<p><span class="math display">\[
+\sum_{i=1}^{D}|x_i-y_i|
+\]</span></p>
+<p><span class="math display">\[
+Accuracy = \frac{TP+TN}{TP+TN+FP+FN}
+\]</span></p>
+<p><span class="math display">\[
+Precision = \frac{TP}{TP+FP}
+\]</span></p>
+<p><span class="math display">\[
+Recall = \frac{TP}{TP+FN}
+\]</span></p>
+<p><span class="math display">\[
 F1 = \frac{2*Precision*Recall}{Precision+Recall} =
 \frac{2*TP}{2*TP+FP+FN}
 \]</span></p>

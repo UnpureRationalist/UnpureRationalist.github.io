@@ -24,7 +24,7 @@
 <meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-02-18T10:05:01.738Z">
-<meta property="article:modified_time" content="2023-02-18T10:15:46.245Z">
+<meta property="article:modified_time" content="2023-02-18T12:40:33.639Z">
 <meta property="article:author" content="arcsin2">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -248,7 +248,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.9k 字
+          3.4k 字
         
       </span>
     
@@ -259,7 +259,7 @@
         
         
         
-          10 分钟
+          12 分钟
         
       </span>
     
@@ -328,6 +328,28 @@ target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment
 <h2 id="测试公式">测试公式</h2>
 <p><span class="math display">\[
 E=mc^2
+\]</span></p>
+<p><span class="math display">\[
+\sigma(z_i) = \frac{e^{z_{i}}}{\sum_{j=1}^K e^{z_{j}}} \ \ \ for\
+i=1,2,\dots,K
+\]</span></p>
+<p><span class="math display">\[
+\epsilon \sim \mathcal{N}(0, \textbf{I})   \\
+\vec{z} \sim \mathcal{N}(\vec{\mu}, \sigma^2 \textbf{I})  \\
+\sum_{i=1}^{D}|x_i-y_i|  \\
+L_{\delta}=
+    \left\{\begin{matrix}
+        \frac{1}{2}(y - \hat{y})^{2} &amp; if \left | (y -
+\hat{y})  \right | &lt; \delta\\
+        \delta ((y - \hat{y}) - \frac1 2 \delta) &amp; otherwise
+    \end{matrix}\right.
+\]</span></p>
+<p><span class="math display">\[
+Accuracy = \frac{TP+TN}{TP+TN+FP+FN}  \\
+Precision = \frac{TP}{TP+FP}  \\
+Recall = \frac{TP}{TP+FN}  \\
+F1 = \frac{2*Precision*Recall}{Precision+Recall} =
+\frac{2*TP}{2*TP+FP+FN}
 \]</span></p>
 <h2 id="测试代码">测试代码</h2>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> net<br><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">from</span> face_alignment <span class="hljs-keyword">import</span> align<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><br><br>adaface_models = &#123;<br>    <span class="hljs-string">&#x27;ir_50&#x27;</span>:<span class="hljs-string">&quot;pretrained/adaface_ir50_ms1mv2.ckpt&quot;</span>,<br>&#125;<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">load_pretrained_model</span>(<span class="hljs-params">architecture=<span class="hljs-string">&#x27;ir_50&#x27;</span></span>):<br>    <span class="hljs-comment"># load model and pretrained statedict</span><br>    <span class="hljs-keyword">assert</span> architecture <span class="hljs-keyword">in</span> adaface_models.keys()<br>    model = net.build_model(architecture)<br>    statedict = torch.load(adaface_models[architecture])[<span class="hljs-string">&#x27;state_dict&#x27;</span>]<br>    model_statedict = &#123;key[<span class="hljs-number">6</span>:]:val <span class="hljs-keyword">for</span> key, val <span class="hljs-keyword">in</span> statedict.items() <span class="hljs-keyword">if</span> key.startswith(<span class="hljs-string">&#x27;model.&#x27;</span>)&#125;<br>    model.load_state_dict(model_statedict)<br>    model.<span class="hljs-built_in">eval</span>()<br>    <span class="hljs-keyword">return</span> model<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">to_input</span>(<span class="hljs-params">pil_rgb_image</span>):<br>    np_img = np.array(pil_rgb_image)<br>    brg_img = ((np_img[:,:,::-<span class="hljs-number">1</span>] / <span class="hljs-number">255.</span>) - <span class="hljs-number">0.5</span>) / <span class="hljs-number">0.5</span><br>    tensor = torch.tensor([brg_img.transpose(<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>)]).<span class="hljs-built_in">float</span>()<br>    <span class="hljs-keyword">return</span> tensor<br><br><span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&#x27;__main__&#x27;</span>:<br><br>    model = load_pretrained_model(<span class="hljs-string">&#x27;ir_50&#x27;</span>)<br>    feature, norm = model(torch.randn(<span class="hljs-number">2</span>,<span class="hljs-number">3</span>,<span class="hljs-number">112</span>,<span class="hljs-number">112</span>))<br><br>    test_image_path = <span class="hljs-string">&#x27;face_alignment/test_images&#x27;</span><br>    features = []<br>    <span class="hljs-keyword">for</span> fname <span class="hljs-keyword">in</span> <span class="hljs-built_in">sorted</span>(os.listdir(test_image_path)):<br>        path = os.path.join(test_image_path, fname)<br>        aligned_rgb_img = align.get_aligned_face(path)<br>        bgr_tensor_input = to_input(aligned_rgb_img)<br>        feature, _ = model(bgr_tensor_input)<br>        features.append(feature)<br><br>    similarity_scores = torch.cat(features) @ torch.cat(features).T<br>    <span class="hljs-built_in">print</span>(similarity_scores)<br>    <br></code></pre></td></tr></table></figure>

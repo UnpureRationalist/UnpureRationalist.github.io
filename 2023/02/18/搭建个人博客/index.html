@@ -16,16 +16,18 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="本文介绍使用 Nginx（或者 GitHub Pages） 与 Hexo 搭建个人博客的主要步骤。">
+    <meta name="description" content="本文介绍使用 Nginx（或者 GitHub Pages） 与 Hexo 搭建个人博客的主要步骤。 在正文开始之前，先介绍上面提到的几个工具的功能：  Nginx：充当 Web 服务器的角色，在个人博客中，其主要功能是在公网服务器上提供 HTTP 或 HTTPS 服务，让用户能够访问你的博客网站 GitHub Pages：在没有个人公网服务器是，使用 GitHub Pages 同样">
 <meta property="og:type" content="article">
 <meta property="og:title" content="使用 Nginx(GitHub Pages) 与 Hexo 搭建个人博客">
 <meta property="og:url" content="http://example.com/2023/02/18/%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="本文介绍使用 Nginx（或者 GitHub Pages） 与 Hexo 搭建个人博客的主要步骤。">
+<meta property="og:description" content="本文介绍使用 Nginx（或者 GitHub Pages） 与 Hexo 搭建个人博客的主要步骤。 在正文开始之前，先介绍上面提到的几个工具的功能：  Nginx：充当 Web 服务器的角色，在个人博客中，其主要功能是在公网服务器上提供 HTTP 或 HTTPS 服务，让用户能够访问你的博客网站 GitHub Pages：在没有个人公网服务器是，使用 GitHub Pages 同样">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-02-18T10:52:27.000Z">
-<meta property="article:modified_time" content="2023-02-18T11:04:23.148Z">
+<meta property="article:modified_time" content="2023-02-18T12:18:06.708Z">
 <meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="博客">
+<meta property="article:tag" content="Hexo">
 <meta name="twitter:card" content="summary_large_image">
   
   
@@ -248,7 +250,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          43 字
+          2.3k 字
         
       </span>
     
@@ -259,7 +261,7 @@
         
         
         
-          1 分钟
+          8 分钟
         
       </span>
     
@@ -304,6 +306,94 @@
                 
                 <p>本文介绍使用 Nginx（或者 GitHub Pages） 与 Hexo
 搭建个人博客的主要步骤。</p>
+<p>在正文开始之前，先介绍上面提到的几个工具的功能：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://nginx.org/en/">Nginx</a>：充当 Web
+服务器的角色，在个人博客中，其主要功能是在公网服务器上提供 HTTP 或 HTTPS
+服务，让用户能够访问你的博客网站</li>
+<li>GitHub Pages：在没有个人公网服务器是，使用 GitHub Pages
+同样可以达到搭建个人博客的目的。具体而言，GitHub Pages
+其实就是一个特殊的 GitHub 仓库，你可以在这个仓库内放一些 HTML、CSS 和 JS
+文件等，从而搭建个人网站。官方介绍见：<a
+target="_blank" rel="noopener" href="https://pages.github.com/">GitHub Pages</a></li>
+<li><a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/">Hexo</a>：Hexo
+是一个静态博客框架，使用它可以搭建博客网站，能够让用户专注于博客内容，而不需要熟悉
+CSS 和 Javascript
+等前端内容。使用官方以及许多开源作者提供的主题，即可快速的构建美观的网页，而博客内容使用
+Markdown 编写即可。</li>
+</ul>
+<p>下面，介绍具体步骤。</p>
+<h2 id="本地安装-node.js">1. 本地安装 Node.js</h2>
+<p>Node.js 官网为：https://nodejs.org/en/download/
+，打开链接，根据本地环境，选择合适的安装文件下载。Windows 平台与 Mac
+平台选择二进制 installer 文件，安装时只需要点下一步即可。</p>
+<p>Linux 平台安装稍微复杂些，推荐以下两种安装方式，可任选其一：</p>
+<ul>
+<li>源代码编译安装，无需配置 bash 等环境，<a
+target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1938607">参考</a></li>
+<li>二进制文件下载安装，需要配置 bash 环境，<a
+target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1772306">参考</a></li>
+</ul>
+<p>安装完成后，在命令行输入以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ npm -v<br>$ node -v<br></code></pre></td></tr></table></figure>
+<p>若都有输出，说明安装成功。</p>
+<h2 id="本地安装-hexo-并初始化博客环境">2. 本地安装 Hexo
+并初始化博客环境</h2>
+<p>Hexo 安装命令参考<a
+target="_blank" rel="noopener" href="https://hexo.io/zh-cn/">官网</a>即可，具体如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ npm install hexo-cli -g<br>$ hexo init blog<br>$ <span class="hljs-built_in">cd</span> blog<br>$ npm install<br>$ hexo server<br></code></pre></td></tr></table></figure>
+<p>关于 Hexo 的更多信息，可参考官方文档：<a
+target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">文档 | Hexo</a> 。</p>
+<p>为了让你的博客网站更加符合你的审美，可以选择一个合适的主题 <a
+target="_blank" rel="noopener" href="https://hexo.io/themes/">Themes | Hexo</a> 。本博客网站使用的是
+Fluid，其 GitHub 仓库地址为：<a
+target="_blank" rel="noopener" href="https://github.com/fluid-dev/hexo-theme-fluid">fluid-dev/hexo-theme-fluid:
+一款 Material Design 风格的 Hexo 主题 / An elegant Material-Design theme
+for Hexo (github.com)</a> ，官方文档地址为：<a
+target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">文档 | Hexo</a> 。</p>
+<p>仔细阅读 Hexo 官方文档与你选择的主题的官方文档，根据自己的喜好配置好
+yml 文件，搭建个人博客的路途就走完了一半。</p>
+<p>下面，我们要解决的问题是：如何让互联网上的广大用户能够访问你的博客网站？</p>
+<p>3、4 小节提供了两种方式，可根据自己的具体情况选择。</p>
+<h2 id="建立-github-pages-仓库">3. 建立 GitHub Pages 仓库</h2>
+<p>首先，在 GitHub
+上建立一个仓库。这个仓库的命名有点讲究，举例说明如下：</p>
+<p>我的 GitHub 个人主页地址为：https://github.com/UnpureRationalist
+，其中，<code>UnpureRationalist</code> 表示我的用户名。</p>
+<p>打开 GitHub 并选择创建仓库选项，将仓库命名为
+<code>用户名.github.io</code>
+，比如我的仓库命名则是：<code>UnpureRationalist.github.io</code>
+，并设置仓库为公开可见。</p>
+<p>然后，在该仓库上传一个名为 <code>index.html</code>
+的文件，参考文件内容如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs html"><span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-keyword">html</span>&gt;</span><br><span class="hljs-tag">&lt;<span class="hljs-name">html</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">head</span>&gt;</span><br>        <span class="hljs-tag">&lt;<span class="hljs-name">title</span>&gt;</span>Example<span class="hljs-tag">&lt;/<span class="hljs-name">title</span>&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">head</span>&gt;</span><br>    <span class="hljs-tag">&lt;<span class="hljs-name">body</span>&gt;</span><br>        <span class="hljs-tag">&lt;<span class="hljs-name">p</span>&gt;</span>Hello World.<span class="hljs-tag">&lt;/<span class="hljs-name">p</span>&gt;</span><br>    <span class="hljs-tag">&lt;/<span class="hljs-name">body</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">html</span>&gt;</span><br></code></pre></td></tr></table></figure>
+<p>在浏览器输入链接 <code>用户名.github.io</code>
+，如我的博客地址为：<code>UnpureRationalist.github.io</code>
+，然后，浏览器即可显示 <code>index.html</code> 文件的内容。</p>
+<p>利用此仓库，我们就可以让其他用户访问自己的博客网站。</p>
+<h2 id="服务器安装-nginx">4. 服务器安装 Nginx</h2>
+<p>对于拥有个人云服务器的用户来说，可以直接在个人服务器上安装 Nginx
+服务，将个人博客搭建在自己的服务器上。</p>
+<p>首先，我们需要在服务器上安装 Nginx，这里以 Ubuntu
+系统为例，步骤如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ sudo apt update<br>$ sudo apt install nginx<br>$ sudo systemectl <span class="hljs-built_in">enable</span> nginx	<span class="hljs-comment"># 设置 nginx 开机启动</span><br>$ sudo systemctl start nginx	<span class="hljs-comment"># 启动 nginx 服务</span><br></code></pre></td></tr></table></figure>
+<p>注意，为了让 Nginx 正常工作，需要在服务器的安全组设置中开放 80 or/and
+443 端口，以让 HTTP or/and HTTPS
+服务正常工作，具体仓库自己使用的服务器提供商。</p>
+<p>如果要使用 HTTPS 服务，则需要对 Nginx
+进行一定的配置，参考链接：https://cloud.tencent.com/document/product/400/35244
+。</p>
+<h2 id="配置-hexo-实现自动部署">5. 配置 Hexo 实现自动部署</h2>
+<p>经过上面的步骤，我们在本地有了一个存放个人博客的目录；在云端有了公网用户能够访问的目录。因此，我们只需要使用
+Git 或 scp 等工具，将 Hexo 的 public 目录下的所有文件和文件夹上传到
+GitHub 仓库或者服务器 Web
+服务根目录下即可。但是，手动进行这些操作有些麻烦，我们可以使用 Hexo
+提供的功能实现一条命令部署。参考链接：<a
+target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/one-command-deployment">部署 | Hexo</a>
+。</p>
+<p>具体而言，就是在 <code>_config.yml</code> 配置文件
+中进行适当的配置，然后运行如下命令即可将个人博客部署到云端：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ hexo clean &amp;&amp; hexo g &amp;&amp; hexo deploy<br></code></pre></td></tr></table></figure>
 
                 
               </div>
@@ -312,6 +402,15 @@
             <div>
               <div class="post-metas my-3">
   
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E5%8D%9A%E5%AE%A2/">#博客</a>
+      
+        <a href="/tags/Hexo/">#Hexo</a>
+      
+    </div>
   
 </div>
 

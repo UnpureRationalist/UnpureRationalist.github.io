@@ -329,28 +329,21 @@ Markdown 编写即可。</li>
 平台选择二进制 installer 文件，安装时只需要点下一步即可。</p>
 <p>Linux 平台安装稍微复杂些，推荐以下两种安装方式，可任选其一：</p>
 <ul>
-<li>源代码编译安装，无需配置 bash，但是编译耗时，<a
-target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1938607">参考</a></li>
-<li>二进制文件下载安装，需要配置 bash 环境，<a
-target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1772306">参考</a></li>
+<li>源代码编译安装，无需配置 bash，但是编译耗时，<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1938607">参考</a></li>
+<li>二进制文件下载安装，需要配置 bash 环境，<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1772306">参考</a></li>
 </ul>
 <p>安装完成后，在命令行输入以下命令：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ npm -v<br>$ node -v<br></code></pre></td></tr></table></figure>
 <p>若都有输出，说明安装成功。</p>
 <h2 id="本地安装-hexo-并初始化博客环境">2. 本地安装 Hexo
 并初始化博客环境</h2>
-<p>Hexo 安装命令参考<a
-target="_blank" rel="noopener" href="https://hexo.io/zh-cn/">官网</a>即可，具体如下：</p>
+<p>Hexo 安装命令参考<a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/">官网</a>即可，具体如下：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ npm install hexo-cli -g<br>$ hexo init blog<br>$ <span class="hljs-built_in">cd</span> blog<br>$ npm install<br>$ hexo server<br></code></pre></td></tr></table></figure>
-<p>关于 Hexo 的更多信息，可参考官方文档：<a
-target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">文档 | Hexo</a> 。</p>
-<p>为了让你的博客网站更加符合你的审美，可以选择一个合适的主题 <a
-target="_blank" rel="noopener" href="https://hexo.io/themes/">Themes | Hexo</a> 。本博客网站使用的是
-Fluid，其 GitHub 仓库地址为：<a
-target="_blank" rel="noopener" href="https://github.com/fluid-dev/hexo-theme-fluid">fluid-dev/hexo-theme-fluid:
+<p>关于 Hexo 的更多信息，可参考官方文档：<a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/">文档 | Hexo</a> 。</p>
+<p>为了让你的博客网站更加符合你的审美，可以选择一个合适的主题 <a target="_blank" rel="noopener" href="https://hexo.io/themes/">Themes | Hexo</a> 。本博客网站使用的是
+Fluid，其 GitHub 仓库地址为：<a target="_blank" rel="noopener" href="https://github.com/fluid-dev/hexo-theme-fluid">fluid-dev/hexo-theme-fluid:
 一款 Material Design 风格的 Hexo 主题 / An elegant Material-Design theme
-for Hexo (github.com)</a> ，官方文档地址为：<a
-target="_blank" rel="noopener" href="https://hexo.fluid-dev.com/docs/guide/">配置指南 | Hexo Fluid
+for Hexo (github.com)</a> ，官方文档地址为：<a target="_blank" rel="noopener" href="https://hexo.fluid-dev.com/docs/guide/">配置指南 | Hexo Fluid
 用户手册 (fluid-dev.com)</a>。</p>
 <p>仔细阅读 Hexo 官方文档与你选择的主题的官方文档，根据自己的喜好配置好
 yml 文件，搭建个人博客的路途就走完了一半。</p>
@@ -390,8 +383,7 @@ yml 文件，搭建个人博客的路途就走完了一半。</p>
 Git 或 scp 等工具，将 Hexo 生成的 public 目录下的所有文件和文件夹上传到
 GitHub 仓库或者服务器 Web
 服务根目录下即可。但是，手动进行这些操作有些麻烦，我们可以使用 Hexo
-提供的功能实现一条命令部署。详情参考链接：<a
-target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/one-command-deployment">部署 | Hexo</a>
+提供的功能实现一条命令部署。详情参考链接：<a target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/one-command-deployment">部署 | Hexo</a>
 。</p>
 <p>具体而言，就是在 <code>_config.yml</code>
 配置文件中进行适当的配置，然后运行如下命令即可将个人博客部署到云端：</p>

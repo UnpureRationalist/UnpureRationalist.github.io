@@ -23,17 +23,11 @@
 <meta property="og:site_name" content="arcsin2 的个人博客">
 <meta property="og:description" content="写在前面： 本文是阅读 《鸟哥的 Linux 私房菜：基础学习篇》 一书的笔记，记录了个人认为的一些重点内容，供本人后续查阅参考。对于偏向于系统运维方面的内容，则未记录。 《鸟哥的 Linux 私房菜：基础学习篇》无疑是入门 Linux 命令行的一本好书，但是在个人阅读过程中，发现本书部分内容更偏向于系统运维人员，而不是大多数的普通程序员。当然，技多不压身，不过，对于仅想了解与日常编程">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://raw.githubusercontent.com/UnpureRationalist/Pictures/main/FHS.png">
-<meta property="og:image" content="https://raw.githubusercontent.com/UnpureRationalist/Pictures/main/image-20210407000259422.png">
-<meta property="og:image" content="https://linux.vbird.org/linux_basic/centos7/0310vi//centos7_vi-mode.gif">
-<meta property="og:image" content="https://linux.vbird.org/linux_basic/centos7/0320bash//0320bash_1.jpg">
-<meta property="og:image" content="https://linux.vbird.org/linux_basic/centos7/0520source//make_configure.gif">
 <meta property="article:published_time" content="2023-02-20T14:44:16.000Z">
 <meta property="article:modified_time" content="2023-02-20T15:18:38.586Z">
 <meta property="article:author" content="arcsin2">
 <meta property="article:tag" content="Linux 命令行">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://raw.githubusercontent.com/UnpureRationalist/Pictures/main/FHS.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
@@ -332,7 +326,8 @@ Foundation）基金会成立</li>
 <li>1988 年，图形用户界面模式 XFree86 计划</li>
 <li>1991 年，芬兰 Linus Torvalds 发布 Linux 内核</li>
 </ol></li>
-<li>常见的开放源代码的授权（<a target="_blank" rel="noopener" href="https://www.runoob.com/w3cnote/open-source-license.html">详细介绍</a>）
+<li>常见的开放源代码的授权（<a
+target="_blank" rel="noopener" href="https://www.runoob.com/w3cnote/open-source-license.html">详细介绍</a>）
 <ol type="1">
 <li>Apache Lisense 2.0</li>
 <li>BSD</li>
@@ -535,7 +530,7 @@ Foundation）基金会成立</li>
 <h4 id="linux-目录配置的依据-fhs">5.3.1 Linux 目录配置的依据 —— FHS</h4>
 <p>FHS（Filesystem Hierarchy
 Standard）：规定每个特定目录下应该放置什么数据</p>
-<hr>
+<hr />
 <table>
 
 <thead>
@@ -574,13 +569,17 @@ Standard）：规定每个特定目录下应该放置什么数据</p>
 <p>/usr （Unix software resource）：与软件安装 / 执行有关</p>
 <p>/var （variable）：与系统运行过程有关</p>
 </blockquote>
-<p>FHS 具体要求：图片来源：<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-hans/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84%E6%A0%87%E5%87%86">维基百科：文件系统层次结构标准</a></p>
+<p>FHS 具体要求：图片来源：<a
+target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-hans/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84%E6%A0%87%E5%87%86">维基百科：文件系统层次结构标准</a></p>
 <figure>
-<img src="https://raw.githubusercontent.com/UnpureRationalist/Pictures/main/FHS.png" srcset="/img/loading.gif" lazyload alt="FHS">
+<img
+src="https://raw.githubusercontent.com/UnpureRationalist/Pictures/main/FHS.png" srcset="/img/loading.gif" lazyload
+alt="FHS" />
 <figcaption aria-hidden="true">FHS</figcaption>
 </figure>
 <h4 id="目录树">5.3.2 目录树</h4>
-<p><img src="https://raw.githubusercontent.com/UnpureRationalist/Pictures/main/image-20210407000259422.png" srcset="/img/loading.gif" lazyload></p>
+<p><img
+src="https://raw.githubusercontent.com/UnpureRationalist/Pictures/main/image-20210407000259422.png" srcset="/img/loading.gif" lazyload /></p>
 <h4 id="绝对路径与相对路径">5.3.3 绝对路径与相对路径</h4>
 <p>略</p>
 <h4 id="centos-的观察">5.3.4 CentOS 的观察</h4>
@@ -642,7 +641,8 @@ tar 程序打包的文件，其中并且经过 bzip2 的压缩 *.tar.xz tar
 <li>编辑模式</li>
 <li>命令行模式</li>
 </ul>
-<p><img src="https://linux.vbird.org/linux_basic/centos7/0310vi//centos7_vi-mode.gif" srcset="/img/loading.gif" lazyload></p>
+<p><img
+src="https://linux.vbird.org/linux_basic/centos7/0310vi//centos7_vi-mode.gif" srcset="/img/loading.gif" lazyload /></p>
 <h3 id="vim-的额外功能">9.2 vim 的额外功能</h3>
 <ul>
 <li>可视区块：以列为单位编辑</li>
@@ -651,7 +651,8 @@ tar 程序打包的文件，其中并且经过 bzip2 的压缩 *.tar.xz tar
 </ul>
 <h2 id="认识与学习-bash">10. 认识与学习 BASH</h2>
 <h3 id="认识-bash-这个-shell">10.1 认识 BASH 这个 SHELL</h3>
-<p><img src="https://linux.vbird.org/linux_basic/centos7/0320bash//0320bash_1.jpg" srcset="/img/loading.gif" lazyload></p>
+<p><img
+src="https://linux.vbird.org/linux_basic/centos7/0320bash//0320bash_1.jpg" srcset="/img/loading.gif" lazyload /></p>
 <p>快捷键：</p>
 <table>
 
@@ -669,7 +670,8 @@ tar 程序打包的文件，其中并且经过 bzip2 的压缩 *.tar.xz tar
 </tr>
 <tr class="even">
 <td style="text-align: center;">[ctrl]+a/[ctrl]+e</td>
-<td style="text-align: center;">分别是让游标移动到整个指令串的最前面([ctrl]+a)
+<td
+style="text-align: center;">分别是让游标移动到整个指令串的最前面([ctrl]+a)
 或最后面([ctrl]+e)。</td>
 </tr>
 </tbody>
@@ -806,69 +808,69 @@ tar 程序打包的文件，其中并且经过 bzip2 的压缩 *.tar.xz tar
 <tbody>
 <tr class="odd">
 <td>^word</td>
-<td>意义：待搜寻的字串(word)在行首！ <br>范例：搜寻行首为#
-开始的那一行，并列出行号<br>grep -n '^#' regular_express.txt</td>
+<td>意义：待搜寻的字串(word)在行首！ <br/>范例：搜寻行首为#
+开始的那一行，并列出行号<br/>grep -n '^#' regular_express.txt</td>
 </tr>
 <tr class="even">
 <td>word$</td>
-<td>意义：待搜寻的字串(word)在行尾！ <br>范例：将行尾为!
-的那一行列印出来，并列出行号<br>grep -n '!$' regular_express.txt</td>
+<td>意义：待搜寻的字串(word)在行尾！ <br/>范例：将行尾为!
+的那一行列印出来，并列出行号<br/>grep -n '!$' regular_express.txt</td>
 </tr>
 <tr class="odd">
 <td>.</td>
 <td>意义：代表『一定有一个任意字元』的字符！
-<br>范例：搜寻的字串可以是(eve) (eae) (eee) (ee)， 但不能仅有(ee)
-！亦即e 与e 中间『一定』仅有一个字元，而空白字元也是字元！<br>grep -n
+<br/>范例：搜寻的字串可以是(eve) (eae) (eee) (ee)， 但不能仅有(ee)
+！亦即e 与e 中间『一定』仅有一个字元，而空白字元也是字元！<br/>grep -n
 'ee' regular_express.txt</td>
 </tr>
 <tr class="even">
 <td>\</td>
 <td>意义：透过shell 的跳脱字符，将特殊符号的特殊意义去除！
-<br>范例：搜寻含有单引号' 的那一行！<br>grep -n '
+<br/>范例：搜寻含有单引号' 的那一行！<br/>grep -n '
 regular_express.txt</td>
 </tr>
 <tr class="odd">
 <td>*</td>
-<td>意义：重复零个到无穷多个的前一个RE 字符 <br>范例：找出含有(es)
+<td>意义：重复零个到无穷多个的前一个RE 字符 <br/>范例：找出含有(es)
 (ess) (esss) 等等的字串，注意，因为* 可以是0 个，所以es
 也是符合带搜寻字串。另外，因为* 为重复『前一个RE 字符』的符号，
 因此，在* 之前必须要紧接着一个RE 字符喔！例如任意字元则为『.*』
-！<br>grep -n 'ess*' regular_express.txt</td>
+！<br/>grep -n 'ess*' regular_express.txt</td>
 </tr>
 <tr class="even">
 <td>[list]</td>
 <td>意义：字元集合的RE 字符，里面列出想要撷取的字元！
-<br>范例：搜寻含有(gl) 或(gd) 的那一行，需要特别留意的是，在[]
+<br/>范例：搜寻含有(gl) 或(gd) 的那一行，需要特别留意的是，在[]
 当中『谨代表一个待搜寻的字元』， 例如『 a[afl]y
 』代表搜寻的字串可以是aay, afy, aly 即[afl] 代表a 或f 或l
-的意思！<br>grep -n 'g[ld]' regular_express.txt</td>
+的意思！<br/>grep -n 'g[ld]' regular_express.txt</td>
 </tr>
 <tr class="odd">
 <td>[n1-n2]</td>
 <td>意义：字元集合的RE 字符，里面列出想要撷取的字元范围！
-<br>范例：搜寻含有任意数字的那一行！需特别留意，在字元集合[] 中的减号-
+<br/>范例：搜寻含有任意数字的那一行！需特别留意，在字元集合[] 中的减号-
 是有特殊意义的，他代表两个字元之间的所有连续字元！但这个连续与否与ASCII
 编码有关，因此，你的编码需要设定正确(在 bash 当中，需要确定LANG
-与LANGUAGE 的变数是否正确！) 例如所有大写字元则为[AZ]<br>grep -n '[AZ]'
+与LANGUAGE 的变数是否正确！) 例如所有大写字元则为[AZ]<br/>grep -n '[AZ]'
 regular_express.txt</td>
 </tr>
 <tr class="even">
 <td>[^list]</td>
 <td>意义：字元集合的RE 字符，里面列出不要的字串或范围！
-<br>范例：搜寻的字串可以是(oog) (ood) 但不能是(oot) ，那个^ 在[]
+<br/>范例：搜寻的字串可以是(oog) (ood) 但不能是(oot) ，那个^ 在[]
 内时，代表的意义是『反向选择』的意思。例如，我不要大写字元，则为[^AZ]。但是，需要特别注意的是，如果以grep
 -n [^AZ] regular_express.txt
 来搜寻，却发现该档案内的所有行都被列出，为什么？因为这个[^AZ]
 是『非大写字元』的意思， 因为每一行均有非大写字元，例如第一行的"Open
-Source" 就有p,e,n,o.... 等等的小写字<br>grep -n 'oo[^t]'
+Source" 就有p,e,n,o.... 等等的小写字<br/>grep -n 'oo[^t]'
 regular_express.txt</td>
 </tr>
 <tr class="odd">
 <td>{n,m}</td>
-<td>意义：连续n 到m 个的『前一个RE 字符』 <br>意义：若为{n} 则是连续n
-个的前一个RE 字符， <br>意义：若是{n,} 则是连续n 个以上的前一个RE
-字符！ <br>范例：在g 与g 之间有2 个到3 个的o
-存在的字串，亦即(goog)(gooog)<br>grep -n 'go\{2,3\}g'
+<td>意义：连续n 到m 个的『前一个RE 字符』 <br/>意义：若为{n} 则是连续n
+个的前一个RE 字符， <br/>意义：若是{n,} 则是连续n 个以上的前一个RE
+字符！ <br/>范例：在g 与g 之间有2 个到3 个的o
+存在的字串，亦即(goog)(gooog)<br/>grep -n 'go\{2,3\}g'
 regular_express.txt</td>
 </tr>
 </tbody>
@@ -885,39 +887,39 @@ regular_express.txt</td>
 <tbody>
 <tr class="odd">
 <td>+</td>
-<td>意义：重复『一个或一个以上』的前一个RE 字符 <br>范例：搜寻(god)
+<td>意义：重复『一个或一个以上』的前一个RE 字符 <br/>范例：搜寻(god)
 (good) (goood)... 等等的字串。那个o+ 代表『一个以上的o
-』所以，底下的执行成果会将第1, 9, 13 行列出来。<br>egrep -n 'go+d'
+』所以，底下的执行成果会将第1, 9, 13 行列出来。<br/>egrep -n 'go+d'
 regular_express.txt</td>
 </tr>
 <tr class="even">
 <td>?</td>
-<td>意义：『零个或一个』的前一个RE 字符 <br>范例：搜寻(gd) (god)
+<td>意义：『零个或一个』的前一个RE 字符 <br/>范例：搜寻(gd) (god)
 这两个字串。那个o? 代表『空的或1 个o 』所以，上面的执行成果会将第13, 14
 行列出来。有没有发现到，这两个案例( 'go+d' 与'go?d' )的结果集合与'go*d'
-相同？想想看，这是为什么喔！<br>egrep -n 'go?d'
+相同？想想看，这是为什么喔！<br/>egrep -n 'go?d'
 regular_express.txt</td>
 </tr>
 <tr class="odd">
 <td>|</td>
-<td>意义：用或( or )的方式找出数个字串 <br>范例：搜寻gd 或good
+<td>意义：用或( or )的方式找出数个字串 <br/>范例：搜寻gd 或good
 这两个字串，注意，是『或』！所以，第1,9,14
-这三行都可以被列印出来喔！那如果还想要找出dog 呢？<br>egrep -n
+这三行都可以被列印出来喔！那如果还想要找出dog 呢？<br/>egrep -n
 'gd|good' regular_express.txt egrep -n 'gd|good|dog'
 regular_express.txt</td>
 </tr>
 <tr class="even">
 <td>()</td>
-<td>意义：找出『群组』字串 范<br>例：搜寻(glad) 或(good)
+<td>意义：找出『群组』字串 范<br/>例：搜寻(glad) 或(good)
 这两个字串，因为g 与d 是重复的，所以， 我就可以将la 与oo 列于( )
-当中，并以| 来分隔开来，就可以啦！<br>egrep -n 'g(la|oo)d'
+当中，并以| 来分隔开来，就可以啦！<br/>egrep -n 'g(la|oo)d'
 regular_express.txt</td>
 </tr>
 <tr class="odd">
 <td>()+</td>
-<td>意义：多个重复群组的判别 <br>范例：将『AxyzxyzxyzxyzC』用echo
-叫出，然后再使用如下的方法搜寻一下！<br>echo 'AxyzxyzxyzxyzC' | egrep
-'A(xyz)+C'<br>上面的例子意思是说，我要找开头是A 结尾是C
+<td>意义：多个重复群组的判别 <br/>范例：将『AxyzxyzxyzxyzC』用echo
+叫出，然后再使用如下的方法搜寻一下！<br/>echo 'AxyzxyzxyzxyzC' | egrep
+'A(xyz)+C'<br/>上面的例子意思是说，我要找开头是A 结尾是C
 ，中间有一个以上的"xyz" 字串的意思</td>
 </tr>
 </tbody>
@@ -1456,7 +1458,7 @@ service 类型的配置文件</h3>
 </tr>
 <tr class="odd">
 <td style="text-align: center;">Documentation</td>
-<td>这个项目在提供管理员能够进行进一步的文件查询的功能！提供的文件可以是如下的资料：<br>Documentation=http://www...<br>Documentation=man:sshd(8)<br>Documentation=file:/etc/ssh/sshd_config</td>
+<td>这个项目在提供管理员能够进行进一步的文件查询的功能！提供的文件可以是如下的资料：<br/>Documentation=http://www...<br/>Documentation=man:sshd(8)<br/>Documentation=file:/etc/ssh/sshd_config</td>
 </tr>
 <tr class="even">
 <td style="text-align: center;">After</td>
@@ -1508,19 +1510,19 @@ service 类型的配置文件</h3>
 <tr class="even">
 <td style="text-align: center;">Type</td>
 <td>说明这个daemon 启动的方式，会影响到ExecStart
-喔！一般来说，有底下几种类型<br>simple：预设值，这个daemon
+喔！一般来说，有底下几种类型<br/>simple：预设值，这个daemon
 主要由ExecStart
-接的指令串来启动，启动后常驻于记忆体中。<br>forking：由ExecStart
+接的指令串来启动，启动后常驻于记忆体中。<br/>forking：由ExecStart
 启动的程序透过spawns 延伸出其他子程序来作为此daemon
 的主要服务。原生的父程序在启动结束后就会终止运作。传统的unit
 服务大多属于这种项目，例如httpd 这个WWW 服务，当httpd
 的程序因为运作过久因此即将终结了，则systemd
 会再重新生出另一个子程序持续运作后，
-再将父程序删除。据说这样的效能比较好！！<br>oneshot：与simple
-类似，不过这个程序在工作完毕后就结束了，不会常驻在记忆体中。<br>dbus：与simple
+再将父程序删除。据说这样的效能比较好！！<br/>oneshot：与simple
+类似，不过这个程序在工作完毕后就结束了，不会常驻在记忆体中。<br/>dbus：与simple
 类似，但这个daemon 必须要在取得一个D-Bus
 的名称后，才会继续运作！因此设定这个项目时，通常也要设定BusName=
-才行！<br>idle：与simple 类似，意思是，要执行这个daemon
+才行！<br/>idle：与simple 类似，意思是，要执行这个daemon
 必须要所有的工作都顺利执行完毕后才会执行。这类的daemon
 通常是开机到最后才执行即可的服务！比较重要的项目大概是simple, forking
 与oneshot
@@ -1652,7 +1654,8 @@ Loader，亦即是grub2, spfdisk 等程序)；</p></li>
 <h3 id="开放源代码的软件安装与升级简介">21.1
 开放源代码的软件安装与升级简介</h3>
 <p>通过 configure 与 make 进行编译示意图：</p>
-<p><img src="https://linux.vbird.org/linux_basic/centos7/0520source//make_configure.gif" srcset="/img/loading.gif" lazyload></p>
+<p><img
+src="https://linux.vbird.org/linux_basic/centos7/0520source//make_configure.gif" srcset="/img/loading.gif" lazyload /></p>
 <h3 id="使用传统程序语言进行编译的简单示例">21.2
 使用传统程序语言进行编译的简单示例</h3>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">1. 编辑主程式：</span> <br>[root@study ~]# vim thanks.c <br><span class="hljs-meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span><br>int main(void)<br>&#123;<br>        printf(&quot;Hello World\n&quot;);<br>        thanks_2();<br>&#125; <br><span class="hljs-meta prompt_"># </span><span class="language-bash">上面的thanks_2(); 那一行就是呼叫副程式啦！</span><br><br>[root@study ~]# vim thanks_2.c <br><span class="hljs-meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span><br>void thanks_2(void)<br>&#123;<br>        printf(&quot;Thank you!\n&quot;);<br>&#125;<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">2. 开始将原始码编译成为可执行的binary file ：</span> <br>[root@study ~]# gcc -c thanks.c thanks_2.c <br>[root@study ~]# ll thanks*<br>-rw-r--r--. 1 root root 75 Sep 4 11:43 thanks_2.c<br>-rw-r--r--. 1 root root 1496 Sep 4 11:43 thanks_2.o   &lt;==编译产生的！<br>-rw-r--r--. 1 root root 91 Sep 4 11:42 thanks.c<br>-rw-r--r--. 1 root root 1560 Sep 4 11:43 thanks.o     &lt;==编译产生的！<br><br>[root@study ~]# gcc -o thanks thanks.o thanks_2.o <br>[root@study ~]# ll thanks* <br>-rwxr-xr-x. 1 root root 8572 Sep 4 11:44 thanks     &lt;==最终结果会产生这玩意儿<br><span class="hljs-meta prompt_"></span><br><span class="hljs-meta prompt_"># </span><span class="language-bash">3. 执行一下这个档案：</span> <br>[root@study ~]# ./thanks<br>Hello World<br>Thank you!<br></code></pre></td></tr></table></figure>
@@ -1939,6 +1942,12 @@ files) 时，可以使用这个参数来直接覆盖档案。 危险性：
                 <div class="post-prevnext my-3">
                   <article class="post-prev col-6">
                     
+                    
+                      <a href="/2023/02/23/Hexo-%E5%8D%9A%E5%AE%A2%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" title="Hexo 博客无法显示图片解决方法">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Hexo 博客无法显示图片解决方法</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
                     
                   </article>
                   <article class="post-next col-6">

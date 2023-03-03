@@ -4,6 +4,25 @@
   
   
   <entry>
+    <title>Ubuntu 22.04 安装 QEMU 流程</title>
+    <link href="/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/"/>
+    <url>/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/</url>
+    
+    <content type="html"><![CDATA[<p><a href="https://www.qemu.org/download/">QEMU</a>官方网站已经提供了安装 QEMU 的教程，按照其内容，Ubuntu 平台仅需执行<code>sudo apt-get install qemu</code>命令即可。但是，在实际安装过程中遇到了错误且未能解决，于是采用源码方式安装。以QEMU 7.2.0 版本为例，介绍安装流程。</p><ol type="1"><li><p>下载源码并解压缩</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">wget https://download.qemu.org/qemu-7.2.0.tar.xz</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">tar xvJf qemu-7.2.0.tar.xz</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">cd</span> qemu-7.2.0</span><br></code></pre></td></tr></table></figure></li><li><p>编译前预处理</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">./configure</span><br></code></pre></td></tr></table></figure></li><li><p>处理报错</p><p>执行上述命令后，可能会出现以下报错：</p><center><img src="/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/image-20230303200128068.png" class=""></center><p>报错原因是系统缺少 QEMU 需要的相关依赖。执行以下命令安装依赖：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install ninja-build</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install zlib1g zlib1g-dev</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install libglib2.0-dev</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install libpixman-1-dev</span><br></code></pre></td></tr></table></figure><p>重新执行：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">./configure</span><br></code></pre></td></tr></table></figure></li><li><p>make 编译</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">make</span><br></code></pre></td></tr></table></figure><p>执行上述命令后，开始漫长的编译过程，请耐心等待。</p></li><li><p>安装</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo make install</span><br></code></pre></td></tr></table></figure></li><li><p>验证</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">qemu-</span><br></code></pre></td></tr></table></figure><p>输入 <code>qemu-</code> 后按两次 TAB键，若出现类似下面的输出，则安装成功。</p><center><img src="/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/image-20230303214138504.png" class="" title="image-20230303214138504"></center></li></ol>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>QEMU</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>Hexo 博客无法显示图片解决方法</title>
     <link href="/2023/02/23/Hexo-%E5%8D%9A%E5%AE%A2%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/"/>
     <url>/2023/02/23/Hexo-%E5%8D%9A%E5%AE%A2%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/</url>

@@ -16,26 +16,27 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="Hexo 官方提供了很多在 Markdown 中 插入图片 的方式，其语法主要可分为两种：  Markdown 原生支持的语法 ![图片描述](图片路径) 其中，图片路径不可以使用相对于本地系统的绝对路径，例如：C:&#x2F;Users&#x2F;admin&#x2F;Pictures&#x2F;a.jpg ，这样 Hexo 在生成静态网页时无法正确解析图片，从而导致图片无法在网页正常显示。 正确的图片路径有以下两种形">
+    <meta name="description" content="QEMU 官方网站已经提供了安装 QEMU 的教程，按照其内容，Ubuntu 平台仅需执行 sudo apt-get install qemu 命令即可。但是，在实际安装过程中遇到了错误且未能解决，于是采用源码方式安装。以 QEMU 7.2.0 版本为例，介绍安装流程。  下载源码并解压缩 123$ wget https:&#x2F;&#x2F;download.qemu.org&#x2F;qemu-7.2.0.">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo 博客无法显示图片解决方法">
-<meta property="og:url" content="https://arcsin2.cloud/2023/02/23/Hexo-%E5%8D%9A%E5%AE%A2%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:title" content="Ubuntu 22.04 安装 QEMU 流程">
+<meta property="og:url" content="https://arcsin2.cloud/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="Hexo 官方提供了很多在 Markdown 中 插入图片 的方式，其语法主要可分为两种：  Markdown 原生支持的语法 ![图片描述](图片路径) 其中，图片路径不可以使用相对于本地系统的绝对路径，例如：C:&#x2F;Users&#x2F;admin&#x2F;Pictures&#x2F;a.jpg ，这样 Hexo 在生成静态网页时无法正确解析图片，从而导致图片无法在网页正常显示。 正确的图片路径有以下两种形">
+<meta property="og:description" content="QEMU 官方网站已经提供了安装 QEMU 的教程，按照其内容，Ubuntu 平台仅需执行 sudo apt-get install qemu 命令即可。但是，在实际安装过程中遇到了错误且未能解决，于是采用源码方式安装。以 QEMU 7.2.0 版本为例，介绍安装流程。  下载源码并解压缩 123$ wget https:&#x2F;&#x2F;download.qemu.org&#x2F;qemu-7.2.0.">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://arcsin2.cloud/imgs/0_0.jpg">
-<meta property="article:published_time" content="2023-02-23T01:12:36.000Z">
-<meta property="article:modified_time" content="2023-02-23T03:12:19.973Z">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/image-20230303200128068.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/image-20230303214138504.png">
+<meta property="article:published_time" content="2023-03-03T11:56:34.000Z">
+<meta property="article:modified_time" content="2023-03-03T13:42:00.300Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="Hexo">
+<meta property="article:tag" content="QEMU">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://arcsin2.cloud/imgs/0_0.jpg">
+<meta name="twitter:image" content="https://arcsin2.cloud/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/image-20230303200128068.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Hexo 博客无法显示图片解决方法 - arcsin2 的个人博客</title>
+  <title>Ubuntu 22.04 安装 QEMU 流程 - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -228,7 +229,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Hexo 博客无法显示图片解决方法"></span>
+            <span id="subtitle" data-typed-text="Ubuntu 22.04 安装 QEMU 流程"></span>
           
         </div>
 
@@ -239,8 +240,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-02-23 09:12" pubdate>
-          2023年2月23日 上午
+        <time datetime="2023-03-03 19:56" pubdate>
+          2023年3月3日 晚上
         </time>
       </span>
     
@@ -251,7 +252,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1k 字
+          544 字
         
       </span>
     
@@ -262,7 +263,7 @@
         
         
         
-          4 分钟
+          2 分钟
         
       </span>
     
@@ -300,61 +301,43 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Hexo 博客无法显示图片解决方法</h1>
+            <h1 style="display: none">Ubuntu 22.04 安装 QEMU 流程</h1>
             
             
               <div class="markdown-body">
                 
-                <p>Hexo 官方提供了很多在 Markdown 中 <a
-target="_blank" rel="noopener" href="https://hexo.io/zh-cn/docs/asset-folders#使用-Markdown-嵌入图片">插入图片</a>
-的方式，其语法主要可分为两种：</p>
+                <p><a target="_blank" rel="noopener" href="https://www.qemu.org/download/">QEMU</a>
+官方网站已经提供了安装 QEMU 的教程，按照其内容，Ubuntu 平台仅需执行
+<code>sudo apt-get install qemu</code>
+命令即可。但是，在实际安装过程中遇到了错误且未能解决，于是采用源码方式安装。以
+QEMU 7.2.0 版本为例，介绍安装流程。</p>
 <ol type="1">
-<li><p>Markdown 原生支持的语法</p>
-<p><code>![图片描述](图片路径)</code></p>
-<p>其中，图片路径不可以使用相对于本地系统的绝对路径，例如：<code>C:/Users/admin/Pictures/a.jpg</code>
-，这样 Hexo
-在生成静态网页时无法正确解析图片，从而导致图片无法在网页正常显示。</p>
-<p>正确的图片路径有以下两种形式：</p>
-<ul>
-<li><p>相对于博客的根目录：<code>/imgs/a.jpg</code>
-，使用这种方式需要在博客 <code>source</code> 目录下新建
-<code>imgs</code> 文件夹，并在 <code>imgs</code>
-文件夹中存放文章需要使用的图片。</p>
-<p>例如，使用：<code>/imgs/0_0.jpg</code>
-语法，可显示如下图片：</p></li>
-</ul>
-<p><img src="/imgs/0_0.jpg" srcset="/img/loading.gif" lazyload /></p>
-<ul>
-<li><p>相对于某篇博客的相对路径：<code>./article_1/a.jpg</code>
-。使用这种方式需要在 Hexo 配置文件 <code>_config.yaml</code> 将
-<code>post_asset_folder</code> 选项设为 <code>true</code> 。然后使用
-<code>hexo new xxx</code> 新建文章时，Hexo 便会在
-<code>source/_posts</code>
-目录下新建与文章同名的文件夹，然后将文章需要使用的图片放在该文件夹中，通过相对路径引用即可。</p>
-<p>例如，使用：<code>Hexo-博客无法显示图片解决方法/0_1.jpg</code>
-语法，可显示如下图片：</p>
-<img src="/2023/02/23/Hexo-%E5%8D%9A%E5%AE%A2%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/0_1.jpg" srcset="/img/loading.gif" lazyload class=""></li>
-</ul></li>
-<li><p>Hexo 特有的 asset_img 标签语法</p>
-<p>Hexo 推荐使用的图片引用方式如下：</p>
-<p><code>&#123;% asset_img example.jpg This is an example image %&#125;</code></p>
-<p>但是，这种语法无法在 Markdown
-编辑器中正常显示图片，会影响我们在编辑器中查看文章内容，个人不推荐这种方式。</p></li>
+<li><p>下载源码并解压缩</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">wget https://download.qemu.org/qemu-7.2.0.tar.xz</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">tar xvJf qemu-7.2.0.tar.xz</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">cd</span> qemu-7.2.0</span><br></code></pre></td></tr></table></figure></li>
+<li><p>编译前预处理</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">./configure</span><br></code></pre></td></tr></table></figure></li>
+<li><p>处理报错</p>
+<p>执行上述命令后，可能会出现以下报错：</p>
+<center>
+<img src="/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/image-20230303200128068.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<p>报错原因是系统缺少 QEMU 需要的相关依赖。执行以下命令安装依赖：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install ninja-build</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install zlib1g zlib1g-dev</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install libglib2.0-dev</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt-get install libpixman-1-dev</span><br></code></pre></td></tr></table></figure>
+<p>重新执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">./configure</span><br></code></pre></td></tr></table></figure></li>
+<li><p>make 编译</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">make</span><br></code></pre></td></tr></table></figure>
+<p>执行上述命令后，开始漫长的编译过程，请耐心等待。</p></li>
+<li><p>安装</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo make install</span><br></code></pre></td></tr></table></figure></li>
+<li><p>验证</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">qemu-</span><br></code></pre></td></tr></table></figure>
+<p>输入 <code>qemu-</code> 后按两次 TAB
+键，若出现类似下面的输出，则安装成功。</p>
+<center>
+<img src="/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/image-20230303214138504.png" srcset="/img/loading.gif" lazyload class="" title="image-20230303214138504">
+</center></li>
 </ol>
-<p>经过个人探索，得到以下比较好用的解决方法，能够同时在 Hexo 博客和
-Markdown 编辑器中正确显示图片。</p>
-<p>首先，根据 Hexo 官方文档，在 <code>_config.yaml</code> 将
-<code>post_asset_folder</code> 选项设为 <code>true</code>
-。然后，安装插件 <code>hexo-image-link</code>，安装命令为：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ npm install hexo-image-link --save<br></code></pre></td></tr></table></figure>
-<p>如果安装了 <code>hexo-asset-img</code> 插件，需要将其卸载：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">$ npm uninstall --save hexo-asset-img<br></code></pre></td></tr></table></figure>
-<p>然后，配置 Markdown 编辑器 Typora 如下：</p>
-<img src="/2023/02/23/Hexo-%E5%8D%9A%E5%AE%A2%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/image-20230223101720679.png" srcset="/img/loading.gif" lazyload class="" title="Typora 配置">
-<p>配置完成后，在 Typora 中粘贴图片时，Typora
-就会自动将图片保存到与文件名同名的目录下，并在 Markdown
-中使用相对路径引用图片。这样，我们就可以在 Hexo 博客和 Typora
-中同时看到图片。</p>
 
                 
               </div>
@@ -363,32 +346,11 @@ Markdown 编辑器中正确显示图片。</p>
             <div>
               <div class="post-metas my-3">
   
-    <div class="post-meta mr-3 d-flex align-items-center">
-      <i class="iconfont icon-category"></i>
-      
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E5%8D%9A%E5%AE%A2/" class="category-chain-item">博客</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-    </div>
-  
   
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/Hexo/">#Hexo</a>
+        <a href="/tags/QEMU/">#QEMU</a>
       
     </div>
   
@@ -400,8 +362,8 @@ Markdown 编辑器中正确显示图片。</p>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Hexo 博客无法显示图片解决方法</div>
-      <div>https://arcsin2.cloud/2023/02/23/Hexo-博客无法显示图片解决方法/</div>
+      <div>Ubuntu 22.04 安装 QEMU 流程</div>
+      <div>https://arcsin2.cloud/2023/03/03/Ubuntu-22-04-安装-QEMU-流程/</div>
     </div>
     <div class="license-meta">
       
@@ -413,7 +375,7 @@ Markdown 编辑器中正确显示图片。</p>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2023年2月23日</div>
+          <div>2023年3月3日</div>
         </div>
       
       
@@ -457,18 +419,12 @@ Markdown 编辑器中正确显示图片。</p>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/" title="Ubuntu 22.04 安装 QEMU 流程">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Ubuntu 22.04 安装 QEMU 流程</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2023/02/20/%E9%B8%9F%E5%93%A5%E7%9A%84-Linux-%E7%A7%81%E6%88%BF%E8%8F%9C%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0/" title="鸟哥的 Linux 私房菜阅读笔记">
-                        <span class="hidden-mobile">鸟哥的 Linux 私房菜阅读笔记</span>
+                      <a href="/2023/02/23/Hexo-%E5%8D%9A%E5%AE%A2%E6%97%A0%E6%B3%95%E6%98%BE%E7%A4%BA%E5%9B%BE%E7%89%87%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/" title="Hexo 博客无法显示图片解决方法">
+                        <span class="hidden-mobile">Hexo 博客无法显示图片解决方法</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

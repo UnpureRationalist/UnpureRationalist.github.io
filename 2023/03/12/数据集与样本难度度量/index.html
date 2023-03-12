@@ -1,0 +1,1032 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文分享关于数据集与样本难度度量的论文，具体为：  A Theory of Usable Information Under Computational Constraints Understanding Dataset Difficulty with \(\mathcal{V}\)-Usable Information  主要内容来自于组会分享，slides 可点此查看。 1.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据集与样本难度度量">
+<meta property="og:url" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本文分享关于数据集与样本难度度量的论文，具体为：  A Theory of Usable Information Under Computational Constraints Understanding Dataset Difficulty with \(\mathcal{V}\)-Usable Information  主要内容来自于组会分享，slides 可点此查看。 1.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312222959237.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312223006884.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312223134757.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312223458019.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312225113429.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312225802256.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312225854120.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312230205356.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312230304658.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312230341812.png">
+<meta property="article:published_time" content="2023-03-12T14:19:00.000Z">
+<meta property="article:modified_time" content="2023-03-12T15:09:37.802Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="dataset &amp; example difficulty">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312222959237.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>数据集与样本难度度量 - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="数据集与样本难度度量"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-03-12 22:19" pubdate>
+          2023年3月12日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          19 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">数据集与样本难度度量</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>本文分享关于数据集与样本难度度量的论文，具体为：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2002.10689">A Theory of Usable
+Information Under Computational Constraints</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://proceedings.mlr.press/v162/ethayarajh22a/ethayarajh22a.pdf">Understanding
+Dataset Difficulty with <span
+class="math inline">\(\mathcal{V}\)</span>-Usable Information</a></li>
+</ul>
+<p>主要内容来自于组会分享，slides 可<a
+href="Dataset%20&amp;%20Example%20Difficulty.pdf">点此查看</a>。</p>
+<h2 id="香农互信息">1. 香农互信息</h2>
+<p>在概率论和信息论中，两个随机变量的互信息（Mutual
+Information，MI）度量了两个变量之间相互依赖的程度。具体来说，对于两个随机变量，MI是一个随机变量由于已知另一个随机变量而减少的“信息量”（单位通常为比特）。</p>
+<p>离散随机变量 X 和 Y 的互信息可以计算为：</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312222959237.png" srcset="/img/loading.gif" lazyload class="" title="离散变量香农互信息定义">
+</center>
+<p>其中 p(x, y) 是 <em>X</em> 和 <em>Y</em> 的联合概率质量函数，而 p(x)
+和 p(y) 分别是 <em>X</em> 和 <em>Y</em> 的边缘概率质量函数。</p>
+<p>互信息又可以等价地表示成：</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312223006884.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<p>但是，在机器学习场景下，香农互信息与我们目前的一些经验性认识存在冲突，比如下面图片展示的例子：</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312223134757.png" srcset="/img/loading.gif" lazyload class="" title="明文与密文与标签的香农互信息相等">
+</center>
+<p>在香农互信息理论下，<em>明文与标注的互信息</em> 和
+<em>密文与标注的互信息</em>
+相等。但是，对于我们人类而言，从明文能够轻易识别出标注；而不能够根据密文判断标注。即如下图所示：</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312223458019.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<p>为了解决这一冲突，作者提出了新的概念：考虑计算约束下的互信息。</p>
+<h2 id="对香农互信息的扩展定义mathcalv-information">2.
+对香农互信息的扩展定义——<span
+class="math inline">\(\mathcal{V}\)</span>-Information</h2>
+<p>首先，作者引入三个概念：</p>
+<ol type="1">
+<li><p><strong>predictive family</strong></p>
+<p>Let <span class="math inline">\(\Omega=\{f: \mathcal{X}
+\cup\{\varnothing\} \rightarrow \mathcal{P}(\mathcal{Y})\}\)</span>. We
+say that <span class="math inline">\(\mathcal{V} \subseteq
+\Omega\)</span> is a predictive family if it satisfies <span
+class="math display">\[
+\forall f \in \mathcal{V}, \forall P \in \operatorname{range}(f), \quad
+\exists f^{\prime} \in \mathcal{V}, \quad \text { s.t. } \quad \forall x
+\in \mathcal{X}, f^{\prime}[x]=P, f^{\prime}[\varnothing]=P
+\]</span></p></li>
+<li><p><strong>predictive conditional <span
+class="math inline">\(\mathcal{V}\)</span>-entropy</strong></p>
+<p>Let <span class="math inline">\(X, Y\)</span> be two random variables
+taking values in <span class="math inline">\(\mathcal{X} \times
+\mathcal{Y}\)</span>, and <span
+class="math inline">\(\mathcal{V}\)</span> be a predictive family. Then
+the predictive conditional <span
+class="math inline">\(\mathcal{V}\)</span>-entropy is defined as <span
+class="math display">\[
+\begin{aligned}
+H_{\mathcal{V}}(Y \mid X) &amp; =\inf _{f \in \mathcal{V}}
+\mathbb{E}_{x, y \sim X, Y}[-\log f[x](y)] \\
+H_{\mathcal{V}}(Y \mid \varnothing) &amp; =\inf _{f \in \mathcal{V}}
+\mathbb{E}_{y \sim Y}[-\log f[\varnothing](y)]
+\end{aligned}
+\]</span> We additionally call <span
+class="math inline">\(H_{\mathcal{V}}(Y \mid \varnothing)\)</span> the
+<span class="math inline">\(\mathcal{V}\)</span>-entropy, and also
+denote it as <span class="math inline">\(H_{\mathcal{V}}(Y)\)</span>
+.</p></li>
+<li><p><strong>predictive conditional <span
+class="math inline">\(\mathcal{V}\)</span>-information</strong></p>
+<p>Let <span class="math inline">\(X, Y\)</span> be two random variables
+taking values in <span class="math inline">\(\mathcal{X} \times
+\mathcal{Y}\)</span>, and <span
+class="math inline">\(\mathcal{V}\)</span> be a predictive family. The
+predictive <span class="math inline">\(\mathcal{V}\)</span>-information
+from <span class="math inline">\(X\)</span> to <span
+class="math inline">\(Y\)</span> is defined as <span
+class="math display">\[
+I_{\mathcal{V}}(X \rightarrow Y)=H_{\mathcal{V}}(Y \mid
+\varnothing)-H_{\mathcal{V}}(Y \mid X)
+\]</span></p></li>
+</ol>
+<p><span class="math inline">\(\mathcal{V}\)</span>-information
+有以下一些性质：</p>
+<ul>
+<li><p>基本性质</p>
+<p>Let <span class="math inline">\(Y\)</span> and <span
+class="math inline">\(X\)</span> be any random variables on <span
+class="math inline">\(\mathcal{Y}\)</span> and <span
+class="math inline">\(\mathcal{X}\)</span>, and <span
+class="math inline">\(\mathcal{V}\)</span> and <span
+class="math inline">\(\mathcal{U}\)</span> be any predictive families,
+then we have</p>
+<ul>
+<li>Monotonicity: If <span class="math inline">\(\mathcal{V} \subseteq
+\mathcal{U}\)</span>, then <span
+class="math inline">\(H_{\mathcal{V}}(Y) \geq H_{\mathcal{U}}(Y),
+H_{\mathcal{V}}(Y \mid X) \geq H_{\mathcal{U}}(Y \mid X)\)</span>.</li>
+<li>Non-Negativity: <span class="math inline">\(I_{\mathcal{V}}(X
+\rightarrow Y) \geq 0\)</span>.</li>
+<li>Independence: If <span class="math inline">\(X\)</span> is
+independent of <span class="math inline">\(Y, I_{\mathcal{V}}(X
+\rightarrow Y)=I_{\mathcal{V}}(Y \rightarrow X)=0\)</span>.</li>
+</ul></li>
+<li><p>数据处理不等式（与香农互信息不同）</p>
+<ul>
+<li><strong>Shannon Mutual Information</strong>: Letting <span
+class="math inline">\(t: \mathcal{X} \rightarrow \mathcal{X}\)</span> be
+any function, <span class="math inline">\(t(X)\)</span> cannot have
+higher mutual information with <span class="math inline">\(Y\)</span>
+than <span class="math inline">\(X: I(t(X) ; Y) \leq I(X ;
+Y)\)</span>.</li>
+<li><strong><span
+class="math inline">\(\mathcal{V}\)</span>-Information</strong>:
+Denoting <span class="math inline">\(t\)</span> as the decryption
+algorithm and <span class="math inline">\(\mathcal{V}\)</span> as a
+class of natural language processing functions, we have that: <span
+class="math inline">\(I_{\mathcal{V}}(t(X) \rightarrow
+Y)&gt;I_{\mathcal{V}}(X \rightarrow Y) \approx 0\)</span>.</li>
+</ul></li>
+<li><p>不对称性（与香农互信息不同）</p>
+<p>If <span class="math inline">\(\mathcal{V}\)</span> contains all
+polynomial-time computable functions, then <span
+class="math inline">\(I_{\mathcal{V}}(X \rightarrow h(X)) \gg
+I_{\mathcal{V}}(h(X) \rightarrow X)\)</span> , where <span
+class="math inline">\(h: \mathcal{X} \rightarrow
+\mathcal{Y}\)</span>.</p></li>
+</ul>
+<p>根据 <span class="math inline">\(\mathcal{V}\)</span>-information
+的性质，我们就能够合理解释上面例子展示的问题，从而有：</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312225113429.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<p><br></p>
+<p>上面介绍的是 <span
+class="math inline">\(\mathcal{V}\)</span>-Information
+的严格定义，但是在机器学习中，我们不存在真实的分布，而是仅有从分布上采样的有限大小的数据集。下面，作者要解决如何在有限大小的数据集上估计
+<span class="math inline">\(\mathcal{V}\)</span>-Information：</p>
+<p>Let <span class="math inline">\(X, Y\)</span> be two random variables
+taking values in <span class="math inline">\(\mathcal{X},
+\mathcal{Y}\)</span> and <span
+class="math inline">\(\mathcal{D}=\left\{\left(x_i,
+y_i\right)\right\}_{i=1}^N \sim X, Y\)</span> denotes the set of samples
+drawn from the joint distribution over <span
+class="math inline">\(\mathcal{X}\)</span> and <span
+class="math inline">\(\mathcal{Y} . \mathcal{V}\)</span> is a predictive
+family. The empirical <span
+class="math inline">\(\mathcal{V}\)</span>-information (under <span
+class="math inline">\(\mathcal{D}\)</span> ) is the following <span
+class="math inline">\(\mathcal{V}\)</span>-information under the
+empirical distribution defined via <span
+class="math inline">\(\mathcal{D}\)</span> : <span
+class="math display">\[
+\hat{I}_{\mathcal{V}}(X \rightarrow Y ; \mathcal{D})=\inf _{f \in
+\mathcal{V}} \frac{1}{|\mathcal{D}|} \sum_{y_i \in \mathcal{D}} \log
+\frac{1}{f[\varnothing]\left(y_i\right)}-\inf _{f \in \mathcal{V}}
+\frac{1}{|\mathcal{D}|} \sum_{x_i, y_i \in \mathcal{D}} \log
+\frac{1}{f\left[x_i\right]\left(y_i\right)}
+\]</span> Then we have the following PAC bound over the empirical <span
+class="math inline">\(\mathcal{V}\)</span>-information:</p>
+<p>Assume <span class="math inline">\(\forall f \in \mathcal{V}, x \in
+\mathcal{X}, y \in \mathcal{Y}, \log f[x](y) \in[-B, B]\)</span>. Then
+for any <span class="math inline">\(\delta \in(0,0.5)\)</span>, with
+probability at least <span class="math inline">\(1-2 \delta\)</span>, we
+have: <span class="math display">\[
+\left|I_{\mathcal{V}}(X \rightarrow Y)-\hat{I}_{\mathcal{V}}(X
+\rightarrow Y ; \mathcal{D})\right| \leq 4
+\mathfrak{R}_{|\mathcal{D}|}\left(\mathcal{G}_{\mathcal{V}}\right)+2 B
+\sqrt{\frac{2 \log \frac{1}{\delta}}{|\mathcal{D}|}}
+\]</span> where we define the function family <span
+class="math inline">\(\mathcal{G}_{\mathcal{V}}=\{g \mid g(x, y)=\log
+f[x](y), f \in \mathcal{V}\}\)</span>, and <span
+class="math inline">\(\mathfrak{R}_N(\mathcal{G})\)</span> denotes the
+Rademacher complexity of <span
+class="math inline">\(\mathcal{G}\)</span> with sample number <span
+class="math inline">\(N\)</span>.</p>
+<h2 id="使用-mathcalv-information-评估数据集和样本难度">3. 使用 <span
+class="math inline">\(\mathcal{V}\)</span>-Information
+评估数据集和样本难度</h2>
+<p>利用上面介绍的 <span
+class="math inline">\(\mathcal{V}\)</span>-Information
+工具并进行实验，能够发现一些有趣的现象。</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312225802256.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<ul>
+<li>大模型 accuracy 与<span
+class="math inline">\(\mathcal{V}\)</span>-Usable Information
+都更高，因为提取更多的信息让识别更容易</li>
+<li><span class="math inline">\(\mathcal{V}\)</span>-Information 相比
+accuracy 对过拟合更加敏感</li>
+</ul>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312225854120.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<ul>
+<li>提供了衡量不同数据集难度的方法</li>
+</ul>
+<p>然后，引入评估样本点 <span
+class="math inline">\(\mathcal{V}\)</span>-Information （Pointwise <span
+class="math inline">\(\mathcal{V}\)</span>-Information，PVI）的方法：</p>
+<p>Given random variables <span class="math inline">\(X, Y\)</span> and
+a predictive family <span class="math inline">\(\mathcal{V}\)</span>,
+the pointwise <span
+class="math inline">\(\mathcal{V}\)</span>-information (PVI) of an
+instance <span class="math inline">\((x, y)\)</span> is <span
+class="math display">\[
+\operatorname{PVI}(x \rightarrow y)=-\log _2 g[\varnothing](y)+\log _2
+g^{\prime}[x](y)
+\]</span> where <span class="math inline">\(g \in \mathcal{V}\)</span>
+s.t. <span class="math inline">\(\mathbb{E}[-\log
+g[\varnothing](Y)]=H_{\mathcal{V}}(Y)\)</span> and <span
+class="math inline">\(g^{\prime} \in \mathcal{V}\)</span> s.t. <span
+class="math inline">\(\mathbb{E}\left[-\log
+g^{\prime}[X](Y)\right]=H_{\mathcal{V}}(Y \mid X)\)</span>.</p>
+<p>PVI is to <span
+class="math inline">\(\mathcal{V}\)</span>-information what PMI is to
+Shannon information: <span class="math display">\[
+\begin{aligned}
+I(X ; Y) &amp; =\mathbb{E}_{x, y \sim P(X, Y)}[\operatorname{PMI}(x, y)]
+\\
+I_{\mathcal{V}}(X \rightarrow Y) &amp; =\mathbb{E}_{x, y \sim P(X,
+Y)}[\operatorname{PVI}(x \rightarrow y)]
+\end{aligned}
+\]</span></p>
+<p>完整算法流程如下：</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312230205356.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<p><br></p>
+<p>然后，利用 PVI 进行实验，同样可以观察到一些有趣的现象：</p>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312230304658.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<ul>
+<li>PVI 最低的样本中存在不少标注错误</li>
+</ul>
+<center>
+<img src="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/image-20230312230341812.png" srcset="/img/loading.gif" lazyload class="">
+</center>
+<ul>
+<li>模型能够正确分类样本的 PVI 阈值在 0.5 左右</li>
+</ul>
+<p><br></p>
+<p>此外，原论文中还展示了一些有趣的实验现象，这里不再赘述，具体请参阅原论文。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Deep-Learning/" class="category-chain-item">Deep Learning</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Deep-Learning/%E8%AF%BB%E8%AE%BA%E6%96%87/" class="category-chain-item">读论文</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/dataset-example-difficulty/">#dataset & example difficulty</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>数据集与样本难度度量</div>
+      <div>https://arcsin2.cloud/2023/03/12/数据集与样本难度度量/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年3月12日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/03/03/Ubuntu-22-04-%E5%AE%89%E8%A3%85-QEMU-%E6%B5%81%E7%A8%8B/" title="Ubuntu 22.04 安装 QEMU 流程">
+                        <span class="hidden-mobile">Ubuntu 22.04 安装 QEMU 流程</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

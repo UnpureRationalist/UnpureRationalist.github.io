@@ -1,0 +1,1017 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文介绍 Few-shot Font Generation 的基本概念和两篇论文。 两篇论文为：  DG-Font: Deformable Generative Networks for Unsupervised Font Generation CF-Font: Content Fusion for Few-shot Font Generation  也可参考整理的 slides。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="小样本字体生成">
+<meta property="og:url" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本文介绍 Few-shot Font Generation 的基本概念和两篇论文。 两篇论文为：  DG-Font: Deformable Generative Networks for Unsupervised Font Generation CF-Font: Content Fusion for Few-shot Font Generation  也可参考整理的 slides。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701221526835.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701222142980.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223602085.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223612919.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223620435.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223627704.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223642827.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223940563.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224008919.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224503851.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225207555.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225120502.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230455898.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230621924.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230641799.png">
+<meta property="article:published_time" content="2023-07-01T09:19:03.000Z">
+<meta property="article:modified_time" content="2023-07-01T15:11:19.333Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="Few-shot Font Gereration">
+<meta property="article:tag" content="FFG">
+<meta property="article:tag" content="字体生成">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701221526835.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>小样本字体生成 - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="小样本字体生成"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-07-01 17:19" pubdate>
+          2023年7月1日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          15 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">小样本字体生成</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>本文介绍 Few-shot Font Generation 的基本概念和两篇论文。</p>
+<p>两篇论文为：</p>
+<ul>
+<li><a
+target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2021/papers/Xie_DG-Font_Deformable_Generative_Networks_for_Unsupervised_Font_Generation_CVPR_2021_paper.pdf">DG-Font:
+Deformable Generative Networks for Unsupervised Font Generation</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2023/papers/Wang_CF-Font_Content_Fusion_for_Few-Shot_Font_Generation_CVPR_2023_paper.pdf">CF-Font:
+Content Fusion for Few-shot Font Generation</a></li>
+</ul>
+<p>也可参考整理的 <a href="FFG.pdf">slides</a>。</p>
+<h2 id="背景">1. 背景</h2>
+<p>不同于英语，由 ASCII 码（8 位二进制，且仅使用其中 7
+位）即可表示绝大多数常用字母和符号。中日韩语言由上万个字组成，因此，想构建一个新字体往往涉及大量的工作，需要专业字体设计人员一个字一个字地设计。小样本字体生成（Few-shot
+Font Generation,
+FFG）就是在这样的背景下提出的，它希望在给定标准内容字体（通常为宋体或楷体）的情况下，使用少量的风格字（如自己的手写体或新设计字体），就可以由模型自动生成目标风格的其他字。这样，我们仅需花费少量精力设计几个风格字体，其余字由模型自动生成即可，大大降低劳动量。</p>
+<p>在 GAN 提出后，FFG
+领域取得了许多不错的进展。目前的方法也大多基于生成对抗模型进行字体生成。此外，FFG
+领域的一个核心问题就是如何将文字的内容（content）与风格（style）解耦合，模型的不同分支能够分别学习到内容和风格的特征表示。在推理时，给定几个风格字体（称为：reference），风格编码器基于这些
+reference
+提取特征并进行平均，作为目标字体的风格特征向量。在已有的内容字体上的每个字轮流使用特征编码器提取内容特征，将内容特征与风格特征融合，输入解码器，即可生成目标字体。</p>
+<p>下面，分别介绍两篇已有的工作。</p>
+<h2 id="df-font">2. DF-Font</h2>
+<p>本文的 motivation
+是：不同的字体之间，其笔画、偏旁等常常不在相同的位置，而是有一个区域变换。传统的卷积只能感知固定区域的像素并逐层提取语义信息；而变形卷积能够自动学习偏移量（offset），使卷积核的感受野不再局限于固定的区域，进而能够学习到更好的内容特征表示。下面介绍具体做法。</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701221526835.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701221526835">
+</center>
+<p><br></p>
+<p>由上面论文主图可以看出，模型整体分为生成器和判别器两个部分，即典型的
+GAN 结构。具体地，生成器包括两个分支：</p>
+<ul>
+<li>上面为 style encoder，给定字体图片，将生成图片的风格特征向量</li>
+<li>下面为 content
+encoder，给定字体图片，将生成图片的内容特征图；同时，后面紧跟着
+decoder，将内容和风格表示融合，生成目标字体图片</li>
+<li>下面的内容表示及生成分支还有两个 FDSC
+模块，其应用了变形卷积，图示和具体介绍如下：</li>
+</ul>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701222142980.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701222142980">
+</center>
+<p>可变形卷积实际上由两个卷积核构成：</p>
+<ul>
+<li><p>第一个卷积核输入是 content encoder 的特征图 <span
+class="math inline">\(K_c\)</span> 以及后面 mixer 的特征图 <span
+class="math inline">\(K_s\)</span>；生成 offset 和 mask，即： <span
+class="math display">\[
+\Theta=f_\theta\left(K_s, K_c\right)
+\]</span> 其中，<span class="math inline">\(f_\theta\)</span>
+表示卷积层， <span class="math inline">\(\Theta=\left\{\Delta p_k,
+\Delta m_k\right.\)</span> <span class="math inline">\(|k=1, \cdots,|
+\mathcal{R} \mid\}\)</span> 为卷积层输出的 offset 和 mask，<span
+class="math inline">\(\mathcal{R}=\{(-1,-1),(-1,0),
+\cdots,(0,1),(1,1)\}\)</span> 表示普通卷积的 offset；</p></li>
+<li><p>输出 offset 和 mask 后，后续的卷积层 <span
+class="math inline">\(f_{DC}\)</span> 将输出特征图 <span
+class="math inline">\(K_c^{\prime}\)</span> <span
+class="math display">\[
+K_c^{\prime}=f_{D C}\left(K_c, \Theta\right)
+\]</span> 此时，变形卷积 <span class="math inline">\(f_{D
+C}(\cdot)\)</span> 每个像素的计算公式可表示为： <span
+class="math display">\[
+K_c^{\prime}(p)=\sum_{k=1}^{\mathcal{R}} w\left(p_k\right) \cdot
+x\left(p+p_k+\Delta p_k\right) \cdot \Delta m_k
+\]</span></p></li>
+</ul>
+<p>然后，介绍损失函数设计，共有 4 个部分：</p>
+<ul>
+<li><p>对抗损失：即 GAN 的损失，用来保证生成逼真的图像：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223602085.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223602085">
+</center></li>
+<li><p>内容一致性损失：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223612919.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223612919">
+</center></li>
+<li><p>图像重构损失：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223620435.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223620435">
+</center></li>
+<li><p>偏移量归一化损失：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223627704.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223627704">
+</center></li>
+</ul>
+<p>总损失表示为：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223642827.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223642827">
+</center>
+<p>然后是实验结果：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223940563.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223940563">
+</center>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224008919.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701224008919">
+</center>
+<p><br></p>
+<p>相比之前方法，本文方法在 unseen fonts 上所有指标表现最好；在 seen
+fonts 上，感知性指标表现最好，像素性指标则一般。</p>
+<h2 id="cf-font">3. CF-Font</h2>
+<p>本文是对上篇论文的改进，其主要贡献在于：提出了内容融合模块（Content
+Fusion Module），让模型学得更好的内容表示。此外，在 loss
+及风格特征向量的表示上也有改进，下面具体介绍。</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224503851.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701224503851">
+</center>
+<p><br></p>
+<p>首先是主图，可以发现和前篇文章的确差不多。多出的是 Content Fusion
+Module 和 Iterative Style-vector Refinement，下面分别介绍。</p>
+<p>传统的内容字体选取由两种方式：</p>
+<ul>
+<li>对所有目标字体，都选取宋体作为 content font（下图黄色线）</li>
+<li>对给定目标字体，从候选集合中选择与目标字体最接近的字体作为 content
+font（下图红色线）</li>
+</ul>
+<p>本文则提出了一种新方法，其从可选的 <span
+class="math inline">\(N\)</span>
+个字体中提取特征图，进行聚类，聚类中心设置为 <span
+class="math inline">\(M\)</span> 个，选择距离聚类中心最近的 <span
+class="math inline">\(M\)</span> 个字体作为基字体（basis
+font）；然后，对于给定的目标字体，计算其与 basis fonts 的相似度，经过
+softmax
+函数后赋予权重；权重与基字体相乘并求和，得到全新的内容特征图表示方式，公式表示如下：</p>
+<ol type="1">
+<li><p>聚类 <span class="math display">\[
+\begin{aligned}
+\boldsymbol{C}_i &amp; =f_{c e}\left(\boldsymbol{I}_i\right),{ }^1 \\
+\boldsymbol{d}_i &amp; =\left(d_{i 1}, d_{i 2}, \ldots, d_{i N}\right),
+\quad d_{i j}=\left\|\boldsymbol{C}_i-\boldsymbol{C}_j\right\|_1, \\
+\boldsymbol{e}_i &amp; =\sigma\left(\boldsymbol{d}_i\right), \\
+\mathcal{B} &amp;
+=\operatorname{Cluster}\left(M,\left\{\boldsymbol{e}_1,
+\boldsymbol{e}_2, \ldots, \boldsymbol{e}_N\right\}\right),
+\end{aligned}
+\]</span></p></li>
+<li><p>计算权重 <span class="math display">\[
+\begin{aligned}
+\boldsymbol{d}_t^{\prime} &amp; =\left(d_{t 1}, d_{t 2}, \ldots, d_{t
+M}\right), \quad d_{t
+m}=\left\|\boldsymbol{C}_t-\boldsymbol{C}_m\right\|_1, \\
+\boldsymbol{w}_t &amp; =\sigma\left(-\boldsymbol{d}_t^{\prime} /
+\tau\right),
+\end{aligned}
+\]</span></p></li>
+<li><p>得到新特征表示 <span class="math display">\[
+\boldsymbol{C}_t^{\prime}=\sum_{m \in \mathcal{B}} w_{t m} \cdot
+\boldsymbol{C}_m
+\]</span></p></li>
+</ol>
+<p>示意图如下：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225207555.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701225207555">
+</center>
+<p>此外，提出了一个新的 loss，用来在 generated image 和 ground-truth
+image 的投影分类后的分布施加限制：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225120502.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701225120502">
+</center>
+<p><br></p>
+<p>公式表示为： <span class="math display">\[
+\mathcal{L}_p(\boldsymbol{Y}, \hat{\boldsymbol{Y}})=\frac{1}{P}
+\sum_{p=1}^P \mathcal{L}_{1 d}\left(\phi_p(\boldsymbol{Y}),
+\phi_p(\hat{\boldsymbol{Y}})\right),
+\]</span> <span class="math inline">\(\mathcal{L}_{1 d}\)</span>
+表示两个分布之间的差异，可选用推土机距离或者 KL 散度，分布表示为： <span
+class="math display">\[
+\begin{aligned}
+\mathcal{L}_{p c-w d l}(\boldsymbol{Y}, \hat{\boldsymbol{Y}}) &amp;
+=\frac{1}{P}
+\sum_{p=1}^P\left\|\frac{\Lambda\left(\phi_p(\boldsymbol{Y})\right)}{\sum
+\phi_p(\boldsymbol{Y})}-\frac{\Lambda\left(\phi_p(\hat{\boldsymbol{Y}})\right)}{\sum
+\phi_p(\hat{\boldsymbol{Y}})}\right\| \\
+\mathcal{L}_{p c-k l}(\boldsymbol{Y}, \hat{\boldsymbol{Y}}) &amp;
+=\frac{1}{P} \sum_{p=1}^P \mathbf{K
+L}\left(\frac{\phi_p(\boldsymbol{Y})}{\sum
+\phi_p(\boldsymbol{Y})}-\frac{\phi_p(\hat{\boldsymbol{Y}})}{\sum
+\phi_p(\hat{\boldsymbol{Y}})}\right),
+\end{aligned}
+\]</span> 其余损失与上文相同，总损失函数表示为： <span
+class="math display">\[
+\begin{array}{r}
+\mathcal{L}=\mathcal{L}_{a d v}+\lambda_{\text {img
+}}\left(\mathcal{L}_{\text {img }}+\lambda_{\text {pll }}
+\mathcal{L}_{\text {pcl }}\right) \\
++\lambda_{\text {cnt }} \mathcal{L}_{\text {cnt }}+\lambda_{\text
+{offset }} \mathcal{L}_{\text {offset }},
+\end{array}
+\]</span></p>
+<p>在推理阶段，初始化风格特征向量为已有的几个 reference image
+特征向量的均值： <span class="math display">\[
+\boldsymbol{s}_t^{\prime}=\frac{1}{Q} \sum_{q=1}^Q f_{s
+e}\left(\boldsymbol{I}_t^q\right)
+\]</span>
+然后，设置该特征向量为可学习的，并冻结模型其他部分的参数，使用重构损失微调大约
+10 个 epoch：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230455898.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701230455898">
+</center>
+<p>使用最终微调后的特征向量作为推理时使用的风格特征向量。</p>
+<p>最后是实验：</p>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230621924.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701230621924">
+</center>
+<center>
+<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230641799.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701230641799">
+</center>
+<p><br></p>
+<p>在绝大多数指标上，本文方法均超过已有方法。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Deep-Learning/" class="category-chain-item">Deep Learning</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Deep-Learning/%E8%AF%BB%E8%AE%BA%E6%96%87/" class="category-chain-item">读论文</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Few-shot-Font-Gereration/">#Few-shot Font Gereration</a>
+      
+        <a href="/tags/FFG/">#FFG</a>
+      
+        <a href="/tags/%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/">#字体生成</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>小样本字体生成</div>
+      <div>https://arcsin2.cloud/2023/07/01/小样本字体生成/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年7月1日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/05/25/LFS%E6%89%A9%E5%AE%B9/" title="使用Git LFS管理大文件及GitHub LFS扩容">
+                        <span class="hidden-mobile">使用Git LFS管理大文件及GitHub LFS扩容</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

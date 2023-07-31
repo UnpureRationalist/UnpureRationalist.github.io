@@ -16,42 +16,27 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="本文介绍 Few-shot Font Generation 的基本概念和两篇论文。 两篇论文为：  DG-Font: Deformable Generative Networks for Unsupervised Font Generation CF-Font: Content Fusion for Few-shot Font Generation  也可参考整理的 slides。">
+    <meta name="description" content="如何方便、快捷地在 Windows 和 Linux 两个操作系统切换，以既能够使用 Windows 的办公软件等，也能够使用 Linux 的开发工具，是一个困扰不少程序员的问题。通常的解决方案有以下几种：  双系统：系统之间切换必须关机并重启；能够使用最原汁原味且无性能损失的操作系统 虚拟机：方便系统之间切换；启动关闭较慢，虚拟机软件较沉重 远程开发机：原生 Linux 系统，通常硬件">
 <meta property="og:type" content="article">
-<meta property="og:title" content="小样本字体生成">
-<meta property="og:url" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/index.html">
+<meta property="og:title" content="使用 WSL 搭建 Linux 开发环境">
+<meta property="og:url" content="https://arcsin2.cloud/2023/07/31/%E4%BD%BF%E7%94%A8-WSL-%E9%85%8D%E7%BD%AE-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="本文介绍 Few-shot Font Generation 的基本概念和两篇论文。 两篇论文为：  DG-Font: Deformable Generative Networks for Unsupervised Font Generation CF-Font: Content Fusion for Few-shot Font Generation  也可参考整理的 slides。">
+<meta property="og:description" content="如何方便、快捷地在 Windows 和 Linux 两个操作系统切换，以既能够使用 Windows 的办公软件等，也能够使用 Linux 的开发工具，是一个困扰不少程序员的问题。通常的解决方案有以下几种：  双系统：系统之间切换必须关机并重启；能够使用最原汁原味且无性能损失的操作系统 虚拟机：方便系统之间切换；启动关闭较慢，虚拟机软件较沉重 远程开发机：原生 Linux 系统，通常硬件">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701221526835.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701222142980.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223602085.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223612919.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223620435.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223627704.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223642827.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223940563.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224008919.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224503851.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225207555.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225120502.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230455898.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230621924.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230641799.png">
-<meta property="article:published_time" content="2023-07-01T09:19:03.000Z">
-<meta property="article:modified_time" content="2023-07-01T15:11:19.333Z">
+<meta property="article:published_time" content="2023-07-31T05:40:49.000Z">
+<meta property="article:modified_time" content="2023-07-31T06:25:07.120Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="Few-shot Font Gereration">
-<meta property="article:tag" content="FFG">
-<meta property="article:tag" content="字体生成">
+<meta property="article:tag" content="Windows Subsystem for Linux（WSL）">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Ubuntu">
+<meta property="article:tag" content="开发环境搭建">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://arcsin2.cloud/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701221526835.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>小样本字体生成 - arcsin2 的个人博客</title>
+  <title>使用 WSL 搭建 Linux 开发环境 - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -256,7 +241,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="小样本字体生成"></span>
+            <span id="subtitle" data-typed-text="使用 WSL 搭建 Linux 开发环境"></span>
           
         </div>
 
@@ -267,8 +252,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-07-01 17:19" pubdate>
-          2023年7月1日 下午
+        <time datetime="2023-07-31 13:40" pubdate>
+          2023年7月31日 下午
         </time>
       </span>
     
@@ -279,7 +264,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.3k 字
+          1.8k 字
         
       </span>
     
@@ -290,7 +275,7 @@
         
         
         
-          15 分钟
+          7 分钟
         
       </span>
     
@@ -328,220 +313,66 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">小样本字体生成</h1>
+            <h1 style="display: none">使用 WSL 搭建 Linux 开发环境</h1>
             
             
               <div class="markdown-body">
                 
-                <p>本文介绍 Few-shot Font Generation 的基本概念和两篇论文。</p>
-<p>两篇论文为：</p>
+                <p>如何方便、快捷地在 Windows 和 Linux 两个操作系统切换，以既能够使用
+Windows 的办公软件等，也能够使用 Linux
+的开发工具，是一个困扰不少程序员的问题。通常的解决方案有以下几种：</p>
+<ul>
+<li>双系统：系统之间切换必须关机并重启；能够使用最原汁原味且无性能损失的操作系统</li>
+<li>虚拟机：方便系统之间切换；启动关闭较慢，虚拟机软件较沉重</li>
+<li>远程开发机：原生 Linux 系统，通常硬件配置不错；需要网络</li>
+</ul>
+<p>上述方案结合实际需求和场景，往往能够满足日常需求。不过，随着微软推出适用于
+Linux 的 Windows 子系统（Windows Subsystem for
+Linux，WSL），我们也多了一个在 Windows 和 Linux
+之间更加无缝切换的选项。本文对如何使用 WSL 搭建 Linux C/C++
+开发环境做简要介绍。</p>
+<h2 id="安装-wsl">1. 安装 WSL</h2>
+<p>WSL 的安装非常简单，参考微软详细的 <a
+target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-cn/windows/wsl/install">安装文档</a>
+即可。</p>
+<p>同时，推荐阅读 WSL 的其他相关文档，对 WSL
+的基本概念及原理有大概的认识，并学习 WSL
+常用的命令。以下是供参考的文档：</p>
 <ul>
 <li><a
-target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2021/papers/Xie_DG-Font_Deformable_Generative_Networks_for_Unsupervised_Font_Generation_CVPR_2021_paper.pdf">DG-Font:
-Deformable Generative Networks for Unsupervised Font Generation</a></li>
+target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-cn/windows/wsl/basic-commands">WSL
+基本命令</a></li>
 <li><a
-target="_blank" rel="noopener" href="https://openaccess.thecvf.com/content/CVPR2023/papers/Wang_CF-Font_Content_Fusion_for_Few-Shot_Font_Generation_CVPR_2023_paper.pdf">CF-Font:
-Content Fusion for Few-shot Font Generation</a></li>
+target="_blank" rel="noopener" href="https://learn.microsoft.com/zh-cn/windows/wsl/tutorials/wsl-vscode">WSL
+搭配 VS Code 使用指南</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fzh-cn%2Fwindows%2Fwsl%2Ftoc.json">WSL
+官方中文 PDF
+文档</a>：提供了概念、安装、使用、开发环境搭建等一系列说明</li>
 </ul>
-<p>也可参考整理的 <a href="FFG.pdf">slides</a>。</p>
-<h2 id="背景">1. 背景</h2>
-<p>不同于英语，由 ASCII 码（8 位二进制，且仅使用其中 7
-位）即可表示绝大多数常用字母和符号。中日韩语言由上万个字组成，因此，想构建一个新字体往往涉及大量的工作，需要专业字体设计人员一个字一个字地设计。小样本字体生成（Few-shot
-Font Generation,
-FFG）就是在这样的背景下提出的，它希望在给定标准内容字体（通常为宋体或楷体）的情况下，使用少量的风格字（如自己的手写体或新设计字体），就可以由模型自动生成目标风格的其他字。这样，我们仅需花费少量精力设计几个风格字体，其余字由模型自动生成即可，大大降低劳动量。</p>
-<p>在 GAN 提出后，FFG
-领域取得了许多不错的进展。目前的方法也大多基于生成对抗模型进行字体生成。此外，FFG
-领域的一个核心问题就是如何将文字的内容（content）与风格（style）解耦合，模型的不同分支能够分别学习到内容和风格的特征表示。在推理时，给定几个风格字体（称为：reference），风格编码器基于这些
-reference
-提取特征并进行平均，作为目标字体的风格特征向量。在已有的内容字体上的每个字轮流使用特征编码器提取内容特征，将内容特征与风格特征融合，输入解码器，即可生成目标字体。</p>
-<p>下面，分别介绍两篇已有的工作。</p>
-<h2 id="df-font">2. DF-Font</h2>
-<p>本文的 motivation
-是：不同的字体之间，其笔画、偏旁等常常不在相同的位置，而是有一个区域变换。传统的卷积只能感知固定区域的像素并逐层提取语义信息；而变形卷积能够自动学习偏移量（offset），使卷积核的感受野不再局限于固定的区域，进而能够学习到更好的内容特征表示。下面介绍具体做法。</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701221526835.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701221526835">
-</center>
-<p><br></p>
-<p>由上面论文主图可以看出，模型整体分为生成器和判别器两个部分，即典型的
-GAN 结构。具体地，生成器包括两个分支：</p>
-<ul>
-<li>上面为 style encoder，给定字体图片，将生成图片的风格特征向量</li>
-<li>下面为 content
-encoder，给定字体图片，将生成图片的内容特征图；同时，后面紧跟着
-decoder，将内容和风格表示融合，生成目标字体图片</li>
-<li>下面的内容表示及生成分支还有两个 FDSC
-模块，其应用了变形卷积，图示和具体介绍如下：</li>
-</ul>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701222142980.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701222142980">
-</center>
-<p>可变形卷积实际上由两个卷积核构成：</p>
-<ul>
-<li><p>第一个卷积核输入是 content encoder 的特征图 <span
-class="math inline">\(K_c\)</span> 以及后面 mixer 的特征图 <span
-class="math inline">\(K_s\)</span>；生成 offset 和 mask，即： <span
-class="math display">\[
-\Theta=f_\theta\left(K_s, K_c\right)
-\]</span> 其中，<span class="math inline">\(f_\theta\)</span>
-表示卷积层， <span class="math inline">\(\Theta=\left\{\Delta p_k,
-\Delta m_k\right.\)</span> <span class="math inline">\(|k=1, \cdots,|
-\mathcal{R} \mid\}\)</span> 为卷积层输出的 offset 和 mask，<span
-class="math inline">\(\mathcal{R}=\{(-1,-1),(-1,0),
-\cdots,(0,1),(1,1)\}\)</span> 表示普通卷积的 offset；</p></li>
-<li><p>输出 offset 和 mask 后，后续的卷积层 <span
-class="math inline">\(f_{DC}\)</span> 将输出特征图 <span
-class="math inline">\(K_c^{\prime}\)</span> <span
-class="math display">\[
-K_c^{\prime}=f_{D C}\left(K_c, \Theta\right)
-\]</span> 此时，变形卷积 <span class="math inline">\(f_{D
-C}(\cdot)\)</span> 每个像素的计算公式可表示为： <span
-class="math display">\[
-K_c^{\prime}(p)=\sum_{k=1}^{\mathcal{R}} w\left(p_k\right) \cdot
-x\left(p+p_k+\Delta p_k\right) \cdot \Delta m_k
-\]</span></p></li>
-</ul>
-<p>然后，介绍损失函数设计，共有 4 个部分：</p>
-<ul>
-<li><p>对抗损失：即 GAN 的损失，用来保证生成逼真的图像：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223602085.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223602085">
-</center></li>
-<li><p>内容一致性损失：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223612919.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223612919">
-</center></li>
-<li><p>图像重构损失：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223620435.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223620435">
-</center></li>
-<li><p>偏移量归一化损失：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223627704.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223627704">
-</center></li>
-</ul>
-<p>总损失表示为：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223642827.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223642827">
-</center>
-<p>然后是实验结果：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701223940563.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701223940563">
-</center>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224008919.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701224008919">
-</center>
-<p><br></p>
-<p>相比之前方法，本文方法在 unseen fonts 上所有指标表现最好；在 seen
-fonts 上，感知性指标表现最好，像素性指标则一般。</p>
-<h2 id="cf-font">3. CF-Font</h2>
-<p>本文是对上篇论文的改进，其主要贡献在于：提出了内容融合模块（Content
-Fusion Module），让模型学得更好的内容表示。此外，在 loss
-及风格特征向量的表示上也有改进，下面具体介绍。</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701224503851.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701224503851">
-</center>
-<p><br></p>
-<p>首先是主图，可以发现和前篇文章的确差不多。多出的是 Content Fusion
-Module 和 Iterative Style-vector Refinement，下面分别介绍。</p>
-<p>传统的内容字体选取由两种方式：</p>
-<ul>
-<li>对所有目标字体，都选取宋体作为 content font（下图黄色线）</li>
-<li>对给定目标字体，从候选集合中选择与目标字体最接近的字体作为 content
-font（下图红色线）</li>
-</ul>
-<p>本文则提出了一种新方法，其从可选的 <span
-class="math inline">\(N\)</span>
-个字体中提取特征图，进行聚类，聚类中心设置为 <span
-class="math inline">\(M\)</span> 个，选择距离聚类中心最近的 <span
-class="math inline">\(M\)</span> 个字体作为基字体（basis
-font）；然后，对于给定的目标字体，计算其与 basis fonts 的相似度，经过
-softmax
-函数后赋予权重；权重与基字体相乘并求和，得到全新的内容特征图表示方式，公式表示如下：</p>
-<ol type="1">
-<li><p>聚类 <span class="math display">\[
-\begin{aligned}
-\boldsymbol{C}_i &amp; =f_{c e}\left(\boldsymbol{I}_i\right),{ }^1 \\
-\boldsymbol{d}_i &amp; =\left(d_{i 1}, d_{i 2}, \ldots, d_{i N}\right),
-\quad d_{i j}=\left\|\boldsymbol{C}_i-\boldsymbol{C}_j\right\|_1, \\
-\boldsymbol{e}_i &amp; =\sigma\left(\boldsymbol{d}_i\right), \\
-\mathcal{B} &amp;
-=\operatorname{Cluster}\left(M,\left\{\boldsymbol{e}_1,
-\boldsymbol{e}_2, \ldots, \boldsymbol{e}_N\right\}\right),
-\end{aligned}
-\]</span></p></li>
-<li><p>计算权重 <span class="math display">\[
-\begin{aligned}
-\boldsymbol{d}_t^{\prime} &amp; =\left(d_{t 1}, d_{t 2}, \ldots, d_{t
-M}\right), \quad d_{t
-m}=\left\|\boldsymbol{C}_t-\boldsymbol{C}_m\right\|_1, \\
-\boldsymbol{w}_t &amp; =\sigma\left(-\boldsymbol{d}_t^{\prime} /
-\tau\right),
-\end{aligned}
-\]</span></p></li>
-<li><p>得到新特征表示 <span class="math display">\[
-\boldsymbol{C}_t^{\prime}=\sum_{m \in \mathcal{B}} w_{t m} \cdot
-\boldsymbol{C}_m
-\]</span></p></li>
-</ol>
-<p>示意图如下：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225207555.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701225207555">
-</center>
-<p>此外，提出了一个新的 loss，用来在 generated image 和 ground-truth
-image 的投影分类后的分布施加限制：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701225120502.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701225120502">
-</center>
-<p><br></p>
-<p>公式表示为： <span class="math display">\[
-\mathcal{L}_p(\boldsymbol{Y}, \hat{\boldsymbol{Y}})=\frac{1}{P}
-\sum_{p=1}^P \mathcal{L}_{1 d}\left(\phi_p(\boldsymbol{Y}),
-\phi_p(\hat{\boldsymbol{Y}})\right),
-\]</span> <span class="math inline">\(\mathcal{L}_{1 d}\)</span>
-表示两个分布之间的差异，可选用推土机距离或者 KL 散度，分布表示为： <span
-class="math display">\[
-\begin{aligned}
-\mathcal{L}_{p c-w d l}(\boldsymbol{Y}, \hat{\boldsymbol{Y}}) &amp;
-=\frac{1}{P}
-\sum_{p=1}^P\left\|\frac{\Lambda\left(\phi_p(\boldsymbol{Y})\right)}{\sum
-\phi_p(\boldsymbol{Y})}-\frac{\Lambda\left(\phi_p(\hat{\boldsymbol{Y}})\right)}{\sum
-\phi_p(\hat{\boldsymbol{Y}})}\right\| \\
-\mathcal{L}_{p c-k l}(\boldsymbol{Y}, \hat{\boldsymbol{Y}}) &amp;
-=\frac{1}{P} \sum_{p=1}^P \mathbf{K
-L}\left(\frac{\phi_p(\boldsymbol{Y})}{\sum
-\phi_p(\boldsymbol{Y})}-\frac{\phi_p(\hat{\boldsymbol{Y}})}{\sum
-\phi_p(\hat{\boldsymbol{Y}})}\right),
-\end{aligned}
-\]</span> 其余损失与上文相同，总损失函数表示为： <span
-class="math display">\[
-\begin{array}{r}
-\mathcal{L}=\mathcal{L}_{a d v}+\lambda_{\text {img
-}}\left(\mathcal{L}_{\text {img }}+\lambda_{\text {pll }}
-\mathcal{L}_{\text {pcl }}\right) \\
-+\lambda_{\text {cnt }} \mathcal{L}_{\text {cnt }}+\lambda_{\text
-{offset }} \mathcal{L}_{\text {offset }},
-\end{array}
-\]</span></p>
-<p>在推理阶段，初始化风格特征向量为已有的几个 reference image
-特征向量的均值： <span class="math display">\[
-\boldsymbol{s}_t^{\prime}=\frac{1}{Q} \sum_{q=1}^Q f_{s
-e}\left(\boldsymbol{I}_t^q\right)
-\]</span>
-然后，设置该特征向量为可学习的，并冻结模型其他部分的参数，使用重构损失微调大约
-10 个 epoch：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230455898.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701230455898">
-</center>
-<p>使用最终微调后的特征向量作为推理时使用的风格特征向量。</p>
-<p>最后是实验：</p>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230621924.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701230621924">
-</center>
-<center>
-<img src="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/image-20230701230641799.png" srcset="/img/loading.gif" lazyload class="" title="image-20230701230641799">
-</center>
-<p><br></p>
-<p>在绝大多数指标上，本文方法均超过已有方法。</p>
+<h2 id="更新软件源">2. 更新软件源</h2>
+<p>Ubuntu 默认的软件源在国内访问很慢，本节以 Ubuntu 22.04
+配置阿里云源为例，介绍如何更新软件源。注意，不同的 Ubuntu
+版本，软件源的地址并不一致，请根据实际情况修改。</p>
+<p>首先进行备份：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo <span class="hljs-built_in">cp</span> /etc/apt/sources.list /etc/apt/sources.list.bak</span><br></code></pre></td></tr></table></figure>
+<p>然后，编辑文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo vim /etc/apt/sources.list</span><br></code></pre></td></tr></table></figure>
+<p>并用以下内容覆盖原本内容：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs shell">deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse<br></code></pre></td></tr></table></figure>
+<p>保存并退出编辑，执行以下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt update</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt upgrade</span><br></code></pre></td></tr></table></figure>
+<p>完成包更新。</p>
+<h2 id="安装-cc-开发工具">3. 安装 C/C++ 开发工具</h2>
+<p>WSL 默认没有安装 gcc、g++、make 等 C/C++
+开发工具，需要我们手动安装。执行以下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt install build-essential gdb</span><br></code></pre></td></tr></table></figure>
+<p>执行完成后，将安装 gcc、g++、make 和 gdb 等开发工具。</p>
+<p>然后，使用以下命令验证是否安装成功：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">gcc --version</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">g++ --version</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">make --version</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">gdb --version</span><br></code></pre></td></tr></table></figure>
+<p>若正常输出版本号等信息，则安装成功。</p>
+<p>至此，你已收获一个在 Windows 系统能够无缝切换并使用 Linux
+进行程序开发的环境。</p>
 
                 
               </div>
@@ -560,12 +391,22 @@ e}\left(\boldsymbol{I}_t^q\right)
     
       <span class="category-chain">
         
-  <a href="/categories/Deep-Learning/" class="category-chain-item">Deep Learning</a>
+  <a href="/categories/%E5%B7%A5%E5%85%B7/" class="category-chain-item">工具</a>
+  
+  
+
+      </span>
+    
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
   
   
     <span>></span>
     
-  <a href="/categories/Deep-Learning/%E8%AF%BB%E8%AE%BA%E6%96%87/" class="category-chain-item">读论文</a>
+  <a href="/categories/Linux/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" class="category-chain-item">开发环境</a>
   
   
 
@@ -582,11 +423,13 @@ e}\left(\boldsymbol{I}_t^q\right)
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/Few-shot-Font-Gereration/">#Few-shot Font Gereration</a>
+        <a href="/tags/Windows-Subsystem-for-Linux%EF%BC%88WSL%EF%BC%89/">#Windows Subsystem for Linux（WSL）</a>
       
-        <a href="/tags/FFG/">#FFG</a>
+        <a href="/tags/Linux/">#Linux</a>
       
-        <a href="/tags/%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/">#字体生成</a>
+        <a href="/tags/Ubuntu/">#Ubuntu</a>
+      
+        <a href="/tags/%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">#开发环境搭建</a>
       
     </div>
   
@@ -598,8 +441,8 @@ e}\left(\boldsymbol{I}_t^q\right)
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>小样本字体生成</div>
-      <div>https://arcsin2.cloud/2023/07/01/小样本字体生成/</div>
+      <div>使用 WSL 搭建 Linux 开发环境</div>
+      <div>https://arcsin2.cloud/2023/07/31/使用-WSL-配置-Linux-开发环境/</div>
     </div>
     <div class="license-meta">
       
@@ -611,7 +454,7 @@ e}\left(\boldsymbol{I}_t^q\right)
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2023年7月1日</div>
+          <div>2023年7月31日</div>
         </div>
       
       
@@ -655,18 +498,12 @@ e}\left(\boldsymbol{I}_t^q\right)
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2023/07/31/%E4%BD%BF%E7%94%A8-WSL-%E9%85%8D%E7%BD%AE-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" title="使用 WSL 搭建 Linux 开发环境">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">使用 WSL 搭建 Linux 开发环境</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2023/05/25/LFS%E6%89%A9%E5%AE%B9/" title="使用Git LFS管理大文件及GitHub LFS扩容">
-                        <span class="hidden-mobile">使用Git LFS管理大文件及GitHub LFS扩容</span>
+                      <a href="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/" title="小样本字体生成">
+                        <span class="hidden-mobile">小样本字体生成</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

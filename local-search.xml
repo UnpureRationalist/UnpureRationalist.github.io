@@ -4,6 +4,41 @@
   
   
   <entry>
+    <title>使用 WSL 搭建 Linux 开发环境</title>
+    <link href="/2023/07/31/%E4%BD%BF%E7%94%A8-WSL-%E9%85%8D%E7%BD%AE-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/"/>
+    <url>/2023/07/31/%E4%BD%BF%E7%94%A8-WSL-%E9%85%8D%E7%BD%AE-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/</url>
+    
+    <content type="html"><![CDATA[<p>如何方便、快捷地在 Windows 和 Linux 两个操作系统切换，以既能够使用Windows 的办公软件等，也能够使用 Linux的开发工具，是一个困扰不少程序员的问题。通常的解决方案有以下几种：</p><ul><li>双系统：系统之间切换必须关机并重启；能够使用最原汁原味且无性能损失的操作系统</li><li>虚拟机：方便系统之间切换；启动关闭较慢，虚拟机软件较沉重</li><li>远程开发机：原生 Linux 系统，通常硬件配置不错；需要网络</li></ul><p>上述方案结合实际需求和场景，往往能够满足日常需求。不过，随着微软推出适用于Linux 的 Windows 子系统（Windows Subsystem forLinux，WSL），我们也多了一个在 Windows 和 Linux之间更加无缝切换的选项。本文对如何使用 WSL 搭建 Linux C/C++开发环境做简要介绍。</p><h2 id="安装-wsl">1. 安装 WSL</h2><p>WSL 的安装非常简单，参考微软详细的 <ahref="https://learn.microsoft.com/zh-cn/windows/wsl/install">安装文档</a>即可。</p><p>同时，推荐阅读 WSL 的其他相关文档，对 WSL的基本概念及原理有大概的认识，并学习 WSL常用的命令。以下是供参考的文档：</p><ul><li><ahref="https://learn.microsoft.com/zh-cn/windows/wsl/basic-commands">WSL基本命令</a></li><li><ahref="https://learn.microsoft.com/zh-cn/windows/wsl/tutorials/wsl-vscode">WSL搭配 VS Code 使用指南</a></li><li><ahref="https://learn.microsoft.com/pdf?url=https%3A%2F%2Flearn.microsoft.com%2Fzh-cn%2Fwindows%2Fwsl%2Ftoc.json">WSL官方中文 PDF文档</a>：提供了概念、安装、使用、开发环境搭建等一系列说明</li></ul><h2 id="更新软件源">2. 更新软件源</h2><p>Ubuntu 默认的软件源在国内访问很慢，本节以 Ubuntu 22.04配置阿里云源为例，介绍如何更新软件源。注意，不同的 Ubuntu版本，软件源的地址并不一致，请根据实际情况修改。</p><p>首先进行备份：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo <span class="hljs-built_in">cp</span> /etc/apt/sources.list /etc/apt/sources.list.bak</span><br></code></pre></td></tr></table></figure><p>然后，编辑文件：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo vim /etc/apt/sources.list</span><br></code></pre></td></tr></table></figure><p>并用以下内容覆盖原本内容：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs shell">deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-proposed main restricted universe multiverse<br>deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse<br>deb-src http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse<br></code></pre></td></tr></table></figure><p>保存并退出编辑，执行以下命令：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt update</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt upgrade</span><br></code></pre></td></tr></table></figure><p>完成包更新。</p><h2 id="安装-cc-开发工具">3. 安装 C/C++ 开发工具</h2><p>WSL 默认没有安装 gcc、g++、make 等 C/C++开发工具，需要我们手动安装。执行以下命令：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo apt install build-essential gdb</span><br></code></pre></td></tr></table></figure><p>执行完成后，将安装 gcc、g++、make 和 gdb 等开发工具。</p><p>然后，使用以下命令验证是否安装成功：</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">gcc --version</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">g++ --version</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">make --version</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">gdb --version</span><br></code></pre></td></tr></table></figure><p>若正常输出版本号等信息，则安装成功。</p><p>至此，你已收获一个在 Windows 系统能够无缝切换并使用 Linux进行程序开发的环境。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>工具</category>
+      
+      <category>Linux</category>
+      
+      <category>开发环境</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Windows Subsystem for Linux（WSL）</tag>
+      
+      <tag>Linux</tag>
+      
+      <tag>Ubuntu</tag>
+      
+      <tag>开发环境搭建</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>小样本字体生成</title>
     <link href="/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/"/>
     <url>/2023/07/01/%E5%B0%8F%E6%A0%B7%E6%9C%AC%E5%AD%97%E4%BD%93%E7%94%9F%E6%88%90/</url>

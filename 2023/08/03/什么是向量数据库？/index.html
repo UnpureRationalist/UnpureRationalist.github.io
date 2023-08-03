@@ -1,0 +1,1058 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Roie Schwaber-Cohen">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="译者注： 本文译自 What is a Vector Database? ，作者：Roie Schwaber-Cohen 。译文与原文基本相同，删除部分不影响理解向量数据库基本概念的内容。 译者：arcsin2  随着人工智能的发展，出现了许多涉及大语言模型、生成式人工智能和语义搜索的应用程序。这些新应用都依赖于向量嵌入——一种包含语义信息、对人工智能在执行复杂任务时获取理解并保持">
+<meta property="og:type" content="article">
+<meta property="og:title" content="什么是向量数据库？">
+<meta property="og:url" content="https://arcsin2.cloud/2023/08/03/%E4%BB%80%E4%B9%88%E6%98%AF%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93%EF%BC%9F/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="译者注： 本文译自 What is a Vector Database? ，作者：Roie Schwaber-Cohen 。译文与原文基本相同，删除部分不影响理解向量数据库基本概念的内容。 译者：arcsin2  随着人工智能的发展，出现了许多涉及大语言模型、生成式人工智能和语义搜索的应用程序。这些新应用都依赖于向量嵌入——一种包含语义信息、对人工智能在执行复杂任务时获取理解并保持">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-08-03T11:46:17.000Z">
+<meta property="article:modified_time" content="2023-08-03T14:17:54.163Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="向量数据库">
+<meta property="article:tag" content="Vector Database">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>什么是向量数据库？ - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="什么是向量数据库？"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-08-03 19:46" pubdate>
+          2023年8月3日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          25 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">什么是向量数据库？</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>译者注：</p>
+<p>本文译自 <a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/vector-database/">What is a Vector
+Database?</a> ，作者：Roie Schwaber-Cohen
+。译文与原文基本相同，删除部分不影响理解向量数据库基本概念的内容。</p>
+<p>译者：<a href="https://arcsin2.cloud/about">arcsin2</a></p>
+</blockquote>
+<p>随着人工智能的发展，出现了许多涉及大语言模型、生成式人工智能和语义搜索的应用程序。这些新应用都依赖于向量嵌入——一种包含语义信息、对人工智能在执行复杂任务时获取理解并保持长期记忆至关重要的数据表示类型。向量嵌入由人工智能模型生成，也就是数学中的向量，它们通常具有特定的维度，代表
+AI
+模型学习到的大量属性或特征。在人工智能和机器学习场景中，这些特征代表了对于理解数据的模式、关系和底层结构至关重要的不同维度，可以看作图片、文本等原始数据的压缩表示。</p>
+<p>因此，我们需要一种专门的数据库——向量数据库来处理这种数据类型。向量数据库通过提供针对向量数据进行优化的存储和查询能力满足
+AI
+程序的需求。向量数据库具有传统数据库所具备的功能，而独立的向量索引库（如
+FAISS
+等向量搜索库）并不具备数据库的功能。向量数据库还专门处理向量嵌入，而传统的基于标量的数据库则不具备这种能力。</p>
+<p>传统基于标量的数据库难以应对向量数据的复杂性和规模，无法进行实时分析。这就是向量数据库发挥作用的地方——它们被专门地设计来处理这种类型的数据，并提供性能、可扩展性和灵活性。</p>
+<p>有了向量数据库，就能够给 AI
+应用添加高级功能，如：语义信息检索、长期记忆等。下图展示了向量数据库在这类应用中扮演的角色：</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/e88ebbacb848b09e477d11eedf4209d10ea4ac0a-1399x537.png" srcset="/img/loading.gif" lazyload
+alt="Vector Database" />
+<figcaption aria-hidden="true">Vector Database</figcaption>
+</figure>
+<p>每个步骤含义分别为：</p>
+<ol type="1">
+<li>首先，我们使用<strong>嵌入模型</strong>为我们想要索引的<strong>内容</strong>创建<strong>向量嵌入</strong>。</li>
+<li>将<strong>向量嵌入</strong>插入到<strong>向量数据库</strong>中，并将其与创建该嵌入的原始<strong>内容</strong>进行关联。</li>
+<li>当<strong>应用程序</strong>发出查询时，我们使用同样的<strong>嵌入模型</strong>为查询创建嵌入，并使用这些嵌入查询<strong>数据库</strong>中的<em>相似</em>向量嵌入。正如之前提到的，这些相似的嵌入与用于创建它们的原始<strong>内容</strong>相关联。</li>
+</ol>
+<h2 id="向量索引与向量数据库有什么不同">1.
+向量索引与向量数据库有什么不同？</h2>
+<p>向量索引，如： <a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/faiss/">FAISS</a>（Facebook AI
+Similarity
+Search，FAISS），可以显著改善向量嵌入的检索，但它们缺乏任何数据库具有的功能。而向量数据库则是专门为
+<em>管理</em>
+向量嵌入而构建的，相比使用独立的向量索引，它具有以下优点：</p>
+<ol type="1">
+<li><p><strong>数据管理：</strong>
+向量数据库提供了易于使用的数据存储功能，比如插入、删除和更新数据。这使得管理和维护向量数据比使用类似
+FAISS 这样的独立向量 <em>索引</em>
+更加简便，后者需要额外的工作来与存储解决方案进行集成。</p></li>
+<li><p><strong>元数据存储和过滤：</strong>
+向量数据库可以存储与每个向量条目相关联的元数据。用户可以使用额外的元数据过滤器查询数据库，实现更精细化的查询。</p></li>
+<li><p><strong>可扩展性：</strong>
+向量数据库被设计为随着数据量和用户需求的增长而扩展，更好地支持分布式和并行处理。独立的向量索引可能需要定制解决方案才能实现类似的可扩展性（比如在
+Kubernetes 集群或其他类似系统上部署和管理它们）。</p></li>
+<li><p><strong>实时更新：</strong>
+向量数据库通常支持实时数据更新，允许动态地更改数据，而独立的向量索引可能需要进行完整的重新索引过程来纳入新数据，这可能耗时且计算成本高。</p></li>
+<li><p><strong>备份：</strong>
+向量数据库处理定期备份数据库中存储的所有数据。</p></li>
+<li><p><strong>生态系统集成：</strong>
+向量数据库更容易与数据处理生态系统的其他组件集成，例如 ETL 流水线（如
+Spark）、分析工具（如 <a target="_blank" rel="noopener" href="https://www.tableau.com/">Tableau</a> 和
+<a target="_blank" rel="noopener" href="https://segment.com/">Segment</a>）以及可视化平台（如 <a
+target="_blank" rel="noopener" href="https://grafana.com/">Grafana</a>），从而简化数据管理工作流程。它还可以轻松集成其他
+AI 相关工具，如 <a
+target="_blank" rel="noopener" href="https://python.langchain.com/en/latest/index.html">LangChain</a>、<a
+target="_blank" rel="noopener" href="https://gpt-index.readthedocs.io/">LlamaIndex</a> 和 <a
+target="_blank" rel="noopener" href="https://openai.com/blog/chatgpt-plugins">ChatGPT’s
+插件</a>。</p></li>
+<li><p><strong>数据安全和访问控制：</strong>
+向量数据库通常提供内置的数据安全功能和访问控制机制，以保护敏感信息，而这些可能在独立的向量索引解决方案中不可用。</p></li>
+</ol>
+<p>简而言之，向量数据库通过解决独立向量索引的局限性（如可扩展性挑战、繁琐的集成过程以及缺乏实时更新和内置安全措施等），为处理向量嵌入提供了更优越的解决方案，确保了更有效和流畅的数据管理体验。</p>
+<h2 id="向量数据库如何工作">2. 向量数据库如何工作？</h2>
+<p>我们都或多或少知道传统数据库的工作方式：它们将字符串、数字和其他类型的标量数据存储在行和列中。另一方面，向量数据库操作的是向量，因此它的优化和查询方式有很大的不同。</p>
+<p>在传统数据库中，我们通常查询数据库中的行，其中值通常与我们的查询完全匹配。在向量数据库中，我们使用相似性度量来找到与我们的查询<strong>最相似</strong>的向量。</p>
+<p>向量数据库使用一系列不同的算法，所有这些算法都参与到近似最近邻（Approximate
+Nearest
+Neighbor，ANN）搜索中。这些算法通过哈希、量化或基于图的搜索来优化搜索过程。</p>
+<p>这些算法被组装成一个流水线，用于快速准确地检索被查询向量的最近邻。由于向量数据库提供的是<strong>近似</strong>结果，我们需要在准确性和速度之间进行权衡。结果越准确，查询就越慢。然而，一个好的系统可以以超快的速度提供几乎完美的准确性。</p>
+<p>以下是一个向量数据库的常见流水线：</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/ff9ba425d0c78d696372e0a43ce57851b4f1d4b7-1307x233.png" srcset="/img/loading.gif" lazyload
+alt="Vector Database pipeline" />
+<figcaption aria-hidden="true">Vector Database pipeline</figcaption>
+</figure>
+<ol type="1">
+<li><p><strong>索引（Indexing）</strong>：向量数据库使用 PQ、LSH 或 HNSW
+等算法对向量进行索引（后文将对这些进行详细介绍）。这一步将向量映射到数据结构，以便实现更快速的检索。</p></li>
+<li><p><strong>查询（Querying）</strong>：向量数据库将索引化的查询向量与数据集中的索引化向量进行比较，找到最近的邻居（应用该索引所使用的相似性度量）。</p></li>
+<li><p><strong>后处理（Post
+Processing）</strong>：在某些情况下，向量数据库从数据集中检索出最终的最近邻居，并对其进行后处理以返回最终结果。这一步可以包括使用不同的相似性度量对最近邻居进行重新排序。</p></li>
+</ol>
+<p>在接下来的部分中，我们将详细讨论这些算法，并解释它们如何对向量数据库的整体性能做出贡献。</p>
+<h3 id="算法">2.1 算法</h3>
+<p>有几种算法可以促进向量索引的创建。它们的共同目标是通过创建一个可以快速遍历的数据结构，实现快速查询。它们通常会将原始向量的表示转换为压缩形式，以优化查询过程。下面详细介绍。</p>
+<h4 id="随机投影random-projection">2.1.1 随机投影（Random
+Projection）</h4>
+<p>随机投影背后的出发点是使用<strong>随机投影矩阵</strong>，将原始的高维向量压缩为低维向量。我们创建一个由随机数构成的矩阵。矩阵的大小将是我们想要的目标低维值。然后，我们计算输入向量与矩阵的点积，得到一个<strong>投影矩阵</strong>，其维度比我们的原始向量更少，但仍保持它们的相似性。</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/22dffa542410c1b542fcaeafcafc088ad278add5-1303x534.png" srcset="/img/loading.gif" lazyload
+alt="Random Projection" />
+<figcaption aria-hidden="true">Random Projection</figcaption>
+</figure>
+<p>当我们查询时，我们使用同样的投影矩阵将查询向量投影到较低维空间。然后，我们将投影后的查询向量与数据库中的投影向量进行比较，找到最近邻居。由于数据的维度降低，搜索过程比在整个高维空间中搜索要快得多。</p>
+<p>随机投影是一种近似方法，投影质量取决于投影矩阵的属性。一般来说，投影矩阵越随机，投影的质量就越好。但是生成一个真正随机的投影矩阵可能在计算上是昂贵的，特别是对于大型数据集而言。
+<a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/locality-sensitive-hashing-random-projection/">了解更多关于随机投影的信息。</a></p>
+<h4 id="乘积量化product-quantization">2.1.2 乘积量化（Product
+Quantization）</h4>
+<p>另一种构建索引的方法是乘积量化（Product
+Quantization，PQ），这是一种用于高维向量（如向量嵌入）的 <em>有损</em>
+压缩技术。它将原始向量分解成较小的块，通过为每个块创建代表性的“码”来简化每个块的表示，然后将所有块重新组合在一起，这不会丢失对相似性操作至关重要的信息。PQ
+的过程可以分解为四个步骤：分割、训练、编码和查询。</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/791910350d7d2140dbe684b405ef5ee761c8fc6a-1060x720.png" srcset="/img/loading.gif" lazyload
+alt="Product Quantization" />
+<figcaption aria-hidden="true">Product Quantization</figcaption>
+</figure>
+<ol type="1">
+<li><strong>分割</strong>： 将向量分割成片段。</li>
+<li><strong>训练：</strong>
+我们为每个片段构建一个“码本”（codebook）。简而言之，该算法生成一个潜在的“码”池，可以分配给一个向量。实际上，这个“码本”由对向量的每个片段执行
+k-means 聚类所创建的聚类的中心点组成。对于 k-means
+聚类使用的值，我们的片段码本将包含与 k-means 聚类相同的值。</li>
+<li><strong>编码：</strong>
+算法将为每个片段分配一个特定的码。实际上，在训练完成后，我们找到码本中最接近每个向量片段的值。我们的
+PQ 码将是对应码本中的值的标识符。我们可以使用任意数量的 PQ
+码，这意味着我们可以选择多个码本值来表示每个片段。</li>
+<li><strong>查询：</strong>
+当我们查询时，算法将向量分解成子向量，并使用相同的码本进行量化。然后，它使用索引码来找到与查询向量最接近的向量。</li>
+</ol>
+<p>码本中代表性向量的数量是表示精度和搜索码本的计算成本之间的权衡。码本中代表性向量越多，子空间中向量的表示就越精确，但搜索码本的计算成本就越高。相比之下，码本中代表性向量越少，表示就越不准确，但计算成本也较低。<a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/product-quantization/">了解更多关于
+PQ 的信息</a>。</p>
+<h4 id="局部敏感哈希locality-sensitive-hashing">2.1.3
+局部敏感哈希（Locality-sensitive hashing）</h4>
+<p>局部敏感哈希（Locality-Sensitive
+Hashing，LSH）是一种用于近似最近邻搜索的索引技术。它在提供近似、有限的搜索结果的同时尽快提高搜索速度。LSH
+使用一组哈希函数将相似的向量映射到“桶”中，如下所示：</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/606382d0ca90a8d24f26780f5f9954123e37be91-575x603.png" srcset="/img/loading.gif" lazyload
+alt="Locality-sensitive hashing" />
+<figcaption aria-hidden="true">Locality-sensitive hashing</figcaption>
+</figure>
+<p>为了找到给定查询向量的最近邻居，我们使用与将相似向量“分桶”到哈希表中相同的哈希函数。查询向量被哈希到特定的表格，然后与该表格中的其他向量进行比较，以找到最接近的匹配项。这种方法比搜索整个数据集要快得多，因为每个哈希表中的向量数量远远少于整个空间中的向量数量。</p>
+<p>需要记住 LSH
+是一种近似方法，近似的质量取决于哈希函数的属性。通常情况下，使用的哈希函数越多，近似质量就越好。然而，使用大量哈希函数可能在计算上代价昂贵，并且对于大型数据集可能不可行。<a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/locality-sensitive-hashing/">了解更多关于
+LSH 的信息</a>。</p>
+<h4 id="层次导航小世界hierarchical-navigable-small-world-hnsw">2.1.4
+层次导航小世界（Hierarchical Navigable Small World, HNSW）</h4>
+<p>层次导航小世界（Hierarchical Navigable Small World,
+HNSW）创建了一个层次化的类似树的结构，其中树的每个节点表示一组向量。节点之间的边表示向量之间的<strong>相似性</strong>。该算法首先创建一组节点，每个节点包含少量向量。这可以通过随机选择或使用
+k-means 等聚类算法对向量进行聚类来完成，其中每个聚类成为一个节点。</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/e06c4bb4c0095a1fb5b45b04acaa15663b6d6a96-734x696.png" srcset="/img/loading.gif" lazyload
+alt="Hierarchical Navigable Small World (HNSW)" />
+<figcaption aria-hidden="true">Hierarchical Navigable Small World
+(HNSW)</figcaption>
+</figure>
+<p>然后，该算法检查每个节点的向量，并在该节点与具有与其最相似向量的节点之间绘制一条边。</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/63110626f18b50b5a15c48a8eea3c852ff64196b-496x467.png" srcset="/img/loading.gif" lazyload
+alt="Hierarchical Navigable Small World (HNSW)" />
+<figcaption aria-hidden="true">Hierarchical Navigable Small World
+(HNSW)</figcaption>
+</figure>
+<p>当我们查询一个 HNSW
+索引时，它使用这个图来在树中导航，访问最有可能包含与查询向量最接近的向量的节点。<a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/hnsw/">了解更多关于 HNSW
+的信息</a>。</p>
+<h3 id="相似性度量similarity-measures">2.2 相似性度量（Similarity
+Measures）</h3>
+<p>在之前讨论的算法基础上，我们需要了解相似性度量在向量数据库中的作用。这些度量是向量数据库比较和识别给定查询的最相关结果的基础。</p>
+<p>相似性度量是一种数学方法，用于确定向量空间中两个向量的相似程度。在向量数据库中，相似性度量用于比较存储在数据库中的向量，并找到与给定查询向量最相似的向量。</p>
+<p>可以使用多种相似性度量，包括：</p>
+<ul>
+<li><strong>余弦相似性（Cosine
+similarity）</strong>：衡量向量空间中两个向量之间夹角的余弦。它的取值范围从
+-1 到 1，其中 1 表示完全相同的向量，0 表示正交的向量，-1
+表示完全相反的向量。</li>
+<li><strong>欧氏距离（Euclidean
+distance）</strong>：衡量向量空间中两个向量之间的直线距离。它的取值范围从
+0 到无穷大，其中 0 表示完全相同的向量，越大的值表示越不相似的向量。</li>
+<li><strong>点积（Dot
+product）</strong>：衡量两个向量的大小和它们之间夹角的余弦的乘积。它的取值范围从负无穷到正无穷，其中正值表示指向相同方向的向量，0
+表示正交的向量，负值表示指向相反方向的向量。</li>
+</ul>
+<p>选择相似性度量将影响从向量数据库中获取的结果。还需要注意的是，每种相似性度量都有其优缺点，在选择时需要根据使用案例和要求做出正确的选择。<a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/vector-similarity/">了解更多关于相似性度量的信息</a>。</p>
+<h3 id="过滤filtering">2.3 过滤（Filtering）</h3>
+<p>数据库中存储的每个向量都包含元数据。除了能够查询相似向量外，向量数据库还可以根据元数据查询对结果进行过滤。为此，向量数据库通常维护两个索引：一个向量索引和一个元数据索引。然后，它在进行向量搜索之前或之后执行元数据过滤，但在任何情况下，都会遇到导致查询过程减慢的困难。</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/fede570123cbdabff288da8900330d472834ceb8-1920x1220.png" srcset="/img/loading.gif" lazyload
+alt="Post-filtering and Pre-filtering" />
+<figcaption aria-hidden="true">Post-filtering and
+Pre-filtering</figcaption>
+</figure>
+<p>过滤过程可以在向量搜索之前或之后执行，但每种方法都有自己的挑战，可能会影响查询性能：</p>
+<ul>
+<li><strong>预过滤（Pre-filtering）：</strong>
+在这种方法中，元数据过滤是在向量搜索之前进行的。虽然这可以帮助减少搜索空间，但可能会导致系统忽略不符合元数据过滤条件的相关结果。此外，广泛的元数据过滤可能会因增加计算开销而减慢查询过程。</li>
+<li><strong>后过滤（Post-filtering）：</strong>
+在这种方法中，元数据过滤是在向量搜索之后进行的。这可以确保考虑到所有相关结果，但也可能引入额外的开销，并在搜索完成后需要过滤掉不相关的结果，从而减慢查询过程。</li>
+</ul>
+<p>为了优化过滤过程，向量数据库使用各种技术，例如利用先进的索引方法进行元数据过滤或使用并行处理来加速过滤任务。在向量数据库中，平衡搜索性能和过滤准确性的权衡对于提供高效且相关的查询结果至关重要。<a
+target="_blank" rel="noopener" href="https://www.pinecone.io/learn/vector-search-filtering/">了解更多关于向量搜索过滤的信息</a>。</p>
+<h3 id="数据库操作database-operations">2.4 数据库操作（Database
+Operations）</h3>
+<p>与向量索引不同，向量数据库配备了一组功能，使其更适合在高规模生产环境中使用。让我们对数据库操作涉及的组件进行一个总体概述。</p>
+<figure>
+<img
+src="https://cdn.sanity.io/images/vr8gru94/production/d0adc44e56739a985cc198ea327fbb3d701f21e5-1094x984.png" srcset="/img/loading.gif" lazyload
+alt="Database Operations" />
+<figcaption aria-hidden="true">Database Operations</figcaption>
+</figure>
+<h4 id="性能与容错性performance-and-fault-tolerance">2.4.1
+性能与容错性（Performance and Fault tolerance）</h4>
+<p>性能和容错性密切相关。我们拥有的数据越多，就需要更多的节点，这同时也增加了错误和故障的可能。与其他类型的数据库一样，我们希望确保即使某些底层节点出现故障，查询也能尽快执行。这可能是由于硬件故障、网络故障或其他类型的技术错误。这种故障可能导致停机时间，甚至产生不正确的查询结果。</p>
+<p>为了确保高性能和容错性，向量数据库使用分片和复制策略：</p>
+<ol type="1">
+<li><strong>分片（Sharding）：</strong>
+将数据分布到多个节点。有不同的数据分片方法。
+例如，可以按照不同数据簇的相似性进行分片，以便将相似向量存储在同一分片中。当进行查询时，查询会被发送到所有分片，然后结果会被检索和合并。这被称为
+“scatter-gather” 模式。</li>
+<li><strong>复制（Replication）：</strong>
+在不同节点上创建多个数据副本。这确保即使某个节点出现故障，其他节点也能够取而代之。有两种主要的一致性模型：<em>最终一致性</em>
+和
+<em>强一致性</em>。最终一致性允许在数据的不同副本之间存在临时的不一致性，这将提高可用性并减少延迟，但可能导致冲突甚至数据丢失。另一方面，强一致性要求在写操作被视为完成之前，所有数据副本都会得到更新。这种方法提供了更强的一致性，但可能导致更高的延迟。</li>
+</ol>
+<h4 id="监控monitoring">2.4.2 监控（Monitoring）</h4>
+<p>为了有效地管理和维护向量数据库，我们需要一个强大的监控系统，跟踪数据库性能、健康状况和整体状态的重要方面。监控对于检测潜在问题、优化性能和确保生产运营的顺利进行至关重要。监控向量数据库的一些方面包括以下内容：</p>
+<ol type="1">
+<li><strong>资源使用情况：</strong> 监控资源使用情况，如
+CPU、内存、磁盘空间和网络活动，这可以识别可能影响数据库性能的潜在问题或资源限制。</li>
+<li><strong>查询性能：</strong>
+查询延迟、吞吐量和错误率可能表明需要解决的潜在系统性问题。</li>
+<li><strong>系统健康：</strong>
+整体系统健康监控包括单个节点、复制过程和其他关键组件的状态。</li>
+</ol>
+<h4 id="访问控制access-control">2.4.3 访问控制（Access-control）</h4>
+<p>访问控制是管理和监管用户对数据和资源的访问的过程。这是数据安全的重要组成部分，确保只有授权用户能够查看、修改或与存储在向量数据库中的敏感数据进行交互。</p>
+<p>访问控制的重要性如下：</p>
+<ol type="1">
+<li><strong>数据保护：</strong>由于人工智能应用通常涉及敏感和机密信息，实施严格的访问控制机制有助于防止未经授权的访问和潜在的数据泄漏。</li>
+<li><strong>合规性：</strong>许多行业，如医疗保健和金融，受到严格的数据隐私法规的约束。实施适当的访问控制有助于组织遵守这些法规，保护其免受法律和财务后果。</li>
+<li><strong>责任和审计：</strong>访问控制机制使组织能够维护向量数据库中用户活动的记录。这些信息对于审计目的至关重要，当发生安全漏洞时，它有助于追溯任何未经授权的访问或修改。</li>
+<li><strong>可扩展性和灵活性：</strong>随着组织的成长和演变，其访问控制需求可能会发生变化。强大的访问控制系统允许无缝修改和扩展用户权限，确保在整个组织的成长过程中数据安全保持完整。</li>
+</ol>
+<h4 id="备份与收集backups-and-collections">2.4.4 备份与收集（Backups and
+collections）</h4>
+<p>当其他方法失效时，向量数据库提供了依赖定期创建备份的能力。这些备份可以存储在外部存储系统或云存储服务中，确保数据的安全性和可恢复性。在发生数据丢失或损坏的情况下，这些备份可以用来将数据库恢复到先前的状态，最大限度地减少停机时间并降低对整个系统的影响。使用
+Pinecone，用户可以选择备份特定的索引，并将它们保存为“集合”，这些集合可以在以后用来填充新的索引。</p>
+<h4 id="api-and-sdks">2.4.5 API and SDKs</h4>
+<p>这就是关键所在：与数据库进行交互的开发人员希望通过易于使用的 API
+来实现，并使用熟悉和舒适的工具集。通过提供用户友好的界面，向量数据库 API
+层简化了高性能向量搜索应用程序的开发。</p>
+<p>除了 API 之外，向量数据库通常还会提供针对特定编程语言的
+SDK（软件开发工具包），用于封装 API。SDK
+使开发人员更轻松地在他们的应用程序中与数据库进行交互。这使得开发人员可以专注于他们的具体用例，比如语义文本搜索、生成问答、混合搜索、图像相似性搜索或产品推荐，而无需担心底层基础设施的复杂性。</p>
+<h2 id="总结">3. 总结</h2>
+<p>在自然语言处理（NLP）、计算机视觉和其他人工智能应用等领域，向量嵌入的指数增长导致了向量数据库的出现，它作为计算引擎使我们能够有效地与应用程序中的向量嵌入进行交互。</p>
+<p>向量数据库是专门构建的数据库，专门用于解决在生产环境中管理向量嵌入时出现的问题。因此，它们相比传统基于标量的数据库和独立向量索引提供了显著的优势。</p>
+<p>在本文中，我们回顾了向量数据库的关键方面，包括它的工作原理、所使用的算法以及使其在生产环境中运行的附加功能。我们希望这有助于您理解向量数据库的内部工作机制。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">向量数据库</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+      
+        <a href="/tags/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93/">#向量数据库</a>
+      
+        <a href="/tags/Vector-Database/">#Vector Database</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>什么是向量数据库？</div>
+      <div>https://arcsin2.cloud/2023/08/03/什么是向量数据库？/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Roie Schwaber-Cohen</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年8月3日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/07/31/%E4%BD%BF%E7%94%A8-WSL-%E9%85%8D%E7%BD%AE-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" title="使用 WSL 搭建 Linux 开发环境">
+                        <span class="hidden-mobile">使用 WSL 搭建 Linux 开发环境</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

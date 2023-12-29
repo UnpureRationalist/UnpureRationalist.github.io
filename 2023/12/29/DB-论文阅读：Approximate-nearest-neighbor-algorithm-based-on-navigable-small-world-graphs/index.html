@@ -16,30 +16,34 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="关系模型与关系代数是关系型数据库系统的基础，SQL 是用户与数据库系统交互的媒介。本文简要介绍关系模型与关系代数的基本内容，从展示关系代数在 SQL 中的对应语句。 1. 关系模型 关系模型是对数据库系统的抽象，其用 “关系” 来表示数据库，而隐藏数据在数据库系统内部是如何组织的。关系模型的核心原则是：  以简单的数据结构(关系)存储数据库。 物理存储结构由 DBMS 实现决定。">
+    <meta name="description" content="本文介绍向量近似最近邻（Approximate Nearest Neighbor，ANN）的一种经典算法：NSW（Navigable Small World，NSW），原文： Approximate nearest neighbor algorithm based on navigable small world graphs 。 摘要 NSW 是一种用于度量空间的近似 K 近邻算法">
 <meta property="og:type" content="article">
-<meta property="og:title" content="从关系代数到 SQL">
-<meta property="og:url" content="https://arcsin2.cloud/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/index.html">
+<meta property="og:title" content="DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs">
+<meta property="og:url" content="https://arcsin2.cloud/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="关系模型与关系代数是关系型数据库系统的基础，SQL 是用户与数据库系统交互的媒介。本文简要介绍关系模型与关系代数的基本内容，从展示关系代数在 SQL 中的对应语句。 1. 关系模型 关系模型是对数据库系统的抽象，其用 “关系” 来表示数据库，而隐藏数据在数据库系统内部是如何组织的。关系模型的核心原则是：  以简单的数据结构(关系)存储数据库。 物理存储结构由 DBMS 实现决定。">
+<meta property="og:description" content="本文介绍向量近似最近邻（Approximate Nearest Neighbor，ANN）的一种经典算法：NSW（Navigable Small World，NSW），原文： Approximate nearest neighbor algorithm based on navigable small world graphs 。 摘要 NSW 是一种用于度量空间的近似 K 近邻算法">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://arcsin2.cloud/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/image-20231222215127913.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/image-20231222221314760.png">
-<meta property="og:image" content="https://arcsin2.cloud/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/image-20231222223632496.png">
-<meta property="article:published_time" content="2023-09-05T05:17:17.000Z">
-<meta property="article:modified_time" content="2023-12-22T14:46:58.379Z">
+<meta property="og:image" content="https://arcsin2.cloud/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229161552498.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229163003622.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229164309519.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229164334787.png">
+<meta property="og:image" content="https://arcsin2.cloud/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229171153499.png">
+<meta property="article:published_time" content="2023-12-29T06:46:21.000Z">
+<meta property="article:modified_time" content="2023-12-29T11:06:56.071Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="关系模型">
-<meta property="article:tag" content="关系代数">
-<meta property="article:tag" content="SQL">
+<meta property="article:tag" content="近似最近邻">
+<meta property="article:tag" content="ANN">
+<meta property="article:tag" content="向量相似度检索">
+<meta property="article:tag" content="K近邻">
+<meta property="article:tag" content="索引">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://arcsin2.cloud/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/image-20231222215127913.png">
+<meta name="twitter:image" content="https://arcsin2.cloud/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229161552498.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>从关系代数到 SQL - arcsin2 的个人博客</title>
+  <title>DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -244,7 +248,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="从关系代数到 SQL"></span>
+            <span id="subtitle" data-typed-text="DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs"></span>
           
         </div>
 
@@ -255,8 +259,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-09-05 13:17" pubdate>
-          2023年9月5日 下午
+        <time datetime="2023-12-29 14:46" pubdate>
+          2023年12月29日 下午
         </time>
       </span>
     
@@ -267,7 +271,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.5k 字
+          2.3k 字
         
       </span>
     
@@ -278,7 +282,7 @@
         
         
         
-          9 分钟
+          8 分钟
         
       </span>
     
@@ -316,127 +320,140 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">从关系代数到 SQL</h1>
+            <h1 style="display: none">DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs</h1>
             
             
               <div class="markdown-body">
                 
-                <p>关系模型与关系代数是关系型数据库系统的基础，SQL
-是用户与数据库系统交互的媒介。本文简要介绍关系模型与关系代数的基本内容，从展示关系代数在
-SQL 中的对应语句。</p>
-<h2 id="关系模型">1. 关系模型</h2>
-<p>关系模型是对数据库系统的抽象，其用 “关系”
-来表示数据库，而隐藏数据在数据库系统内部是如何组织的。关系模型的核心原则是：</p>
+                <p>本文介绍向量近似最近邻（Approximate Nearest
+Neighbor，ANN）的一种经典算法：NSW（Navigable Small World，NSW），原文：
+<a
+target="_blank" rel="noopener" href="https://www.researchgate.net/profile/Yu-Malkov/publication/259126397_Approximate_nearest_neighbor_algorithm_based_on_navigable_small_world_graphs/links/63733c302f4bca7fd06030b8/Approximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs.pdf">Approximate
+nearest neighbor algorithm based on navigable small world graphs</a>
+。</p>
+<p><strong>摘要</strong></p>
+<p>NSW 是一种用于度量空间的近似 K
+近邻算法。该算法基于图，每个向量构成顶点，向量之间的连接构成边。使用一种贪心算法的变体来进行
+K 近邻查询操作；插入算法基于查询操作并连接边。插入和查询操作时间复杂度为
+<span
+class="math inline">\({\log}^{2}(n)\)</span>。查询和插入操作可并行执行，且该索引数据结构可分布式。无需调整索引结构即可改变
+K 近邻查询正确性的概率。</p>
+<h2 id="核心思想">1. 核心思想</h2>
+<p>索引结构是一个可导航小世界图 <span class="math inline">\(G = (V,
+E)\)</span> ，向量集合 <span class="math inline">\(X\)</span>
+中的每个元素一一映射到顶点集合 <span class="math inline">\(V\)</span>
+。边集 <span class="math inline">\(E\)</span> 由索引构造算法决定。</p>
+<p>相关名词含义：</p>
 <ul>
-<li>以简单的数据结构(关系)存储数据库。</li>
-<li>物理存储结构由 DBMS 实现决定。</li>
-<li>通过高级语言访问数据，DBMS 负责找到最好的执行策略。</li>
+<li>朋友（friends）：共享某条边的顶点集</li>
+<li>顶点 <span class="math inline">\(v_i\)</span> 的朋友列表：与顶点
+<span class="math inline">\(v_i\)</span> 共享一条边的顶点列表</li>
 </ul>
-<p>关系模型具有几个关键概念：</p>
+<p>图中的边有两个目的：</p>
 <ul>
-<li>关系（relation）：关系是包含表示实体的属性关系的无序集合。</li>
-<li>元组（tuple）：元组是关系中的一组属性值。</li>
+<li>部分边是短程连接，用来作为 Delaunay
+图的近似，以使用贪心搜索算法；</li>
+<li>其余边是长程连接，用于实现对数级别复杂度的贪婪搜索。长程连负责构建图的可导航小世界属性。</li>
 </ul>
-<h2 id="关系代数">2. 关系代数</h2>
-<p>关系代数是用于操作关系模型的工具，以在数据库中进行查询等操作。关系代数的每个操作符接受一个或多个关系作为其输入，并输出一个新的关系。关系代数运算符根据输入的关系数量可分为单目运算符和双目运算符。最常用的操作有：</p>
+<p>数据结构示意图如下：</p>
+<center>
+<img src="/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229161552498.png" srcset="/img/loading.gif" lazyload class="" title="数据结构示意图">
+</center>
+<p>其中，蓝色圆表示图中顶点（数据集向量），绿色圆表示查询向量，黑色边是
+Delaunay 图的近似（短程连接），红色边是长程连接。箭头表示从进入点（entry
+point）的一个贪心搜索过程。</p>
+<p>数据结构由顶点的逐个插入形成。对于每个新加入的元素，从结构中找到其最接近的邻居集合（Delaunay
+图的近似）。这个集合与插入元素相互连接。随着越来越多的元素被插入到结构中，之前作为短程连接的连接现在变成了长程连接，从而形成了一个可导航小世界图。</p>
+<h2 id="查询算法">2. 查询算法</h2>
+<h3 id="基本贪心查询算法">2.1 基本贪心查询算法</h3>
+<p>该小节的算法用于近似最近邻查询，即只返回 1
+个查询结果。算法伪代码如下：</p>
+<center>
+<img src="/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229163003622.png" srcset="/img/loading.gif" lazyload class="" title="基本贪心查询算法">
+</center>
+<p>算法接收两个参数：</p>
 <ul>
-<li>选择（Select）：<span class="math inline">\(\sigma\)</span></li>
-<li>投影（Projection）：<span class="math inline">\(\Pi\)</span></li>
-<li>并集（Union）：<span class="math inline">\(\cup\)</span></li>
-<li>交集（Intersection）：<span class="math inline">\(\cap\)</span></li>
-<li>差集（Difference）：<span class="math inline">\(-\)</span></li>
-<li>笛卡尔积（Product）：<span
-class="math inline">\(\times\)</span></li>
-<li>连接（Join）：<span class="math inline">\(\bowtie\)</span></li>
-<li>……</li>
+<li><span class="math inline">\(q\)</span> ：表示查询向量</li>
+<li><span class="math inline">\(v_{entry\_point}\)</span>
+：表示查询起始顶点，且 <span class="math inline">\(v_{entry\_point} \in
+V\)</span> ，即 <span class="math inline">\(v_{entry\_point}\)</span>
+是顶点集合 <span class="math inline">\(V\)</span> 的一个元素。</li>
 </ul>
-<h3 id="选择">2.1 选择</h3>
-<p>含义：从关系中选择满足选择谓词的元组。谓词用来充当过滤器，仅保留满足谓词条件的元组。可以使用合取/析取合并多个谓词。</p>
-<p>语法：<span
-class="math inline">\(\sigma_{predicate}(\text{R})\)</span></p>
-<p>例子：<span class="math inline">\(\sigma_{
-{\text{a}\_\text{id}=\text{&#39;a2 &#39;}} \wedge {\text{ b}\_\text{id}
-&gt; \text{102}}}(\text{R})\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R<br><span class="hljs-keyword">WHERE</span> a_id<span class="hljs-operator">=</span><span class="hljs-string">&#x27;a2&#x27;</span> <span class="hljs-keyword">AND</span> b_id<span class="hljs-operator">&gt;</span><span class="hljs-number">102</span>;<br></code></pre></td></tr></table></figure>
-<h3 id="投影">2.2 投影</h3>
-<p>含义：用只包含指定属性的元组生成关系。可用于重新排列属性顺序和操作属性的值。</p>
-<p>语法：<span class="math inline">\(\Pi_{
-\text{A1},\text{A2},...,\text{An} }(\text{R})\)</span></p>
-<p>例子：<span class="math inline">\(\Pi_{
-\text{b}\_\text{id-100},\text{a}\_\text{id} }( \sigma_{
-\text{a}\_\text{id}=\text{&#39;a2&#39;} }(\text{R}) )\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> b_id<span class="hljs-number">-100</span>, a_id<br><span class="hljs-keyword">FROM</span> R <span class="hljs-keyword">WHERE</span> a_id <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;a2&#x27;</span>;<br></code></pre></td></tr></table></figure>
-<h3 id="并集">2.3 并集</h3>
-<p>含义：生成一个关系，其中包含只出现在一个或两个输入关系中的所有元组。</p>
-<p>语法：<span class="math inline">\(\text{R} \cup \text{S}\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql">(<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R)<br><span class="hljs-keyword">UNION</span> <span class="hljs-keyword">ALL</span><br>(<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> S);<br></code></pre></td></tr></table></figure>
-<h3 id="交集">2.4 交集</h3>
-<p>含义：生成一个关系，该关系只包含出现在两个输入关系中的元组。</p>
-<p>语法：<span class="math inline">\(\text{R} \cap \text{S}\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql">(<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R)<br><span class="hljs-keyword">INTERSECT</span><br>(<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> S);<br></code></pre></td></tr></table></figure>
-<h3 id="差集">2.5 差集</h3>
-<p>含义：生成一个关系，其中只包含第一个输入关系中出现的元组，而不包含第二个输入关系中出现的元组。</p>
-<p>语法：<span class="math inline">\(\text{R} - \text{S}\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql">(<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R)<br><span class="hljs-keyword">EXCEPT</span><br>(<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> S);<br></code></pre></td></tr></table></figure>
-<h3 id="笛卡尔积">2.6 笛卡尔积</h3>
-<p>含义：生成包含来自输入关系的元组的所有可能组合的关系。</p>
-<p>语法：<span class="math inline">\(\text{R} \times
-\text{S}\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R <span class="hljs-keyword">CROSS</span> <span class="hljs-keyword">JOIN</span> S;<br><br><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R, S;<br></code></pre></td></tr></table></figure>
-<h3 id="连接">2.7 连接</h3>
-<p>含义：生成一个包含元组的关系，该元组是两个具有一个或多个属性的共同值元组(每个输入关系一个)的组合。</p>
-<p>语法：<span class="math inline">\(\text{R} \bowtie
-\text{S}\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R <span class="hljs-keyword">NATURAL</span> <span class="hljs-keyword">JOIN</span> S;<br><br><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R <span class="hljs-keyword">JOIN</span> S <span class="hljs-keyword">USING</span> (a_id, b_id);<br></code></pre></td></tr></table></figure>
-<p>连接操作还可以附加谓词，相当于先做笛卡尔积再进行选择操作，见
-《Database System Concepts》一书解释：</p>
-<img src="/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/image-20231222215127913.png" srcset="/img/loading.gif" lazyload class="" title="连接+谓词&#x3D;&#x3D;笛卡尔积+选择">
-<p>这种形式相当于以下 SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> R, S <span class="hljs-keyword">ON</span> R.a1<span class="hljs-operator">=</span>S.a2;<br><br><span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span><br><span class="hljs-keyword">FROM</span> R, S<br><span class="hljs-keyword">WHERE</span> R.a1<span class="hljs-operator">=</span>S.a2;<br></code></pre></td></tr></table></figure>
-<h3 id="赋值">2.8 赋值</h3>
-<p>含义：提供一种工具，更容易地表达复杂查询。</p>
-<p>符号：<span class="math inline">\(\leftarrow\)</span></p>
-<p>例子：</p>
-<img src="/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/image-20231222221314760.png" srcset="/img/loading.gif" lazyload class="" title="image-20231222221314760">
-<h3 id="重命名">2.9 重命名</h3>
-<p>含义：用于给关系代数计算中间结果取名。</p>
-<p>符号：<span class="math inline">\(\rho\)</span></p>
-<p>语法：<span class="math inline">\(\rho_{\text{x} }(\text{E})\)</span>
-或 <span class="math inline">\(\rho_{\text{x} (
-\text{A1},\text{A2},...,\text{An} ) }(\text{E})\)</span></p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> <span class="hljs-keyword">DISTINCT</span> T.name<br><span class="hljs-keyword">FROM</span> instructor <span class="hljs-keyword">AS</span> T, instructor <span class="hljs-keyword">AS</span> S<br><span class="hljs-keyword">WHERE</span> T.salary <span class="hljs-operator">&gt;</span> S.salary <span class="hljs-keyword">AND</span> S.dept name <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;Biology&#x27;</span>;<br><br><span class="hljs-keyword">SELECT</span> name <span class="hljs-keyword">AS</span> instructor_name, course_id<br><span class="hljs-keyword">FROM</span> instructor, teaches<br><span class="hljs-keyword">WHERE</span> instructor.ID <span class="hljs-operator">=</span> teaches.ID;<br></code></pre></td></tr></table></figure>
-<h3 id="聚合">2.10 聚合</h3>
-<p>含义：计算 AVG、MAX、MIN、SUM、COUNT 值</p>
-<p>符号：<span class="math inline">\(\gamma\)</span></p>
-<p>例子：<span class="math inline">\(_\text{A2} \gamma_{
-\textbf{average}\text{(A1)}} (R)\)</span> ，表示在关系 R 上，在 A2
-属性上分组，计算 A1 属性的平均值。</p>
-<p>SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs sql"><span class="hljs-keyword">SELECT</span> dept_name, <span class="hljs-built_in">AVG</span>(salary) <span class="hljs-keyword">AS</span> avg salary<br><span class="hljs-keyword">FROM</span> instructor<br><span class="hljs-keyword">GROUP</span> <span class="hljs-keyword">BY</span> dept_name;<br></code></pre></td></tr></table></figure>
-<p>更复杂的例子：</p>
-<img src="/2023/09/05/%E4%BB%8E%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0%E5%88%B0-SQL/image-20231222223632496.png" srcset="/img/loading.gif" lazyload class="" title="image-20231222223632496">
-<p><br></p>
-<p><br></p>
-<p><strong>参考：</strong></p>
-<ol type="1">
-<li><a
-target="_blank" rel="noopener" href="https://15445.courses.cs.cmu.edu/fall2022/slides/01-introduction.pdf">CMU
-15-445/645 Fall 2022 Lecture #01: Course Overview &amp; Relational
-Model</a></li>
-<li><a target="_blank" rel="noopener" href="https://codex.cs.yale.edu/avi/db-book/">Database System
-Concepts Seventh Edition</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://www.db.dobo.sk/wp-content/uploads/2015/11/Codd_1970_A_relational_model.pdf">A
-Relational Model of Data for Large Shared Data Banks</a></li>
-</ol>
+<p>执行流程如下：</p>
+<p>从入口点开始，算法计算查询 <span class="math inline">\(q\)</span>
+到当前顶点的好友列表中每个顶点的距离，然后选择距离最小的顶点。如果查询与所选顶点之间的距离小于查询与当前元素之间的距离，那么算法会移动到所选顶点，它成为新的当前顶点。当算法达到一个局部最小值时停止，即：其好友列表中没有比该顶点更接近查询
+<span class="math inline">\(q\)</span> 的顶点。</p>
+<p>注意，该算法并不保证返回最近邻结果，而是返回近似最近邻。</p>
+<h3 id="k-近邻查询">2.2 K 近邻查询</h3>
+<p>近似 K 近邻查询算法伪代码如下：</p>
+<center>
+<img src="/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229164309519.png" srcset="/img/loading.gif" lazyload class="" title="近似 K 近邻查询算法">
+<img src="/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229164334787.png" srcset="/img/loading.gif" lazyload class="" title="近似 K 近邻查询算法">
+</center>
+<p>算法参数含义：</p>
+<ul>
+<li><span class="math inline">\(q\)</span> ：表示查询向量</li>
+<li><span class="math inline">\(k\)</span> ：即 k 近邻</li>
+<li><span class="math inline">\(m\)</span>：重复进行 <span
+class="math inline">\(m\)</span> 循环体</li>
+</ul>
+<p>伪代码中一些变量含义解释如下：</p>
+<ul>
+<li>创建一个<code>TreeSet</code>对象<code>tempRes</code>，用于存储临时结果。</li>
+<li>创建一个<code>TreeSet</code>对象<code>candidates</code>，用于存储当前考虑的候选顶点。</li>
+<li>创建一个<code>TreeSet</code>对象<code>visitedSet</code>，用于记录已访问过的顶点，以避免重复访问。</li>
+<li>创建一个列表<code>result</code>，用于存储最终的 k 个最近邻居。</li>
+</ul>
+<p>算法主体中，外层循环即进行 <span class="math inline">\(m\)</span>
+次查询，以提高查询精度；内层循环对集合 <code>candidates</code>
+进行动态插入及遍历，直到满足 break 条件或遍历完 <code>candidates</code>
+结束内层循环。</p>
+<h2 id="插入算法">3. 插入算法</h2>
+<p>插入算法伪代码如下：</p>
+<center>
+<img src="/2023/12/29/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AApproximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/image-20231229171153499.png" srcset="/img/loading.gif" lazyload class="" title="插入算法">
+</center>
+<p>参数含义：</p>
+<ul>
+<li><span class="math inline">\(new\_object\)</span> ：插入元素</li>
+<li><span class="math inline">\(f\)</span> ：表示进行 k 近邻查询时的参数
+k</li>
+<li><span class="math inline">\(w\)</span>：表示调用
+<code>k-NNSearch</code> 算法时的参数 <span
+class="math inline">\(m\)</span></li>
+</ul>
+<p>该算法首先调用 <code>k-NNSearch</code> 返回近似 k
+近邻结果，然后将插入元素与近似最近邻结果互相连接边。从伪代码中也可以看出索引结构是无向图。</p>
+<h3 id="参数选择">3.1 参数选择</h3>
+<p>参数 <span class="math inline">\(w\)</span>
+决定了在构建算法中确定最近邻居的准确性（召回率）。作者建议设置足够大的
+<span class="math inline">\(w\)</span> ，以让召回率接近
+1（如：0.95~0.99）。小的召回率会增加错误连接的比例，这只会提高算法的复杂性，而实验表明，插入时召回率超过
+0.99 对搜索质量没有可测量的影响。测试还显示，对于最佳召回率，<span
+class="math inline">\(w\)</span>
+随着数据集大小的变化缓慢（对数）变化，因此，如果我们已经知道一个好的召回率的近似值
+<span class="math inline">\(w0\)</span>，我们可以首先使用大得多的 <span
+class="math inline">\(m\)</span>（例如，<span class="math inline">\(m =
+2\times w0 + 10\)</span>），假设 <span class="math inline">\(m\)</span>
+足够大，使得搜索结果真正是最近的 k 个邻居，然后增加 <span
+class="math inline">\(w\)</span>，并重复测试，直到达到一个高召回率（如：0.95~0.99）。操作的复杂度与数据集大小成对数关系，因此它不影响整体构建复杂度。</p>
+<p>参数 <span class="math inline">\(f\)</span>
+决定了在插入新元素时，与新元素连接的最近邻居的数量。测试结果显示，对于维度在
+1~20 的欧式空间数据，<span class="math inline">\(f\)</span>
+的值应该大约是维度 <span class="math inline">\(d\)</span> 的 3
+倍，这样可以保持内存消耗与维度线性增长，同时保持较高的搜索召回率。小的
+<span class="math inline">\(f\)</span>
+能够减少单次搜索的复杂度，但是牺牲了召回质量。</p>
+<h2 id="总结与问题">4. 总结与问题</h2>
+<p>以上就是对 NSW
+关键的查询、插入算法的介绍。实验部分请参考原论文。在原论文中，作者还提出了可改进的方向，以降低复杂度和/或提高准确性：</p>
+<ul>
+<li><strong>更复杂的节点朋友选择算法</strong>：选择最近的邻居作为朋友并不是近似
+Delaunay
+图的最佳方法，因为这种方法只考虑了新元素与候选节点之间的距离，而忽略了候选节点之间的距离。</li>
+<li><strong>更复杂的可导航小世界创建算法</strong></li>
+<li><strong>更有效地管理多个搜索</strong></li>
+</ul>
 
                 
               </div>
@@ -458,6 +475,13 @@ Relational Model of Data for Large Shared Data Banks</a></li>
   <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
   
   
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/%E8%AF%BB%E8%AE%BA%E6%96%87/" class="category-chain-item">读论文</a>
+  
+  
+
+  
 
       </span>
     
@@ -470,11 +494,15 @@ Relational Model of Data for Large Shared Data Banks</a></li>
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E5%85%B3%E7%B3%BB%E6%A8%A1%E5%9E%8B/">#关系模型</a>
+        <a href="/tags/%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB/">#近似最近邻</a>
       
-        <a href="/tags/%E5%85%B3%E7%B3%BB%E4%BB%A3%E6%95%B0/">#关系代数</a>
+        <a href="/tags/ANN/">#ANN</a>
       
-        <a href="/tags/SQL/">#SQL</a>
+        <a href="/tags/%E5%90%91%E9%87%8F%E7%9B%B8%E4%BC%BC%E5%BA%A6%E6%A3%80%E7%B4%A2/">#向量相似度检索</a>
+      
+        <a href="/tags/K%E8%BF%91%E9%82%BB/">#K近邻</a>
+      
+        <a href="/tags/%E7%B4%A2%E5%BC%95/">#索引</a>
       
     </div>
   
@@ -486,8 +514,8 @@ Relational Model of Data for Large Shared Data Banks</a></li>
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>从关系代数到 SQL</div>
-      <div>https://arcsin2.cloud/2023/09/05/从关系代数到-SQL/</div>
+      <div>DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs</div>
+      <div>https://arcsin2.cloud/2023/12/29/DB-论文阅读：Approximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/</div>
     </div>
     <div class="license-meta">
       
@@ -499,7 +527,7 @@ Relational Model of Data for Large Shared Data Banks</a></li>
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2023年9月5日</div>
+          <div>2023年12月29日</div>
         </div>
       
       
@@ -543,18 +571,12 @@ Relational Model of Data for Large Shared Data Banks</a></li>
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2023/12/25/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AA-Relational-Model-of-Data-for-Large-Shared-Data-Banks/" title="DB 论文阅读：A Relational Model of Data for Large Shared Data Banks">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">DB 论文阅读：A Relational Model of Data for Large Shared Data Banks</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2023/08/11/Linux%20%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%80%20API/" title="Linux 网络编程基础 API">
-                        <span class="hidden-mobile">Linux 网络编程基础 API</span>
+                      <a href="/2023/12/25/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AA-Relational-Model-of-Data-for-Large-Shared-Data-Banks/" title="DB 论文阅读：A Relational Model of Data for Large Shared Data Banks">
+                        <span class="hidden-mobile">DB 论文阅读：A Relational Model of Data for Large Shared Data Banks</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

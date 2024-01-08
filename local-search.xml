@@ -4,6 +4,33 @@
   
   
   <entry>
+    <title>Go 语言入门</title>
+    <link href="/2024/01/08/Go-%E8%AF%AD%E8%A8%80%E5%85%A5%E9%97%A8/"/>
+    <url>/2024/01/08/Go-%E8%AF%AD%E8%A8%80%E5%85%A5%E9%97%A8/</url>
+    
+    <content type="html"><![CDATA[<p>本文介绍学习 Go 语言一些学习材料，总结学习 Go时容易理解错误的一些概念，可用于已掌握 C++、Java等编程语言的程序员快速入门 Go。</p><h2 id="基础语法">1. 基础语法</h2><p>入门 Go 语言基础语法和关键语言概念的最佳材料是 Go语言官方提供的在线教程：</p><ul><li>英文版：<ahref="https://go.dev/tour/welcome/1">https://go.dev/tour/welcome/1</a></li><li>中文版：<ahref="https://tour.go-zh.org/welcome/1">https://tour.go-zh.org/welcome/1</a></li></ul><p>这一在线教程提供了文档+在线编程环境，可在浏览器中编辑和运行代码。同时，也穿插了一些小练习，能够在写代码中学习Go 语言。学习完该教程预估要几个小时，学习完后即可使用 Go语言编写自己的程序。</p><p>这一教程涵盖的内容大概包括：</p><ul><li>基本数据类型：<code>int</code>、<code>float64</code>、<code>string</code>等 Go语言支持的基本数据类型，以及定义变量、常量、函数内变量的语法等；</li><li>常用容器：包括 <code>slice</code>、<code>map</code>等数据结构，分别提供可变长数组、哈希等功能；</li><li>控制语句：<code>if</code> 、<code>for</code> 、<code>switch</code>等控制语句结构，尤其是 Go 语言提供的类似于<code>if expression; bool</code> 的语法；</li><li>函数与接口：Go语言中函数定义语法、多返回值、接口定义与实现、结构体方法等；</li><li>并发：介绍 Go语言提供的并发编程相关概念，包括：<code>goroutine</code>、<code>select</code>、<code>channel</code>等的使用。</li></ul><p>学习完这些内容后，该教程也指出了继续学习的方向，链接：<ahref="https://tour.go-zh.org/concurrency/11">https://tour.go-zh.org/concurrency/11</a>。</p><h2 id="值传递-or-引用传递">2. 值传递 or 引用传递？</h2><p>学习完 Go基础语法后，难免会遇到一个问题：为什么同样是语法上的以值传递，对<code>int</code> 等类型的修改不改变函数外参数；而对<code>map</code>、<code>slice</code>、<code>channel</code>的更改却会改变传递给函数的原参数。乍一看，这似乎类似于 Java语言中的机制：对基本类型以值传递；对对象类型引用传递。但是这一理解实际上是不对的，Go语言中只存在以值传递。看似 “引用传递” 实际上是 Go语言为了方便我们使用所做的一层隐藏或抽象。</p><p>对 Go 以值传递的介绍文章网上已有很多，这里贴两个链接供参考：</p><ul><li><ahref="https://zhuanlan.zhihu.com/p/542218435">Golang是值传递还是引用传递- 码农在新加坡的文章 - 知乎</a></li><li><a href="https://juejin.cn/post/7221730647043244090">【Go 进阶】Go语言到底是值传递，还是引用传递？</a></li></ul><p>简单来说就是：</p><ul><li>Go 语言函数传参只存在以值传递；</li><li><code>map</code>、<code>channel</code>等语言提供的功能，其本质上是调用 <code>make_xxx</code>函数并返回指针类型，语言隐藏了其实际上是指针的事实，从而方便程序员使用；</li><li><code>slice</code>更为特殊，其本质上是一个结构体，内部含有指向堆内存的指针，因此函数传递<code>slice</code>时，需要做结构体拷贝，但是由于指针实际上指向堆内存，通过下标访问<code>arr[i]</code> 并进行更改时，更改也对函数体外的原<code>slice</code> 可见。</li></ul><h2 id="并发编程">3. 并发编程</h2><p>Go 语言提供的 <code>goroutine</code> 和 <code>channel</code>提供了一种抽象层级更高的并发编程模型，而不是传统的面向锁、条件变量等的并发编程。个人认为，初次学习Go的并发编程时还是比较难理解的，尤其是思维方式的转变，从习惯的：共享数据结构（内存）+锁的并发编程，转向Go 语言的：如何定义消息和划分读写 <code>channel</code> 功能，以使用<code>goroutine</code> 和 <code>channel</code>进行并发编程。这是完全两种不同的思考方式，需要花费一定时间来转换。这里提供一些可参考的资料以学习Go 并发编程的惯用法：</p><ul><li><a href="https://www.youtube.com/watch?v=f6kdp27TYZs">Go并发模型</a>(<ahref="https://talks.go-zh.org/2012/concurrency.slide">幻灯片</a>) ：Go语言设计者之一关于 Go 并发编程模式的演讲视频；</li><li><a href="https://www.youtube.com/watch?v=QDDwwePbDtw">深入 Go并发模型</a>(<ahref="https://talks.go-zh.org/2013/advconc.slide">幻灯片</a>) ：Google的另一关于 Go 并发编程的演讲视频；</li><li><a href="https://go-zh.org/doc/codewalk/sharemem/">Codewalk:通过通信共享内存</a> ：通过通信来共享内存示例；</li><li><ahref="https://github.com/lotusirous/go-concurrency-patterns">lotusirous/go-concurrency-patterns:Concurrency patterns in Go (github.com)</a> ：收集了常用 Go并发编程模式的 GitHub 仓库。</li></ul>]]></content>
+    
+    
+    <categories>
+      
+      <category>编程语言</category>
+      
+      <category>Go</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Go</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>DB 论文阅读：Hierarchical Navigable Small World</title>
     <link href="/2024/01/03/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AHierarchical-Navigable-Small-World/"/>
     <url>/2024/01/03/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AHierarchical-Navigable-Small-World/</url>
@@ -292,6 +319,8 @@
     
     <categories>
       
+      <category>编程语言</category>
+      
       <category>C</category>
       
     </categories>
@@ -418,6 +447,8 @@
     
     
     <categories>
+      
+      <category>编程语言</category>
       
       <category>C++</category>
       

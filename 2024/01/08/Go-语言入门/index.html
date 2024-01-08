@@ -16,26 +16,24 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="作为第一门语言是 C++ 的程序员，一直觉得对 C 语言的一些重要特性不清晰，对一些 C 程序惯用法也不了解。故借阅读 《C 程序设计语言》 一书的机会，将相关曾经遗漏的知识整理如下。  1. extern 声明 extern 关键字用于声明外部变量，注意声明与定义的不同：  定义（define）：表示创建变量或分配存储单元 声明（declaration）：说明变量的性质，但">
+    <meta name="description" content="本文介绍学习 Go 语言一些学习材料，总结学习 Go 时容易理解错误的一些概念，可用于已掌握 C++、Java 等编程语言的程序员快速入门 Go。 1. 基础语法 入门 Go 语言基础语法和关键语言概念的最佳材料是 Go 语言官方提供的在线教程：  英文版：https:&#x2F;&#x2F;go.dev&#x2F;tour&#x2F;welcome&#x2F;1 中文版：https:&#x2F;&#x2F;tour.go-zh.org&#x2F;welcom">
 <meta property="og:type" content="article">
-<meta property="og:title" content="C 语言拾遗">
-<meta property="og:url" content="https://arcsin2.cloud/2023/05/01/C-%E8%AF%AD%E8%A8%80%E6%8B%BE%E9%81%97/index.html">
+<meta property="og:title" content="Go 语言入门">
+<meta property="og:url" content="https://arcsin2.cloud/2024/01/08/Go-%E8%AF%AD%E8%A8%80%E5%85%A5%E9%97%A8/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="作为第一门语言是 C++ 的程序员，一直觉得对 C 语言的一些重要特性不清晰，对一些 C 程序惯用法也不了解。故借阅读 《C 程序设计语言》 一书的机会，将相关曾经遗漏的知识整理如下。  1. extern 声明 extern 关键字用于声明外部变量，注意声明与定义的不同：  定义（define）：表示创建变量或分配存储单元 声明（declaration）：说明变量的性质，但">
+<meta property="og:description" content="本文介绍学习 Go 语言一些学习材料，总结学习 Go 时容易理解错误的一些概念，可用于已掌握 C++、Java 等编程语言的程序员快速入门 Go。 1. 基础语法 入门 Go 语言基础语法和关键语言概念的最佳材料是 Go 语言官方提供的在线教程：  英文版：https:&#x2F;&#x2F;go.dev&#x2F;tour&#x2F;welcome&#x2F;1 中文版：https:&#x2F;&#x2F;tour.go-zh.org&#x2F;welcom">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2023-05-01T07:33:35.000Z">
-<meta property="article:modified_time" content="2024-01-08T06:18:15.343Z">
+<meta property="article:published_time" content="2024-01-08T06:16:32.000Z">
+<meta property="article:modified_time" content="2024-01-08T12:04:11.939Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="define">
-<meta property="article:tag" content="extern">
-<meta property="article:tag" content="union">
+<meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary_large_image">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>C 语言拾遗 - arcsin2 的个人博客</title>
+  <title>Go 语言入门 - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -240,7 +238,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="C 语言拾遗"></span>
+            <span id="subtitle" data-typed-text="Go 语言入门"></span>
           
         </div>
 
@@ -251,8 +249,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2023-05-01 15:33" pubdate>
-          2023年5月1日 下午
+        <time datetime="2024-01-08 14:16" pubdate>
+          2024年1月8日 下午
         </time>
       </span>
     
@@ -263,7 +261,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.1k 字
+          1.5k 字
         
       </span>
     
@@ -274,7 +272,7 @@
         
         
         
-          8 分钟
+          6 分钟
         
       </span>
     
@@ -312,58 +310,100 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">C 语言拾遗</h1>
+            <h1 style="display: none">Go 语言入门</h1>
             
             
               <div class="markdown-body">
                 
-                <blockquote>
-<p>作为第一门语言是 C++ 的程序员，一直觉得对 C
-语言的一些重要特性不清晰，对一些 C 程序惯用法也不了解。故借阅读 《C
-程序设计语言》 一书的机会，将相关曾经遗漏的知识整理如下。</p>
-</blockquote>
-<h2 id="extern-声明">1. extern 声明</h2>
-<p><code>extern</code>
-关键字用于声明外部变量，注意声明与定义的不同：</p>
+                <p>本文介绍学习 Go 语言一些学习材料，总结学习 Go
+时容易理解错误的一些概念，可用于已掌握 C++、Java
+等编程语言的程序员快速入门 Go。</p>
+<h2 id="基础语法">1. 基础语法</h2>
+<p>入门 Go 语言基础语法和关键语言概念的最佳材料是 Go
+语言官方提供的在线教程：</p>
 <ul>
-<li>定义（define）：表示创建变量或分配存储单元</li>
-<li>声明（declaration）：说明变量的性质，但并不分配存储单元</li>
+<li>英文版：<a
+target="_blank" rel="noopener" href="https://go.dev/tour/welcome/1">https://go.dev/tour/welcome/1</a></li>
+<li>中文版：<a
+target="_blank" rel="noopener" href="https://tour.go-zh.org/welcome/1">https://tour.go-zh.org/welcome/1</a></li>
 </ul>
-<p>当外部变量的定义出现在使用它的函数之前时，可以省略
-<code>extern</code> 声明；反之，必须有 <code>extern</code>
-声明（如：涉及多个源文件）。</p>
-<p>Example：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span><br><br><span class="hljs-type">int</span> n = <span class="hljs-number">1</span>;<br><br><span class="hljs-type">int</span> <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">void</span>)</span><br>&#123;<br>    <span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> n;	<span class="hljs-meta"># extern declaration</span><br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d\n&quot;</span>, n);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
-<p>用 <code>static</code>
-关键字修饰外部变量或函数，可以将其后声明的对象的作用域限定为被编译文件的剩余部分，其他文件不能访问该对象。</p>
-<p><code>static</code>
-也可用于声明内部变量：该变量仅能在某函数内使用但一直占据存储空间。</p>
-<h2 id="宏">2. 宏</h2>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 取消宏定义</span><br><span class="hljs-meta">#<span class="hljs-keyword">undef</span> getchar</span><br><br><br><span class="hljs-comment">// 调试打印宏</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> dprint(expr) printf(#expr <span class="hljs-string">&quot; = %g\n&quot;</span>, expr)</span><br><br>dprint(x/y);<br><br><span class="hljs-comment">// 宏将展开为：</span><br><span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;x/y&quot;</span> <span class="hljs-string">&quot; = %g\n&quot;</span>, x/y);<br><br><br><span class="hljs-comment">// 预处理器运算符 ##</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> paste(front, end) front ## end</span><br><br><span class="hljs-comment">// 宏调用 paste(name, 1) 的结果将创建符号 name1</span><br></code></pre></td></tr></table></figure>
-<p>条件包含</p>
-<p>example 1：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">if</span> !defined(HDR)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> HDR</span><br><br><span class="hljs-comment">/* hdr.h 文件内容 */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
-<p>等价于：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> HDR</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> HDR</span><br><br><span class="hljs-comment">/* code here */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br></code></pre></td></tr></table></figure>
-<p>example 2：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">if</span> SYSTEM == SYSV</span><br>	<span class="hljs-meta">#<span class="hljs-keyword">define</span> HDR <span class="hljs-string">&quot;sysv.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">elif</span> SYSTEM == BSD:</span><br>	<span class="hljs-meta">#<span class="hljs-keyword">define</span> HDR <span class="hljs-string">&quot;bsd.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">elif</span> SYSTEM == MSDOS:</span><br>	<span class="hljs-meta">#<span class="hljs-keyword">define</span> HDR <span class="hljs-string">&quot;msdos.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">else</span>:</span><br>	<span class="hljs-meta">#<span class="hljs-keyword">define</span> HDR <span class="hljs-string">&quot;default.h&quot;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> HDR</span><br></code></pre></td></tr></table></figure>
-<h2 id="union">3. union</h2>
-<p><code>union</code>：在不同时刻保存不同类型和长度的对象的变量。</p>
-<p>example：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">union</span> <span class="hljs-title">u_tag</span> &#123;</span><br>    <span class="hljs-type">int</span> ival;<br>    <span class="hljs-type">float</span> fval;<br>    <span class="hljs-type">char</span> *sval;<br>&#125; u;<br></code></pre></td></tr></table></figure>
-<p><code>union</code> 实际上就是
-<code>struct</code>，它的所有成员相对与基地址的偏移量都为 0，此
-<code>struct</code>
-空间要大到足够容纳最宽的成员，并且，其对齐方式要适合于
-<code>union</code> 中所有类型的成员。</p>
-<h2 id="位字段-bit-field">4. 位字段 bit-field</h2>
-<p>example：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">// 定义位字段，&#x27;:&#x27; 后数字表示字段的宽度</span><br><span class="hljs-comment">// 字段作用与小整数类似，可以出现在算术表达式中</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> &#123;</span><br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> is_keyword : <span class="hljs-number">1</span>;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> is_extern : <span class="hljs-number">1</span>;<br>    <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> is_static : <span class="hljs-number">1</span>;<br>&#125; flags;<br><br><span class="hljs-comment">// 设置字段值</span><br>flags.is_extern = flags.is_static = <span class="hljs-number">1</span>;<br>flags.is_extern = flags.is_static = <span class="hljs-number">0</span>;<br><br><span class="hljs-comment">// 位测试</span><br><span class="hljs-keyword">if</span> (flags.is_extern == <span class="hljs-number">0</span> &amp;&amp; flags.is_static ==<span class="hljs-number">0</span>)<br>    ...<br></code></pre></td></tr></table></figure>
-<p>字段不是数组，且没有地址，不能对其使用 <code>&amp;</code>
-运算符。</p>
-<h2 id="文件访问">5. 文件访问</h2>
-<p>example：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c">FILE *fp = fopen(name, mode);	<span class="hljs-comment">// 以指定 mode 打开文件；失败返回 NULL</span><br>fclose(fp);		<span class="hljs-comment">// 关闭文件</span><br><br><span class="hljs-comment">// 从文件中返回下一个字符；若达到文件结尾或出错，返回 EOF</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">getc</span><span class="hljs-params">(FILE *fp)</span>;<br><br><span class="hljs-comment">// 将字符 c 写入到 fp 指向的文件中，并返回写入的字符</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">putc</span><span class="hljs-params">(<span class="hljs-type">int</span> c, FILE *fp)</span>;<br><br><span class="hljs-comment">// 对文件的格式化输入输出</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">fscanf</span><span class="hljs-params">(FILE *fp, <span class="hljs-type">char</span> *format, ...)</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">fprintf</span><span class="hljs-params">(FILE *fp, <span class="hljs-type">char</span> *format, ...)</span>;<br><br><span class="hljs-comment">// 错误判断</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">ferror</span><span class="hljs-params">(FILE *fp)</span>;	<span class="hljs-comment">// 如果流 fp 中出现错误，则返回一个非 0 值</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">feof</span><span class="hljs-params">(FILE *fp)</span>;		<span class="hljs-comment">// 如果文件到达文件结尾，返回一个非 0 值</span><br><br><span class="hljs-comment">// 行输入和行输出</span><br><span class="hljs-comment">// 从 fp 指向的文件中读取下一个输入行（包括换行符），并将它存放在 line 中。最多读取 maxline-1 个字符。正常结束返回 line；出错返回 NULL</span><br><span class="hljs-type">char</span> *<span class="hljs-title function_">fgets</span><span class="hljs-params">(<span class="hljs-type">char</span> *line, <span class="hljs-type">int</span> maxline, FILE *fp)</span>;<br><span class="hljs-comment">// 将 line 写入 fp 指向的文件中。出错返回 EOF；否则返回一个非负值。</span><br><span class="hljs-type">char</span> *<span class="hljs-title function_">fputs</span><span class="hljs-params">(<span class="hljs-type">char</span> *line, FILE *fp)</span>;<br></code></pre></td></tr></table></figure>
+<p>这一在线教程提供了文档+在线编程环境，可在浏览器中编辑和运行代码。同时，也穿插了一些小练习，能够在写代码中学习
+Go 语言。学习完该教程预估要几个小时，学习完后即可使用 Go
+语言编写自己的程序。</p>
+<p>这一教程涵盖的内容大概包括：</p>
+<ul>
+<li>基本数据类型：<code>int</code>、<code>float64</code>、<code>string</code>
+等 Go
+语言支持的基本数据类型，以及定义变量、常量、函数内变量的语法等；</li>
+<li>常用容器：包括 <code>slice</code>、<code>map</code>
+等数据结构，分别提供可变长数组、哈希等功能；</li>
+<li>控制语句：<code>if</code> 、<code>for</code> 、<code>switch</code>
+等控制语句结构，尤其是 Go 语言提供的类似于
+<code>if expression; bool</code> 的语法；</li>
+<li>函数与接口：Go
+语言中函数定义语法、多返回值、接口定义与实现、结构体方法等；</li>
+<li>并发：介绍 Go
+语言提供的并发编程相关概念，包括：<code>goroutine</code>、<code>select</code>、<code>channel</code>
+等的使用。</li>
+</ul>
+<p>学习完这些内容后，该教程也指出了继续学习的方向，链接：<a
+target="_blank" rel="noopener" href="https://tour.go-zh.org/concurrency/11">https://tour.go-zh.org/concurrency/11</a>
+。</p>
+<h2 id="值传递-or-引用传递">2. 值传递 or 引用传递？</h2>
+<p>学习完 Go
+基础语法后，难免会遇到一个问题：为什么同样是语法上的以值传递，对
+<code>int</code> 等类型的修改不改变函数外参数；而对
+<code>map</code>、<code>slice</code>、<code>channel</code>
+的更改却会改变传递给函数的原参数。乍一看，这似乎类似于 Java
+语言中的机制：对基本类型以值传递；对对象类型引用传递。但是这一理解实际上是不对的，Go
+语言中只存在以值传递。看似 “引用传递” 实际上是 Go
+语言为了方便我们使用所做的一层隐藏或抽象。</p>
+<p>对 Go 以值传递的介绍文章网上已有很多，这里贴两个链接供参考：</p>
+<ul>
+<li><a
+target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/542218435">Golang是值传递还是引用传递
+- 码农在新加坡的文章 - 知乎</a></li>
+<li><a target="_blank" rel="noopener" href="https://juejin.cn/post/7221730647043244090">【Go 进阶】Go
+语言到底是值传递，还是引用传递？</a></li>
+</ul>
+<p>简单来说就是：</p>
+<ul>
+<li>Go 语言函数传参只存在以值传递；</li>
+<li><code>map</code>、<code>channel</code>
+等语言提供的功能，其本质上是调用 <code>make_xxx</code>
+函数并返回指针类型，语言隐藏了其实际上是指针的事实，从而方便程序员使用；</li>
+<li><code>slice</code>
+更为特殊，其本质上是一个结构体，内部含有指向堆内存的指针，因此函数传递
+<code>slice</code>
+时，需要做结构体拷贝，但是由于指针实际上指向堆内存，通过下标访问
+<code>arr[i]</code> 并进行更改时，更改也对函数体外的原
+<code>slice</code> 可见。</li>
+</ul>
+<h2 id="并发编程">3. 并发编程</h2>
+<p>Go 语言提供的 <code>goroutine</code> 和 <code>channel</code>
+提供了一种抽象层级更高的并发编程模型，而不是传统的面向锁、条件变量等的并发编程。个人认为，初次学习
+Go
+的并发编程时还是比较难理解的，尤其是思维方式的转变，从习惯的：共享数据结构（内存）+锁的并发编程，转向
+Go 语言的：如何定义消息和划分读写 <code>channel</code> 功能，以使用
+<code>goroutine</code> 和 <code>channel</code>
+进行并发编程。这是完全两种不同的思考方式，需要花费一定时间来转换。这里提供一些可参考的资料以学习
+Go 并发编程的惯用法：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=f6kdp27TYZs">Go
+并发模型</a>(<a
+target="_blank" rel="noopener" href="https://talks.go-zh.org/2012/concurrency.slide">幻灯片</a>) ：Go
+语言设计者之一关于 Go 并发编程模式的演讲视频；</li>
+<li><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=QDDwwePbDtw">深入 Go
+并发模型</a>(<a
+target="_blank" rel="noopener" href="https://talks.go-zh.org/2013/advconc.slide">幻灯片</a>) ：Google
+的另一关于 Go 并发编程的演讲视频；</li>
+<li><a target="_blank" rel="noopener" href="https://go-zh.org/doc/codewalk/sharemem/">Codewalk:
+通过通信共享内存</a> ：通过通信来共享内存示例；</li>
+<li><a
+target="_blank" rel="noopener" href="https://github.com/lotusirous/go-concurrency-patterns">lotusirous/go-concurrency-patterns:
+Concurrency patterns in Go (github.com)</a> ：收集了常用 Go
+并发编程模式的 GitHub 仓库。</li>
+</ul>
 
                 
               </div>
@@ -387,7 +427,7 @@
   
     <span>></span>
     
-  <a href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/" class="category-chain-item">C</a>
+  <a href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/Go/" class="category-chain-item">Go</a>
   
   
 
@@ -404,11 +444,7 @@
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/define/">#define</a>
-      
-        <a href="/tags/extern/">#extern</a>
-      
-        <a href="/tags/union/">#union</a>
+        <a href="/tags/Go/">#Go</a>
       
     </div>
   
@@ -420,8 +456,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>C 语言拾遗</div>
-      <div>https://arcsin2.cloud/2023/05/01/C-语言拾遗/</div>
+      <div>Go 语言入门</div>
+      <div>https://arcsin2.cloud/2024/01/08/Go-语言入门/</div>
     </div>
     <div class="license-meta">
       
@@ -433,7 +469,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2023年5月1日</div>
+          <div>2024年1月8日</div>
         </div>
       
       
@@ -477,18 +513,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2023/05/25/LFS%E6%89%A9%E5%AE%B9/" title="使用Git LFS管理大文件及GitHub LFS扩容">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">使用Git LFS管理大文件及GitHub LFS扩容</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2023/03/12/%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8E%E6%A0%B7%E6%9C%AC%E9%9A%BE%E5%BA%A6%E5%BA%A6%E9%87%8F/" title="数据集与样本难度度量">
-                        <span class="hidden-mobile">数据集与样本难度度量</span>
+                      <a href="/2024/01/03/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9AHierarchical-Navigable-Small-World/" title="DB 论文阅读：Hierarchical Navigable Small World">
+                        <span class="hidden-mobile">DB 论文阅读：Hierarchical Navigable Small World</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

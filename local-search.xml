@@ -4,6 +4,39 @@
   
   
   <entry>
+    <title>DBMS for ANNS 一览</title>
+    <link href="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/"/>
+    <url>/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/</url>
+    
+    <content type="html"><![CDATA[<p>自 2023 年 ChatGPT带动的大语言模型热以来，向量相似度检索得到了很多数据库系统的支持。实际上，早在2023 年之前，就已经有很多 DBMS支持了向量数据存储、索引、查询优化等功能。其中，最重要的功能就是提供支持近似最近邻检索（ANNS）的索引结构。在<a href="https://github.com/erikbern/ann-benchmarks">ANN Benchmark</a>中，列出了许多支持 ANNS 的库或者DBMS，并在主要的数据集上进行了性能测试。本文简要的介绍几个支持 ANNS的数据库系统。</p><h2 id="vearch">1. Vearch</h2><p>论文见：<ahref="https://arxiv.org/ftp/arxiv/papers/1908/1908.07389.pdf">The Designand Implementation of a Real Time Visual Search System on JD E-commercePlatform</a></p><p>GitHub：<a href="https://github.com/vearch/vearch">vearch/vearch:Distributed vector search for AI-native applications(github.com)</a></p><p>Vearch 算是最早的提供 ANNS功能的数据库系统，来自京东，用于其内部的商品图像检索。更早期的系统大多服务于基于内容的图片检索，不能称得上真正的DBMS。Vearch 提供了 Restful API 、实时索引更新、一些语言的 SDK 以及DDL/DML/DQL 接口等功能，所以可以算是 DBMS。Vearch 架构图：</p><center><img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326202017972.png" class="" title="image-20240326202017972"></center><p>以现在观点看，当时（论文发表时）的 Vearch 还是比较 naive的，但是其的却算是开创性的支持 ANNS 的DBMS。且在后续发展中，也逐渐支持了属性过滤等相对高级的功能。</p><p>另外，尽管开源了且最近都在更新，但是其文档似乎做的不是特别好，页面不是很详细，让人担心使用时会遇到问题。</p><h2 id="analyticdb">2. AnalyticDB</h2><p>论文：<ahref="https://www.vldb.org/pvldb/vol12/p2059-zhan.pdf">AnalyticDB:Real-time OLAP Database System at Alibaba Cloud</a></p><p>未开源，阿里云提供云服务版</p><p>如论文标题所示，AnalyticDB 是 OLAP系统。不过根据论文，其在当时已经支持了向量数据存储及索引功能。其为所有列创建索引，以加速OLAP 场景复杂查询的响应速度。在论文发表时，其支持了 PQ 和 ProximityGraph (k-NNG) 两种 ANN索引结构。对于走索引的查询，其设计了一些不错的优化策略，具体可参考原论文4.2.1 Index Filtering 小节。附架构图：</p><center><img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326203815139.png" class="" title="image-20240326203815139"></center><h2 id="analyticdb-v">3. AnalyticDB-V</h2><p>论文：<ahref="https://vldb.org/pvldb/vol13/p3152-wei.pdf">AnalyticDB-V: A HybridAnalytical Engine Towards Query Fusion for Structured and UnstructuredData</a></p><p>未开源</p><p>如题目所示，AnalyticDB-V 显然是 AnalyticDB 针对V（vector）的优化版本。AnalyticDB-V主要贡献是针对同时包含结构化数据的布尔条件过滤和向量相似度的混合查询进行了系统的优化。混合查询示意图如下：</p><center><img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326204502178.png" class="" title="image-20240326204502178"></center><p>系统架构图如下：</p><center><img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326204552655.png" class="" title="image-20240326204552655"></center><p>AnalyticDB-V 实现了 4中针对混合查询的物理执行计划，并设计了基于代价的查询优化算法，让系统选择代价最低的执行计划。具体参见论文5. HYBRID QUERY OPTIMIZATION 小节。</p><p>个人认为，AnalyticDB-V是很不错的工作。针对工业界的现实需求：标量向量数据混合查询，设计并实现一系列优化算法，以实现高效查询。同时也算是挖了个坑，混合查询优化这个方向值得进一步探索与研究。</p><h2 id="pase">4. PASE</h2><p>论文：<ahref="https://dl.acm.org/doi/pdf/10.1145/3318464.3386131">PASE:PostgreSQL Ultra-High-Dimensional Approximate Nearest Neighbor SearchExtension</a></p><p>GitHub：<ahref="https://github.com/alipay/PASE">https://github.com/alipay/PASE</a></p><p>连续第三篇阿里的工作。不同于前两个 DBMS，PASE 是 PostgreSQL的插件，实现了向量数据存储和索引功能，支持 PQ 和 HNSW 两种索引结构。</p><p>本文是学习如何为 PG 编写插件的不错案例，论文中介绍了 PG页面结构，如何自定义索引，如何设计页面存储格式等问题。例如：PQ 和 HNSW的页面格式分别设计如下：</p><center><img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326205647387.png" class="" title="image-20240326205647387"><img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326205709314.png" class="" title="image-20240326205709314"></center><p>对如何为 PG 编写插件感兴趣的，值得参考本论文和对应的 GitHub仓库。</p><p>根据 GitHub 仓库，PASE似乎提交后就没有后续的更新和维护了。不过类似的工作还有： <ahref="https://github.com/pgvector/pgvector">pgvector/pgvector:Open-source vector similarity search for Postgres (github.com)</a>，pgvector 是一个开源社区编写的 PG 插件，同样用于 ANNS，实现了 PQ 和HNSW 索引，且还在更新维护中。</p><h2 id="milvus">5. Milvus</h2><p>论文：<ahref="https://dl.acm.org/doi/pdf/10.1145/3448016.3457550">Milvus: APurpose-Built Vector Data Management System</a></p><p>GitHub：<ahref="https://github.com/milvus-io/milvus">milvus-io/milvus: Acloud-native vector database, storage for next generation AIapplications (github.com)</a></p><p>Milvus 是一个开源的、商业级、专为向量数据设计的DBMS，算是当今全球比较成功的 VDBMS，同样是国内企业开发。Milvus 提供了GPU 加速、SIMD指令优化、多向量相似度检索等高级特性。个人认为文档与社区也建设的不错，算是国内一众数据库厂商中发展的很不错的了。Milvus架构图如下：</p><center><img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326210514433.png" class="" title="image-20240326210514433"></center><p>同时，还有个 Manu （<a href="https://arxiv.org/pdf/2206.13843">Manu:A Cloud Native Vector Database ManagementSystem</a>），是同一家公司的云原生VDBMS，感兴趣参考论文，这里不多介绍。</p><p>另外，谈到商业 VDBMS，国外的 <ahref="https://www.pinecone.io/">Pinecone</a> 也是知名的 VDBMS创业公司，且其文档也做得特别好，不过其未开源也没有相关的论文。</p><h2 id="traditional-dbms-for-anns">6. Traditional DBMS for ANNS</h2><p>早些年时，一些传统的数据库，包括 PG、ES等，其实也有相关插件，实现了向量检索功能。2023 年 GhatGPT、LLMs等概念大火以来，许多传统数据库陆续官方宣布支持了向量数据存储及 ANNS功能，包括 Elasticsearch、ClickHouse、Redis 等等。可见，未来 vector大概率会成为类似 int、char 的基础数据类型，得到 DBMS的广泛支持。不过，在与传统 DBMS 结合时，必然也会产生新的问题和需求，比如AnalyticDB-V首次探索的混合查询优化等等。后续会如何发展，值得我们拭目以待。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>数据库</category>
+      
+      <category>向量数据库</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>ANN</tag>
+      
+      <tag>数据库</tag>
+      
+      <tag>向量数据库</tag>
+      
+      <tag>Vector Database</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>重学操作系统：CPU 虚拟化与进程</title>
     <link href="/2024/03/09/%E9%87%8D%E5%AD%A6%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%9ACPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%8E%E8%BF%9B%E7%A8%8B/"/>
     <url>/2024/03/09/%E9%87%8D%E5%AD%A6%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%9ACPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%8E%E8%BF%9B%E7%A8%8B/</url>

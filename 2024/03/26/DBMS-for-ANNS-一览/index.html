@@ -16,25 +16,35 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="操作系统是每名程序员必须掌握的内容。回想大学时学习操作系统时，总是陷于一些算法方面的细节，习题则多为计算不同算法的性能指标，而忽略了从更高层面来看待和理解操作系统。因此，最近开始阅读备受好评的操作系统书籍：《操作系统导论》（英文版名称为：Operating Systems: Three Easy Pieces，OSTEP）。 OSTEP 从虚拟化、并发、持久化三大方面展开对操作系统的介绍，通">
+    <meta name="description" content="自 2023 年 ChatGPT 带动的大语言模型热以来，向量相似度检索得到了很多数据库系统的支持。实际上，早在 2023 年之前，就已经有很多 DBMS 支持了向量数据存储、索引、查询优化等功能。其中，最重要的功能就是提供支持近似最近邻检索（ANNS）的索引结构。在 ANN Benchmark 中，列出了许多支持 ANNS 的库或者 DBMS，并在主要的数据集上进行了性能测试。本文简">
 <meta property="og:type" content="article">
-<meta property="og:title" content="重学操作系统：CPU 虚拟化与进程">
-<meta property="og:url" content="https://arcsin2.cloud/2024/03/09/%E9%87%8D%E5%AD%A6%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%9ACPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%8E%E8%BF%9B%E7%A8%8B/index.html">
+<meta property="og:title" content="DBMS for ANNS 一览">
+<meta property="og:url" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="操作系统是每名程序员必须掌握的内容。回想大学时学习操作系统时，总是陷于一些算法方面的细节，习题则多为计算不同算法的性能指标，而忽略了从更高层面来看待和理解操作系统。因此，最近开始阅读备受好评的操作系统书籍：《操作系统导论》（英文版名称为：Operating Systems: Three Easy Pieces，OSTEP）。 OSTEP 从虚拟化、并发、持久化三大方面展开对操作系统的介绍，通">
+<meta property="og:description" content="自 2023 年 ChatGPT 带动的大语言模型热以来，向量相似度检索得到了很多数据库系统的支持。实际上，早在 2023 年之前，就已经有很多 DBMS 支持了向量数据存储、索引、查询优化等功能。其中，最重要的功能就是提供支持近似最近邻检索（ANNS）的索引结构。在 ANN Benchmark 中，列出了许多支持 ANNS 的库或者 DBMS，并在主要的数据集上进行了性能测试。本文简">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-03-09T01:38:35.000Z">
-<meta property="article:modified_time" content="2024-03-09T14:10:15.196Z">
+<meta property="og:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326202017972.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326203815139.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326204502178.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326204552655.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326205647387.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326205709314.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326210514433.png">
+<meta property="article:published_time" content="2024-03-26T09:07:06.000Z">
+<meta property="article:modified_time" content="2024-03-26T13:26:49.791Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="CPU 虚拟化">
-<meta property="article:tag" content="进程调度">
+<meta property="article:tag" content="ANN">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="向量数据库">
+<meta property="article:tag" content="Vector Database">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326202017972.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>重学操作系统：CPU 虚拟化与进程 - arcsin2 的个人博客</title>
+  <title>DBMS for ANNS 一览 - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -239,7 +249,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="重学操作系统：CPU 虚拟化与进程"></span>
+            <span id="subtitle" data-typed-text="DBMS for ANNS 一览"></span>
           
         </div>
 
@@ -250,8 +260,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-03-09 09:38" pubdate>
-          2024年3月9日 上午
+        <time datetime="2024-03-26 17:07" pubdate>
+          2024年3月26日 下午
         </time>
       </span>
     
@@ -262,7 +272,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2.7k 字
+          2.6k 字
         
       </span>
     
@@ -273,7 +283,7 @@
         
         
         
-          10 分钟
+          9 分钟
         
       </span>
     
@@ -311,100 +321,129 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">重学操作系统：CPU 虚拟化与进程</h1>
+            <h1 style="display: none">DBMS for ANNS 一览</h1>
             
             
               <div class="markdown-body">
                 
-                <p>操作系统是每名程序员必须掌握的内容。回想大学时学习操作系统时，总是陷于一些算法方面的细节，习题则多为计算不同算法的性能指标，而忽略了从更高层面来看待和理解操作系统。因此，最近开始阅读备受好评的操作系统书籍：《操作系统导论》（英文版名称为：Operating
-Systems: Three Easy Pieces，OSTEP）。</p>
-<p>OSTEP
-从虚拟化、并发、持久化三大方面展开对操作系统的介绍，通过提出问题、介绍简单的解决方案、逐渐放宽假设从而引出现代操作系统中真正使用的复杂算法，循序渐进地展开对操作系统的介绍。同时，我认为本书最好的一点就是：对操作系统要解决的关键问题用单独的排版特别标出。抓住这些问题，就抓住了学习操作系统的主线任务和主要矛盾，而不会再局限于算法细节，真正从更高的角度理解操作系统。</p>
-<p>本文内容基于《操作系统导论》CPU
-虚拟化部分的内容，并按照自己的理解重新组织了内容。需要注意的是：本文的基本假设是单核
-CPU 以及多进程，不考虑现代多核 CPU 所带来的进程调度等问题。</p>
-<h2 id="什么是操作系统">1. 什么是操作系统</h2>
-<p>在正式开始之前，我们首先要搞清楚一个问题：什么是操作系统？</p>
-<p>首先，我们要对操作系统有一个直观的概念。这里用之前在知乎冲浪时看到的内容概括：操作系统就是躺在内存里面，等着中断到来进行处理的代码。（原文参见：<a
-target="_blank" rel="noopener" href="https://www.zhihu.com/question/23561375/answer/25345790">Linux
-内核的操作系统是不是得一直运行着？ - 高鹏的回答 - 知乎</a>）</p>
-<p>现在我们知道了操作系统不是魔法，它也是程序，只不过它的功能比较特殊，同时它的权限也比普通程序更高，也就是要区分
-CPU 的内核模式和用户模式。</p>
-<p>对操作系统有了直观的概念后，还需要知道操作系统究竟是用来干什么的，它有什么样的功能？同样一句话概括：操作系统是系统资源（CPU
-时间、内存、IO
-设备等）的管理者。资源往往是稀少的，而需求（即不同进程都有对资源的需求）又是很多的。因此，操作系统作为资源管理者，有以下主要设计目标：</p>
-<ul>
-<li>共享：当资源有限时，如何满足众多需求，实现资源的共享；</li>
-<li>高效：操作系统作为资源的管理者，其本身占用的
-CPU、内存等资源要尽可能少，且尽量不让资源空闲，以实现高效的资源共享；</li>
-<li>公平：在分配资源时，尽可能公平，不能让某个进程一直独占系统资源；</li>
-<li>安全：操作系统要保证资源的安全性，防止资源遭到破坏以及不同进程之间互相影响。</li>
-</ul>
-<p>实现这些目标的一个重要方法是：虚拟化，即：制造一个假象，让用户程序以为自己在独占资源。</p>
-<p>对于 CPU 时间资源而言，进程便是为了解决 CPU
-的共享问题而引出的概念，下一小节详细介绍。</p>
-<h2 id="如何共享-cpu进程">2. 如何共享 CPU：进程</h2>
-<p>为了共享 CPU 实现运行多道程序，首先要知道 CPU
-是用来干什么的？程序又是什么？</p>
-<p>这里我们只需要知道 CPU
-就是一个不断执行指令的器件，每个时钟周期其都在不断地进行：取指令、分析指令、执行指令的操作。而程序就是一个指令序列，正在执行中的程序称为进程。在某一时刻进程运行到的指令（PC，程序计数器）及进程的所有数据（包括寄存器和内存）共同构成了一个状态。在
-CPU 的下一个时钟周期，CPU 将根据 PC
-指针地址取指令，并分析执行，从而得到进程的下一个状态。</p>
-<p>为了让 CPU
-资源能够被共享，一个简单的想法就是：将时间划分为时间片，例如 1 秒钟。第
-1 秒执行第 1 个进程；第 2 秒执行第 2
-个进程；以此类推……这种方式称为：时分共享。同时，在切换执行的进程时，需要保存必要的进程状态（保存在内核栈中），包括：PC（程序计数器）、SP（栈指针）
-等寄存器，以能够在后面恢复程序的运行状态并继续执行（上下文切换）。操作系统要用数据结构维护系统内所有的进程信息，称为：进程列表。为了保证安全性，操作系统运行于
-CPU
-内核模式下，而进程运行于用户模式下。同时，采用时间中断方式让操作系统能够周期性地获取执行权限。</p>
-<h2 id="如何高效公平地共享-cpu进程调度">3. 如何高效公平地共享
-CPU：进程调度</h2>
-<p>当有多个进程在系统内运行时，我们要考虑让 CPU
-执行哪个进程，这就是进程调度问题。同时，操作系统也要尽可能地保证高效地调度，及不浪费
-CPU
-资源；同时也要保证公平，不能出现饥饿现象（即有进程一直得不到执行）。</p>
-<h3 id="先进先出first-in-first-outfifo">3.1 先进先出（First In First
-Out，FIFO）</h3>
-<p>FIFO 算法也被称为先到先服务（First Come First Served，FCFS）。</p>
-<p>这是最简单的进程调度算法，根据名字就可以知道含义：先到达的进程先占用
-CPU，直到运行结束（假设进程不存在 IO 操作）。</p>
-<h3 id="最短任务优化shortest-job-firstsjf">3.2 最短任务优化（Shortest
-Job First，SJF）</h3>
-<p>该调度策略含义为：先运行耗时最短的任务，然后次短任务，以此类推。</p>
-<p>不过，由于现实世界往往不知道进程的执行耗时，因此该算法并不现实。</p>
-<h3 id="最短完成时间优化shortest-time-to-completion-firststcf">3.3
-最短完成时间优化（Shortest Time-to-Completion First，STCF）</h3>
-<p>该调度策略也称为：抢占式最短作业优先（Preemptive Shortest Job
-First，PSJF）。</p>
-<p>该调度算法运行进行抢占式调度（SJF
-是非抢占式的），每当有新任务加入系统时，选择剩余工作和新工作中剩余时间最少的，执行该任务。</p>
-<p>前三种调度算法都是为了优化周转时间（完成时间减去到达时间）。</p>
-<h3 id="轮转round-robinrr">3.4 轮转（Round-Robin，RR）</h3>
-<p>对于交互式程序，响应时间（即：首次运行时刻减去到达时刻）非常重要，于是提出了
-RR 调度策略。</p>
-<p>RR
-基本思想是：在一个时间片内运行一个任务，然后切换到运行队列的下一个任务，而不是运行一个任务直到结束。反复执行，直到所有任务都运行结束。时间片长度必须是时钟中断周期的倍数。</p>
-<h3 id="多级反馈队列multi-level-feedback-queuemlfq">3.5
-多级反馈队列（Multi-level Feedback Queue，MLFQ）</h3>
-<p>前面 3.1 到 3.4
-小节中的调度算法只能优化周转时间或响应时间中的一个。本小节介绍现代操作系统中真正使用的进程调度算法：多级反馈队列，其能够同时优化周转时间和响应时间。</p>
-<p>MLFQ
-调度算法有多个独立的队列，每个队列有不同的优先级。任何时刻一个任务只能存放在一个队列中。MLFQ
-总是优先执行较高优先级的工作。同一优先级队列内的任务采用轮转调度。为了兼顾周转时间和响应时间，MLFQ
-遵循以下规则：</p>
-<ul>
-<li>如果 A 优先级大于 B 优先级，运行 A；</li>
-<li>如果 A 优先级等于 B 优先级，轮转运行 A 和 B；</li>
-<li>工作进入系统时，放在最高优先级队列；（优化响应时间）</li>
-<li>一旦工作用完了其在某一层的时间配额（无论中间主动放弃了多少次
-CPU），就降低其优先级；（公平性，优先级越高的队列时间配额越短）</li>
-<li>每经过一段时间 <span class="math inline">\(S\)</span>
-，就将系统内所有工作重新加入最高优先级队列。（防止 CPU
-密集型任务饥饿）</li>
-</ul>
-<h2 id="总结">4. 总结</h2>
-<p>本文主要参考了 《操作系统导论》 1 到 11 章的内容，介绍了 CPU
-虚拟化部分的主要内容，包括：进程概念、上下文切换、进程调度等。原书部分章节本文并未涉及，如：比例配额调度和多核处理器调度等，推荐阅读原书。</p>
+                <p>自 2023 年 ChatGPT
+带动的大语言模型热以来，向量相似度检索得到了很多数据库系统的支持。实际上，早在
+2023 年之前，就已经有很多 DBMS
+支持了向量数据存储、索引、查询优化等功能。其中，最重要的功能就是提供支持近似最近邻检索（ANNS）的索引结构。在
+<a target="_blank" rel="noopener" href="https://github.com/erikbern/ann-benchmarks">ANN Benchmark</a>
+中，列出了许多支持 ANNS 的库或者
+DBMS，并在主要的数据集上进行了性能测试。本文简要的介绍几个支持 ANNS
+的数据库系统。</p>
+<h2 id="vearch">1. Vearch</h2>
+<p>论文见：<a
+target="_blank" rel="noopener" href="https://arxiv.org/ftp/arxiv/papers/1908/1908.07389.pdf">The Design
+and Implementation of a Real Time Visual Search System on JD E-commerce
+Platform</a></p>
+<p>GitHub：<a target="_blank" rel="noopener" href="https://github.com/vearch/vearch">vearch/vearch:
+Distributed vector search for AI-native applications
+(github.com)</a></p>
+<p>Vearch 算是最早的提供 ANNS
+功能的数据库系统，来自京东，用于其内部的商品图像检索。更早期的系统大多服务于基于内容的图片检索，不能称得上真正的
+DBMS。Vearch 提供了 Restful API 、实时索引更新、一些语言的 SDK 以及
+DDL/DML/DQL 接口等功能，所以可以算是 DBMS。Vearch 架构图：</p>
+<center>
+<img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326202017972.png" srcset="/img/loading.gif" lazyload class="" title="image-20240326202017972">
+</center>
+<p>以现在观点看，当时（论文发表时）的 Vearch 还是比较 naive
+的，但是其的却算是开创性的支持 ANNS 的
+DBMS。且在后续发展中，也逐渐支持了属性过滤等相对高级的功能。</p>
+<p>另外，尽管开源了且最近都在更新，但是其文档似乎做的不是特别好，页面不是很详细，让人担心使用时会遇到问题。</p>
+<h2 id="analyticdb">2. AnalyticDB</h2>
+<p>论文：<a
+target="_blank" rel="noopener" href="https://www.vldb.org/pvldb/vol12/p2059-zhan.pdf">AnalyticDB:
+Real-time OLAP Database System at Alibaba Cloud</a></p>
+<p>未开源，阿里云提供云服务版</p>
+<p>如论文标题所示，AnalyticDB 是 OLAP
+系统。不过根据论文，其在当时已经支持了向量数据存储及索引功能。其为所有列创建索引，以加速
+OLAP 场景复杂查询的响应速度。在论文发表时，其支持了 PQ 和 Proximity
+Graph (k-NNG) 两种 ANN
+索引结构。对于走索引的查询，其设计了一些不错的优化策略，具体可参考原论文
+4.2.1 Index Filtering 小节。附架构图：</p>
+<center>
+<img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326203815139.png" srcset="/img/loading.gif" lazyload class="" title="image-20240326203815139">
+</center>
+<h2 id="analyticdb-v">3. AnalyticDB-V</h2>
+<p>论文：<a
+target="_blank" rel="noopener" href="https://vldb.org/pvldb/vol13/p3152-wei.pdf">AnalyticDB-V: A Hybrid
+Analytical Engine Towards Query Fusion for Structured and Unstructured
+Data</a></p>
+<p>未开源</p>
+<p>如题目所示，AnalyticDB-V 显然是 AnalyticDB 针对
+V（vector）的优化版本。AnalyticDB-V
+主要贡献是针对同时包含结构化数据的布尔条件过滤和向量相似度的混合查询进行了系统的优化。混合查询示意图如下：</p>
+<center>
+<img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326204502178.png" srcset="/img/loading.gif" lazyload class="" title="image-20240326204502178">
+</center>
+<p>系统架构图如下：</p>
+<center>
+<img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326204552655.png" srcset="/img/loading.gif" lazyload class="" title="image-20240326204552655">
+</center>
+<p>AnalyticDB-V 实现了 4
+中针对混合查询的物理执行计划，并设计了基于代价的查询优化算法，让系统选择代价最低的执行计划。具体参见论文
+5. HYBRID QUERY OPTIMIZATION 小节。</p>
+<p>个人认为，AnalyticDB-V
+是很不错的工作。针对工业界的现实需求：标量向量数据混合查询，设计并实现一系列优化算法，以实现高效查询。同时也算是挖了个坑，混合查询优化这个方向值得进一步探索与研究。</p>
+<h2 id="pase">4. PASE</h2>
+<p>论文：<a
+target="_blank" rel="noopener" href="https://dl.acm.org/doi/pdf/10.1145/3318464.3386131">PASE:
+PostgreSQL Ultra-High-Dimensional Approximate Nearest Neighbor Search
+Extension</a></p>
+<p>GitHub：<a
+target="_blank" rel="noopener" href="https://github.com/alipay/PASE">https://github.com/alipay/PASE</a></p>
+<p>连续第三篇阿里的工作。不同于前两个 DBMS，PASE 是 PostgreSQL
+的插件，实现了向量数据存储和索引功能，支持 PQ 和 HNSW 两种索引结构。</p>
+<p>本文是学习如何为 PG 编写插件的不错案例，论文中介绍了 PG
+页面结构，如何自定义索引，如何设计页面存储格式等问题。例如：PQ 和 HNSW
+的页面格式分别设计如下：</p>
+<center>
+<img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326205647387.png" srcset="/img/loading.gif" lazyload class="" title="image-20240326205647387">
+<img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326205709314.png" srcset="/img/loading.gif" lazyload class="" title="image-20240326205709314">
+</center>
+<p>对如何为 PG 编写插件感兴趣的，值得参考本论文和对应的 GitHub
+仓库。</p>
+<p>根据 GitHub 仓库，PASE
+似乎提交后就没有后续的更新和维护了。不过类似的工作还有： <a
+target="_blank" rel="noopener" href="https://github.com/pgvector/pgvector">pgvector/pgvector:
+Open-source vector similarity search for Postgres (github.com)</a>
+，pgvector 是一个开源社区编写的 PG 插件，同样用于 ANNS，实现了 PQ 和
+HNSW 索引，且还在更新维护中。</p>
+<h2 id="milvus">5. Milvus</h2>
+<p>论文：<a
+target="_blank" rel="noopener" href="https://dl.acm.org/doi/pdf/10.1145/3448016.3457550">Milvus: A
+Purpose-Built Vector Data Management System</a></p>
+<p>GitHub：<a
+target="_blank" rel="noopener" href="https://github.com/milvus-io/milvus">milvus-io/milvus: A
+cloud-native vector database, storage for next generation AI
+applications (github.com)</a></p>
+<p>Milvus 是一个开源的、商业级、专为向量数据设计的
+DBMS，算是当今全球比较成功的 VDBMS，同样是国内企业开发。Milvus 提供了
+GPU 加速、SIMD
+指令优化、多向量相似度检索等高级特性。个人认为文档与社区也建设的不错，算是国内一众数据库厂商中发展的很不错的了。Milvus
+架构图如下：</p>
+<center>
+<img src="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/image-20240326210514433.png" srcset="/img/loading.gif" lazyload class="" title="image-20240326210514433">
+</center>
+<p>同时，还有个 Manu （<a target="_blank" rel="noopener" href="https://arxiv.org/pdf/2206.13843">Manu:
+A Cloud Native Vector Database Management
+System</a>），是同一家公司的云原生
+VDBMS，感兴趣参考论文，这里不多介绍。</p>
+<p>另外，谈到商业 VDBMS，国外的 <a
+target="_blank" rel="noopener" href="https://www.pinecone.io/">Pinecone</a> 也是知名的 VDBMS
+创业公司，且其文档也做得特别好，不过其未开源也没有相关的论文。</p>
+<h2 id="traditional-dbms-for-anns">6. Traditional DBMS for ANNS</h2>
+<p>早些年时，一些传统的数据库，包括 PG、ES
+等，其实也有相关插件，实现了向量检索功能。2023 年 GhatGPT、LLMs
+等概念大火以来，许多传统数据库陆续官方宣布支持了向量数据存储及 ANNS
+功能，包括 Elasticsearch、ClickHouse、Redis 等等。可见，未来 vector
+大概率会成为类似 int、char 的基础数据类型，得到 DBMS
+的广泛支持。不过，在与传统 DBMS 结合时，必然也会产生新的问题和需求，比如
+AnalyticDB-V
+首次探索的混合查询优化等等。后续会如何发展，值得我们拭目以待。</p>
 
                 
               </div>
@@ -423,8 +462,15 @@ CPU），就降低其优先级；（公平性，优先级越高的队列时间�
     
       <span class="category-chain">
         
-  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">操作系统</a>
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
   
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">向量数据库</a>
+  
+  
+
   
 
       </span>
@@ -438,9 +484,13 @@ CPU），就降低其优先级；（公平性，优先级越高的队列时间�
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/CPU-%E8%99%9A%E6%8B%9F%E5%8C%96/">#CPU 虚拟化</a>
+        <a href="/tags/ANN/">#ANN</a>
       
-        <a href="/tags/%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6/">#进程调度</a>
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+      
+        <a href="/tags/%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93/">#向量数据库</a>
+      
+        <a href="/tags/Vector-Database/">#Vector Database</a>
       
     </div>
   
@@ -452,8 +502,8 @@ CPU），就降低其优先级；（公平性，优先级越高的队列时间�
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>重学操作系统：CPU 虚拟化与进程</div>
-      <div>https://arcsin2.cloud/2024/03/09/重学操作系统：CPU-虚拟化与进程/</div>
+      <div>DBMS for ANNS 一览</div>
+      <div>https://arcsin2.cloud/2024/03/26/DBMS-for-ANNS-一览/</div>
     </div>
     <div class="license-meta">
       
@@ -465,7 +515,7 @@ CPU），就降低其优先级；（公平性，优先级越高的队列时间�
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年3月9日</div>
+          <div>2024年3月26日</div>
         </div>
       
       
@@ -509,18 +559,12 @@ CPU），就降低其优先级；（公平性，优先级越高的队列时间�
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/03/26/DBMS-for-ANNS-%E4%B8%80%E8%A7%88/" title="DBMS for ANNS 一览">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">DBMS for ANNS 一览</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/02/19/C-%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B/" title="C++ 对象模型">
-                        <span class="hidden-mobile">C++ 对象模型</span>
+                      <a href="/2024/03/09/%E9%87%8D%E5%AD%A6%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%9ACPU-%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%8E%E8%BF%9B%E7%A8%8B/" title="重学操作系统：CPU 虚拟化与进程">
+                        <span class="hidden-mobile">重学操作系统：CPU 虚拟化与进程</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

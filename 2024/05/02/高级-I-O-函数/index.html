@@ -1,0 +1,886 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文是《Linux 高性能服务器编程》阅读记录，供以后查阅参考。推荐阅读原书。 所有函数未标明需要包含什么头文件，可使用 man 命令自行查询。  1. pipe 函数声明： 12345&#x2F;* Create a one-way communication channel (pipe).   If successful, two file descriptors are stored">
+<meta property="og:type" content="article">
+<meta property="og:title" content="高级 I&#x2F;O 函数">
+<meta property="og:url" content="https://arcsin2.cloud/2024/05/02/%E9%AB%98%E7%BA%A7-I-O-%E5%87%BD%E6%95%B0/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本文是《Linux 高性能服务器编程》阅读记录，供以后查阅参考。推荐阅读原书。 所有函数未标明需要包含什么头文件，可使用 man 命令自行查询。  1. pipe 函数声明： 12345&#x2F;* Create a one-way communication channel (pipe).   If successful, two file descriptors are stored">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-05-02T14:11:48.000Z">
+<meta property="article:modified_time" content="2024-05-02T14:11:05.896Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>高级 I/O 函数 - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="高级 I/O 函数"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-05-02 22:11" pubdate>
+          2024年5月2日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          18 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">高级 I/O 函数</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>本文是《Linux
+高性能服务器编程》阅读记录，供以后查阅参考。推荐阅读原书。</p>
+<p>所有函数未标明需要包含什么头文件，可使用 <code>man</code>
+命令自行查询。</p>
+</blockquote>
+<h2 id="pipe">1. pipe</h2>
+<p>函数声明：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Create a one-way communication channel (pipe).</span><br><span class="hljs-comment">   If successful, two file descriptors are stored in PIPEDES;</span><br><span class="hljs-comment">   bytes written on PIPEDES[1] can be read from PIPEDES[0].</span><br><span class="hljs-comment">   Returns 0 if successful, -1 if not.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title">pipe</span> <span class="hljs-params">(<span class="hljs-type">int</span> __pipedes[<span class="hljs-number">2</span>])</span> __THROW __wur</span>;<br></code></pre></td></tr></table></figure>
+<p><code>fd[1]</code> 用于 <strong>写入</strong>
+数据；<code>fd[0]</code> 用于 <strong>读取</strong>
+数据。且管道为单向通信，只能一端写入，另一端读取。需要双向通信时，可创建两个管道。管道默认为阻塞的，也即调用
+<code>read</code> 函数读数据时，若管道内无数据写入，<code>read</code>
+调用会阻塞，直到有数据可读。<code>write</code>
+调用当管道已满时，也会阻塞，直到管道有足够的空闲空间可供写入数据。</p>
+<p>如果写入端引用计数为 0，调用 <code>read</code> 会返回 0，表示
+EOF（End Of File）；如果读取端引用计数为 0，调用 <code>write</code>
+将失败，并引发 <code>SIGPIPE</code> 信号。</p>
+<p>另外，可使用 <code>sockerpair</code>
+函数创建双向通信的管道，即：两端都可以读写：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Create two new sockets, of type TYPE in domain DOMAIN and using</span><br><span class="hljs-comment">   protocol PROTOCOL, which are connected to each other, and put file</span><br><span class="hljs-comment">   descriptors for them in FDS[0] and FDS[1].  If PROTOCOL is zero,</span><br><span class="hljs-comment">   one will be chosen automatically.  Returns 0 on success, -1 for errors.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title">socketpair</span> <span class="hljs-params">(<span class="hljs-type">int</span> __domain, <span class="hljs-type">int</span> __type, <span class="hljs-type">int</span> __protocol,</span></span><br><span class="hljs-params"><span class="hljs-function">		       <span class="hljs-type">int</span> __fds[<span class="hljs-number">2</span>])</span> __THROW</span>;<br></code></pre></td></tr></table></figure>
+<h2 id="dup-和-dup2">2. dup 和 dup2</h2>
+<p>函数原型：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Duplicate FD, returning a new file descriptor on the same file.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title">dup</span> <span class="hljs-params">(<span class="hljs-type">int</span> __fd)</span> __THROW __wur</span>;<br><br><br><span class="hljs-comment">/* Duplicate FD to FD2, closing FD2 and making it open on the same file.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title">dup2</span> <span class="hljs-params">(<span class="hljs-type">int</span> __fd, <span class="hljs-type">int</span> __fd2)</span> __THROW</span>;<br></code></pre></td></tr></table></figure>
+<p><code>dup</code>
+函数用于创建一个新的指向同一个文件、管道或网络连接的文件描述符。<code>dup2</code>
+关闭 <code>fd2</code>，并且将 <code>fd2</code> 指向 <code>fd</code>
+表示的文件。</p>
+<h2 id="readv-和-writev">3. readv 和 writev</h2>
+<p><code>readv</code>
+函数将数据从文件描述符读到分散的内存块中，即：分散读；<code>writev</code>
+函数则将多块分散的内存数据一并写入一个文件描述符，即：集中写。函数声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Read data from file descriptor FD, and put the result in the</span><br><span class="hljs-comment">   buffers described by IOVEC, which is a vector of COUNT &#x27;struct iovec&#x27;s.</span><br><span class="hljs-comment">   The buffers are filled in the order specified.</span><br><span class="hljs-comment">   Operates just like &#x27;read&#x27; (see &lt;unistd.h&gt;) except that data are</span><br><span class="hljs-comment">   put in IOVEC instead of a contiguous buffer.</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a cancellation point and therefore not marked with</span><br><span class="hljs-comment">   __THROW.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">ssize_t</span> <span class="hljs-title">readv</span> <span class="hljs-params">(<span class="hljs-type">int</span> __fd, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> iovec *__iovec, <span class="hljs-type">int</span> __count)</span></span>;<br><br><br><span class="hljs-comment">/* Write data pointed by the buffers described by IOVEC, which</span><br><span class="hljs-comment">   is a vector of COUNT &#x27;struct iovec&#x27;s, to file descriptor FD.</span><br><span class="hljs-comment">   The data is written in the order specified.</span><br><span class="hljs-comment">   Operates just like &#x27;write&#x27; (see &lt;unistd.h&gt;) except that the data</span><br><span class="hljs-comment">   are taken from IOVEC instead of a contiguous buffer.</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a cancellation point and therefore not marked with</span><br><span class="hljs-comment">   __THROW.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">ssize_t</span> <span class="hljs-title">writev</span> <span class="hljs-params">(<span class="hljs-type">int</span> __fd, <span class="hljs-type">const</span> <span class="hljs-keyword">struct</span> iovec *__iovec, <span class="hljs-type">int</span> __count)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>成功时返回读取的字节数；失败返回 -1。</p>
+<p><code>writev</code> 函数的一个可能的使用场景是：响应 HTTP
+请求时，header 和 body 分别存储在两个缓冲区里。可以利用
+<code>writev</code> 函数一次写两个缓冲区。</p>
+<h2 id="sendfile">4. sendfile</h2>
+<p><code>sendfile</code>
+函数用于在两个文件描述符之间直接传递数据，从而避免了内核缓冲区和用户缓冲区之间的数据拷贝，称之为零拷贝。函数声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Send up to COUNT bytes from file associated with IN_FD starting at</span><br><span class="hljs-comment">   *OFFSET to descriptor OUT_FD.  Set *OFFSET to the IN_FD&#x27;s file position</span><br><span class="hljs-comment">   following the read bytes.  If OFFSET is a null pointer, use the normal</span><br><span class="hljs-comment">   file position instead.  Return the number of written bytes, or -1 in</span><br><span class="hljs-comment">   case of error.  */</span><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> __USE_FILE_OFFSET64</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">ssize_t</span> <span class="hljs-title">sendfile</span> <span class="hljs-params">(<span class="hljs-type">int</span> __out_fd, <span class="hljs-type">int</span> __in_fd, <span class="hljs-type">off_t</span> *__offset,</span></span><br><span class="hljs-params"><span class="hljs-function">			 <span class="hljs-type">size_t</span> __count)</span> __THROW</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>in_fd</code>：待读出内容的文件描述符，必须时支持类似
+<code>mmap</code> 函数的文件描述符，即它必须指向真实的文件，不能是
+socket 和管道</li>
+<li><code>out_fd</code>：待写入内容的文件描述符，必须是一个 socket</li>
+<li><code>offset</code>：指定从读入文件描述符的哪个位置开始读；空表示从默认起始位置开始读</li>
+<li><code>count</code>：指定传输的字节数</li>
+<li>调用成功返回传输的字节数，-1 表示出错</li>
+</ul>
+<h2 id="mmap-和-munmap">5. mmap 和 munmap</h2>
+<p><code>mmap</code> 函数用于申请一段内存空间。<code>munmap</code>
+函数则释放由 <code>mmap</code> 函数创建的这段内存空间。声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Map addresses starting near ADDR and extending for LEN bytes.  from</span><br><span class="hljs-comment">   OFFSET into the file FD describes according to PROT and FLAGS.  If ADDR</span><br><span class="hljs-comment">   is nonzero, it is the desired mapping address.  If the MAP_FIXED bit is</span><br><span class="hljs-comment">   set in FLAGS, the mapping will be at ADDR exactly (which must be</span><br><span class="hljs-comment">   page-aligned); otherwise the system chooses a convenient nearby address.</span><br><span class="hljs-comment">   The return value is the actual mapping address chosen or MAP_FAILED</span><br><span class="hljs-comment">   for errors (in which case `errno&#x27; is set).  A successful `mmap&#x27; call</span><br><span class="hljs-comment">   deallocates any previous mapping for the affected region.  */</span><br><br><span class="hljs-meta">#<span class="hljs-keyword">ifndef</span> __USE_FILE_OFFSET64</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">void</span> *<span class="hljs-title">mmap</span> <span class="hljs-params">(<span class="hljs-type">void</span> *__addr, <span class="hljs-type">size_t</span> __len, <span class="hljs-type">int</span> __prot,</span></span><br><span class="hljs-params"><span class="hljs-function">		   <span class="hljs-type">int</span> __flags, <span class="hljs-type">int</span> __fd, <span class="hljs-type">__off_t</span> __offset)</span> __THROW</span>;<br><br><br><span class="hljs-comment">/* Deallocate any mapping for the region starting at ADDR and extending LEN</span><br><span class="hljs-comment">   bytes.  Returns 0 if successful, -1 for errors (and sets errno).  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title">munmap</span> <span class="hljs-params">(<span class="hljs-type">void</span> *__addr, <span class="hljs-type">size_t</span> __len)</span> __THROW</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>start</code>：允许用户使用某个特定地址作为内存的起始地址，设置为
+<code>NULL</code> 表示系统自动分配一个地址</li>
+<li><code>len</code>：指定内存端的长度</li>
+<li><code>prot</code>：设置内存端的访问权限，包括可读、可写、可执行和不能被访问</li>
+<li><code>flags</code>：控制内存段内容被修改后程序的行为</li>
+<li><code>fd</code>：被映射文件对应的文件描述符</li>
+<li><code>offset</code>：设置文件从何处开始映射</li>
+</ul>
+<h2 id="splice">6. splice</h2>
+<p><code>splice</code>
+函数用于在两个文件描述符之间移动数据，也是零拷贝操作。函数声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Splice two files together.</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a possible cancellation point and therefore not</span><br><span class="hljs-comment">   marked with __THROW.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">__ssize_t</span> <span class="hljs-title">splice</span> <span class="hljs-params">(<span class="hljs-type">int</span> __fdin, <span class="hljs-type">__off64_t</span> *__offin, <span class="hljs-type">int</span> __fdout,</span></span><br><span class="hljs-params"><span class="hljs-function">			 <span class="hljs-type">__off64_t</span> *__offout, <span class="hljs-type">size_t</span> __len,</span></span><br><span class="hljs-params"><span class="hljs-function">			 <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> __flags)</span></span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>fd_in</code>：待输入数据的文件描述符</li>
+<li><code>off_in</code>：如果 <code>fd_in</code>
+是管道文件描述符，则必须设置为
+<code>NULL</code>；否则表示从输入数据流的何处开始读数据，为
+<code>NULL</code> 表示从输入流的当前偏移位置读入</li>
+<li><code>fd_out</code>：使用 <code>splice</code> 时，<code>fd_in</code>
+和 <code>fd_out</code> 必须至少有一个为管道文件描述符</li>
+<li><code>off_out</code>：和 <code>in</code>
+相同，不过表示写入数据流</li>
+<li><code>len</code> ：表示移动数据的长度</li>
+<li><code>flags</code>：控制数据如何移动</li>
+</ul>
+<h2 id="tee">7. tee</h2>
+<p><code>tee</code>
+函数用于在两个管道文件描述符之间复制数据，也是零拷贝操作。它不消耗数据，因此源文件描述符上的数据仍然可以用于后续的读操作。函数声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* In-kernel implementation of tee for pipe buffers.</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a possible cancellation point and therefore not</span><br><span class="hljs-comment">   marked with __THROW.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">__ssize_t</span> <span class="hljs-title">tee</span> <span class="hljs-params">(<span class="hljs-type">int</span> __fdin, <span class="hljs-type">int</span> __fdout, <span class="hljs-type">size_t</span> __len,</span></span><br><span class="hljs-params"><span class="hljs-function">		      <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> __flags)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>函数参数含义与 <code>splice</code> 相同，但是 <code>fd_in</code> 和
+<code>fd_out</code> 都必须是管道文件描述符。</p>
+<h2 id="fcntl">8. fcntl</h2>
+<p><code>fcntl</code> （file
+control）函数提供了对文件描述符的各种控制操作。另外一个能够控制文件描述符属性和行为的系统调用是
+<code>ioctl</code>，能够比 <code>fcntl</code>
+执行更多的控制。<code>fcntl</code> 函数声明如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Do the file control operation described by CMD on FD.</span><br><span class="hljs-comment">   The remaining arguments are interpreted depending on CMD.</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a cancellation point and therefore not marked with</span><br><span class="hljs-comment">   __THROW.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title">fcntl</span> <span class="hljs-params">(<span class="hljs-type">int</span> __fd, <span class="hljs-type">int</span> __cmd, ...)</span></span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>fd</code>：被操作的文件描述符</li>
+<li><code>cmd</code>：指定执行何种类型的操作</li>
+<li><code>arg</code>：可选参数</li>
+</ul>
+<p>网络编程中，<code>fcntl</code>
+函数常用于将文件描述符设置未非阻塞的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;fcntl.h&gt;</span></span><br><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">setNonBlocking</span><span class="hljs-params">(<span class="hljs-type">int</span> fd)</span> </span>&#123;<br>  <span class="hljs-type">int</span> old_option = <span class="hljs-built_in">fcntl</span>(fd, F_GETFL);  <span class="hljs-comment">// 获取文件描述符旧的状态标志</span><br>  <span class="hljs-type">int</span> new_option = old_option | O_NONBLOCK;<br>  <span class="hljs-built_in">fcntl</span>(fd, F_SETFL, new_option);  <span class="hljs-comment">// 设置非阻塞</span><br>  <span class="hljs-keyword">return</span> old_option;               <span class="hljs-comment">// 返回文件描述符旧的状态标志，可供恢复</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Linux/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" class="category-chain-item">网络编程</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Linux/">#Linux</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>高级 I/O 函数</div>
+      <div>https://arcsin2.cloud/2024/05/02/高级-I-O-函数/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年5月2日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/04/19/C-%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8/" title="C++ 并发编程入门">
+                        <span class="hidden-mobile">C++ 并发编程入门</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

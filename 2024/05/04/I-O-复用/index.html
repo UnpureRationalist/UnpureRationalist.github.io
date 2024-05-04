@@ -1,0 +1,975 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文是《Linux 高性能服务器编程》阅读记录，供以后查阅参考。推荐阅读原书。 所有函数未标明需要包含什么头文件，可使用 man 命令自行查询。  1. select select 系统调用用于：在一段指定的时间内，监听用户感兴趣的文件描述符上的可读、可写和异常等事件。 1.1 select API select 函数原型： 123456789101112&#x2F;* Check">
+<meta property="og:type" content="article">
+<meta property="og:title" content="I&#x2F;O 复用">
+<meta property="og:url" content="https://arcsin2.cloud/2024/05/04/I-O-%E5%A4%8D%E7%94%A8/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本文是《Linux 高性能服务器编程》阅读记录，供以后查阅参考。推荐阅读原书。 所有函数未标明需要包含什么头文件，可使用 man 命令自行查询。  1. select select 系统调用用于：在一段指定的时间内，监听用户感兴趣的文件描述符上的可读、可写和异常等事件。 1.1 select API select 函数原型： 123456789101112&#x2F;* Check">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/2024/05/04/I-O-%E5%A4%8D%E7%94%A8/image-20240504222700859.png">
+<meta property="article:published_time" content="2024-05-04T11:34:41.000Z">
+<meta property="article:modified_time" content="2024-05-04T15:05:31.579Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="select">
+<meta property="article:tag" content="poll">
+<meta property="article:tag" content="epoll">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/2024/05/04/I-O-%E5%A4%8D%E7%94%A8/image-20240504222700859.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>I/O 复用 - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="I/O 复用"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-05-04 19:34" pubdate>
+          2024年5月4日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">I/O 复用</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>本文是《Linux
+高性能服务器编程》阅读记录，供以后查阅参考。推荐阅读原书。</p>
+<p>所有函数未标明需要包含什么头文件，可使用 <code>man</code>
+命令自行查询。</p>
+</blockquote>
+<h2 id="select">1. select</h2>
+<p><code>select</code>
+系统调用用于：在一段指定的时间内，监听用户感兴趣的文件描述符上的可读、可写和异常等事件。</p>
+<h3 id="select-api">1.1 select API</h3>
+<p><code>select</code> 函数原型：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">/* Check the first NFDS descriptors each in READFDS (if not NULL) for read</span><br><span class="hljs-comment">   readiness, in WRITEFDS (if not NULL) for write readiness, and in EXCEPTFDS</span><br><span class="hljs-comment">   (if not NULL) for exceptional conditions.  If TIMEOUT is not NULL, time out</span><br><span class="hljs-comment">   after waiting the interval specified therein.  Returns the number of ready</span><br><span class="hljs-comment">   descriptors, or -1 for errors.</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a cancellation point and therefore not marked with</span><br><span class="hljs-comment">   __THROW.  */</span><br><span class="hljs-function"><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title">select</span> <span class="hljs-params">(<span class="hljs-type">int</span> __nfds, fd_set *__restrict __readfds,</span></span><br><span class="hljs-params"><span class="hljs-function">		   fd_set *__restrict __writefds,</span></span><br><span class="hljs-params"><span class="hljs-function">		   fd_set *__restrict __exceptfds,</span></span><br><span class="hljs-params"><span class="hljs-function">		   <span class="hljs-keyword">struct</span> timeval *__restrict __timeout)</span></span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p><code>nfds</code>：指定被监听的文件描述符的总数。通常设置为
+<code>select</code> 监听的所有文件描述符中的最大值 + 1，因为文件描述符从
+0 开始计数。</p></li>
+<li><p><code>readfs</code>：指向可读事件对应的文件描述符集合；</p></li>
+<li><p><code>writefs</code>：可写；</p></li>
+<li><p><code>exceptfs</code>：异常；<code>select</code>
+调用返回时，系统将修改这些文件描述符来通知应用程序哪些文件描述符已就绪。
+<code>fd_set</code> 结构体类型定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* The fd_set member is required to be an array of longs.  */</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-type">long</span> <span class="hljs-type">int</span> __fd_mask;<br><br><span class="hljs-comment">/* Some versions of &lt;linux/posix_types.h&gt; define this macros.  */</span><br><span class="hljs-meta">#<span class="hljs-keyword">undef</span>	__NFDBITS</span><br><span class="hljs-comment">/* It&#x27;s easier to assume 8-bit bytes than to get CHAR_BIT.  */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> __NFDBITS	(8 * (int) sizeof (__fd_mask))</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span>	__FD_ELT(d)	((d) / __NFDBITS)</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span>	__FD_MASK(d)	((__fd_mask) (1UL &lt;&lt; ((d) % __NFDBITS)))</span><br><br><span class="hljs-comment">/* fd_set for select and pselect.  */</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">struct</span></span><br><span class="hljs-class">  &#123;</span><br>    <span class="hljs-comment">/* XPG4.2 requires this member name.  Otherwise avoid the name</span><br><span class="hljs-comment">       from the global namespace.  */</span><br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> __USE_XOPEN</span><br>    __fd_mask fds_bits[__FD_SETSIZE / __NFDBITS];<br><span class="hljs-meta"># <span class="hljs-keyword">define</span> __FDS_BITS(set) ((set)-&gt;fds_bits)</span><br><span class="hljs-meta">#<span class="hljs-keyword">else</span></span><br>    __fd_mask __fds_bits[__FD_SETSIZE / __NFDBITS];<br><span class="hljs-meta"># <span class="hljs-keyword">define</span> __FDS_BITS(set) ((set)-&gt;__fds_bits)</span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>  &#125; fd_set;<br></code></pre></td></tr></table></figure>
+<p>即：<code>fd_set</code>
+结构体成员仅包含一个整型数组，数组每个元素的每一位（bit）标记一个文件描述符。<code>fd_set</code>
+能容纳的文件描述符数量由 <code>FD_SETSIZE</code> 指定，这限制了
+<code>select</code> 能同时处理的文件描述符总量。</p>
+<p>系统提供了以下宏，以便于用户读写 <code>fd_set</code> 中的 bit：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;sys/select.h&gt;</span></span><br><br>FD_ZERO(fd_set *fdset);				<span class="hljs-comment">// 清除 fd_set 所有位</span><br>FD_SET(<span class="hljs-type">int</span> fd, fd_set *fdset);		<span class="hljs-comment">// 设置 fd_set 位 fd</span><br>FD_CLR(<span class="hljs-type">int</span> fd, fd_set *fdset);		<span class="hljs-comment">// 清除 fd_set 位 fd</span><br><span class="hljs-type">int</span> <span class="hljs-title function_">FD_ISSET</span><span class="hljs-params">(<span class="hljs-type">int</span> fd, fd_set *fdset)</span>;	<span class="hljs-comment">// 测试 fd_set 的位 fd 是否被设置</span><br></code></pre></td></tr></table></figure></li>
+<li><p><code>timeout</code>：设置 <code>select</code>
+函数的超时时间，类型是 <code>tomeval</code> 结构体：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* A time value that is accurate to the nearest</span><br><span class="hljs-comment">   microsecond but also has a range of years.  */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">timeval</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">long</span> tv_sec;		<span class="hljs-comment">/* Seconds.  */</span><br>  <span class="hljs-type">long</span> tv_usec;	<span class="hljs-comment">/* Microseconds.  */</span><br>&#125;;<br></code></pre></td></tr></table></figure>
+<p>如果传递给 <code>timeout</code> <code>NULL</code> 指针，则
+<code>select</code> 将阻塞，直到某个文件描述符就绪。</p></li>
+<li><p>返回值：成功时返回就绪（可读、可写和异常）文件描述符的总数。如果超时后没有任何文件描述符就绪，返回
+0。失败时返回 -1 并设置 <code>errno</code>。如果在 <code>select</code>
+等待期间，程序收到信号，则 <code>select</code> 立即返回 -1，并设置
+<code>errno</code> 为 <code>EINTR</code>。</p></li>
+</ul>
+<h3 id="文件描述符就绪条件">1.2 文件描述符就绪条件</h3>
+<ul>
+<li><p><code>socket</code> <strong>可读</strong>情况：</p>
+<ul>
+<li><p><code>socket</code>
+内核接收缓冲区中的字节数大于或等于其低水位标记
+<code>SO_RCVLOWAT</code>。此时我们可以无阻塞的读该 <code>socket</code>
+且返回的字节数大于 0。</p></li>
+<li><p><code>socket</code> 通信的对方关闭连接。此时读取
+<code>socket</code> 返回 0。</p></li>
+<li><p>监听 <code>socket</code> 上有新的连接请求。</p></li>
+<li><p><code>socket</code> 上有未处理的错误。此时我们可以使用
+<code>getsocketopt</code> 来读取和清楚该错误。</p></li>
+</ul></li>
+<li><p><code>socket</code> <strong>可写</strong>情况：</p>
+<ul>
+<li><code>socket</code> 内核发送缓冲区中的字节数大于或等于其低水位标记
+<code>SO_SNDLOWAT</code>。此时我们可以无阻塞的写该 <code>socket</code>
+且返回的字节数大于 0。</li>
+<li><code>socket</code> 的写操作被关闭。对写操作被关闭的
+<code>socket</code> 执行写操作将触发一个 <code>SIGPIPE</code>
+信号。</li>
+<li><code>socket</code> 使用非阻塞 <code>connect</code>
+连接成功或者失败（超时）之后。</li>
+<li><code>socket</code> 上有未处理的错误。此时我们可以使用
+<code>getsocketopt</code> 来读取和清楚该错误。</li>
+</ul></li>
+<li><p><code>socket</code> <strong>异常</strong>情况：</p>
+<ul>
+<li><code>select</code> 能处理的异常情况只有一种：<code>socket</code>
+接收到带外数据。</li>
+</ul></li>
+</ul>
+<h2 id="poll">2. poll</h2>
+<p><code>poll</code> 函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Poll the file descriptors described by the NFDS structures starting at</span><br><span class="hljs-comment">   FDS.  If TIMEOUT is nonzero and not -1, allow TIMEOUT milliseconds for</span><br><span class="hljs-comment">   an event to occur; if TIMEOUT is -1, block until an event occurs.</span><br><span class="hljs-comment">   Returns the number of file descriptors with events, zero if timed out,</span><br><span class="hljs-comment">   or -1 for errors.</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a cancellation point and therefore not marked with</span><br><span class="hljs-comment">   __THROW.  */</span><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title function_">poll</span> <span class="hljs-params">(<span class="hljs-keyword">struct</span> pollfd *__fds, <span class="hljs-type">nfds_t</span> __nfds, <span class="hljs-type">int</span> __timeout)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p><code>fds</code>：一个 <code>pollfd</code>
+结构体类型数组，结构体定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Data structure describing a polling request.  */</span><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">pollfd</span></span><br><span class="hljs-class">  &#123;</span><br>    <span class="hljs-type">int</span> fd;			<span class="hljs-comment">/* File descriptor to poll.  */</span><br>    <span class="hljs-type">short</span> <span class="hljs-type">int</span> events;		<span class="hljs-comment">/* Types of events poller cares about.  */</span><br>    <span class="hljs-type">short</span> <span class="hljs-type">int</span> revents;		<span class="hljs-comment">/* Types of events that actually occurred.  */</span><br>  &#125;;<br></code></pre></td></tr></table></figure>
+<p>其中，<code>fd</code> 成员指定文件描述符；<code>events</code>
+成员告诉系统监听 <code>fd</code>
+上的哪些事件，是一系列事件的按位或；<code>revents</code>
+成员由内核修改，通知应用程序 <code>fd</code>
+实际上发生了哪些事件。<code>poll</code> 支持的事件类型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Event types that can be polled for.  These bits may be set in `events&#x27;</span><br><span class="hljs-comment">   to indicate the interesting event types; they will appear in `revents&#x27;</span><br><span class="hljs-comment">   to indicate the status of the file descriptor.  */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> POLLIN		0x001		<span class="hljs-comment">/* There is data to read.  */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> POLLPRI		0x002		<span class="hljs-comment">/* There is urgent data to read.  */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> POLLOUT		0x004		<span class="hljs-comment">/* Writing now will not block.  */</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">if</span> defined __USE_XOPEN || defined __USE_XOPEN2K8</span><br><span class="hljs-comment">/* These values are defined in XPG4.2.  */</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> POLLRDNORM	0x040		<span class="hljs-comment">/* Normal data may be read.  */</span></span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> POLLRDBAND	0x080		<span class="hljs-comment">/* Priority data may be read.  */</span></span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> POLLWRNORM	0x100		<span class="hljs-comment">/* Writing now will not block.  */</span></span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> POLLWRBAND	0x200		<span class="hljs-comment">/* Priority data may be written.  */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br><span class="hljs-meta">#<span class="hljs-keyword">ifdef</span> __USE_GNU</span><br><span class="hljs-comment">/* These are extensions for Linux.  */</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> POLLMSG	0x400</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> POLLREMOVE	0x1000</span><br><span class="hljs-meta"># <span class="hljs-keyword">define</span> POLLRDHUP	0x2000</span><br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br><br><span class="hljs-comment">/* Event types always implicitly polled for.  These bits need not be set in</span><br><span class="hljs-comment">   `events&#x27;, but they will appear in `revents&#x27; to indicate the status of</span><br><span class="hljs-comment">   the file descriptor.  */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> POLLERR		0x008		<span class="hljs-comment">/* Error condition.  */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> POLLHUP		0x010		<span class="hljs-comment">/* Hung up.  */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> POLLNVAL	0x020		<span class="hljs-comment">/* Invalid polling request.  */</span></span><br></code></pre></td></tr></table></figure></li>
+<li><p><code>nfds</code>：指定被监听事件集合 <code>fds</code>
+的大小，其类型定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Type used for the number of file descriptors.  */</span><br><span class="hljs-keyword">typedef</span> <span class="hljs-type">unsigned</span> <span class="hljs-type">long</span> <span class="hljs-type">int</span> <span class="hljs-type">nfds_t</span>;<br></code></pre></td></tr></table></figure></li>
+<li><p><code>timeout</code>：指定超时值，<code>int</code>
+类型，单位毫秒。-1 表示 <code>poll</code> 调用将阻塞直到某个事件发生；0
+调用立即返回。</p></li>
+<li><p>返回值：含义与 <code>select</code> 相同。</p></li>
+</ul>
+<h2 id="epoll">3. epoll</h2>
+<h3 id="内核事件表">3.1 内核事件表</h3>
+<p><code>epoll</code> 是 Linux 特有的 I/O 复用函数。它在实现和使用上与
+<code>select</code>、<code>poll</code>
+有很大差异。首先，<code>epoll</code>
+使用一组函数来完成任务，而不是单个函数。其次，<code>epoll</code>
+把用户关心的文件描述符上的事件放在内核里的一个事件表中，从而无须像
+<code>select</code> 和 <code>poll</code>
+那样每次调用都要重复传入文件描述符集或事件集。但 <code>epoll</code>
+需要使用一个额外的文件描述符，来唯一标识内核中的这个事件表。这个文件描述符使用
+<code>epoll_create</code> 函数创建：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Creates an epoll instance.  Returns an fd for the new instance.</span><br><span class="hljs-comment">   The &quot;size&quot; parameter is a hint specifying the number of file</span><br><span class="hljs-comment">   descriptors to be associated with the new instance.  The fd</span><br><span class="hljs-comment">   returned by epoll_create() should be closed with close().  */</span><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title function_">epoll_create</span> <span class="hljs-params">(<span class="hljs-type">int</span> __size)</span> __THROW;<br></code></pre></td></tr></table></figure>
+<p>函数返回的文件描述符将用于后续 <code>epoll</code>
+相关函数的第一个参数，以指定要访问的内核事件表。</p>
+<p>操作 <code>epoll</code> 内核事件表的函数 <code>epoll_ctl</code>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Manipulate an epoll instance &quot;epfd&quot;. Returns 0 in case of success,</span><br><span class="hljs-comment">   -1 in case of error ( the &quot;errno&quot; variable will contain the</span><br><span class="hljs-comment">   specific error code ) The &quot;op&quot; parameter is one of the EPOLL_CTL_*</span><br><span class="hljs-comment">   constants defined above. The &quot;fd&quot; parameter is the target of the</span><br><span class="hljs-comment">   operation. The &quot;event&quot; parameter describes which events the caller</span><br><span class="hljs-comment">   is interested in and any associated user data.  */</span><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title function_">epoll_ctl</span> <span class="hljs-params">(<span class="hljs-type">int</span> __epfd, <span class="hljs-type">int</span> __op, <span class="hljs-type">int</span> __fd,</span><br><span class="hljs-params">		      <span class="hljs-keyword">struct</span> epoll_event *__event)</span> __THROW;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><p><code>op</code>：指定操作类型，有以下三种：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Valid opcodes ( &quot;op&quot; parameter ) to issue to epoll_ctl().  */</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLL_CTL_ADD 1	<span class="hljs-comment">/* Add a file descriptor to the interface.  */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLL_CTL_DEL 2	<span class="hljs-comment">/* Remove a file descriptor from the interface.  */</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLL_CTL_MOD 3	<span class="hljs-comment">/* Change file descriptor epoll_event structure.  */</span></span><br></code></pre></td></tr></table></figure>
+<p>分别表示：往事件表注册 <code>fd</code> 上的事件；删除 <code>fd</code>
+上注册的事件；修改 <code>fd</code> 上注册的事件</p></li>
+<li><p><code>fd</code>：要操作的文件描述符</p></li>
+<li><p><code>event</code>：指定事件类型，是 <code>epoll_event</code>
+结构体类型的指针，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">typedef</span> <span class="hljs-class"><span class="hljs-keyword">union</span> <span class="hljs-title">epoll_data</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">void</span> *ptr;<br>  <span class="hljs-type">int</span> fd;<br>  <span class="hljs-type">uint32_t</span> u32;<br>  <span class="hljs-type">uint64_t</span> u64;<br>&#125; <span class="hljs-type">epoll_data_t</span>;<br><br><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">epoll_event</span></span><br><span class="hljs-class">&#123;</span><br>  <span class="hljs-type">uint32_t</span> events;	<span class="hljs-comment">/* Epoll events */</span><br>  <span class="hljs-type">epoll_data_t</span> data;	<span class="hljs-comment">/* User data variable */</span><br>&#125; __EPOLL_PACKED;<br></code></pre></td></tr></table></figure>
+<p>其中，<code>events</code> 成员表示事件类型。<code>epoll</code>
+支持的事件类型和 <code>poll</code> 基本相同。表示 <code>epoll</code>
+事件类型的宏是在 <code>poll</code> 对应的宏前加上 “E”，具体如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-class"><span class="hljs-keyword">enum</span> <span class="hljs-title">EPOLL_EVENTS</span></span><br><span class="hljs-class">  &#123;</span><br>    EPOLLIN = <span class="hljs-number">0x001</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLIN EPOLLIN</span><br>    EPOLLPRI = <span class="hljs-number">0x002</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLPRI EPOLLPRI</span><br>    EPOLLOUT = <span class="hljs-number">0x004</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLOUT EPOLLOUT</span><br>    EPOLLRDNORM = <span class="hljs-number">0x040</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLRDNORM EPOLLRDNORM</span><br>    EPOLLRDBAND = <span class="hljs-number">0x080</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLRDBAND EPOLLRDBAND</span><br>    EPOLLWRNORM = <span class="hljs-number">0x100</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLWRNORM EPOLLWRNORM</span><br>    EPOLLWRBAND = <span class="hljs-number">0x200</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLWRBAND EPOLLWRBAND</span><br>    EPOLLMSG = <span class="hljs-number">0x400</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLMSG EPOLLMSG</span><br>    EPOLLERR = <span class="hljs-number">0x008</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLERR EPOLLERR</span><br>    EPOLLHUP = <span class="hljs-number">0x010</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLHUP EPOLLHUP</span><br>    EPOLLRDHUP = <span class="hljs-number">0x2000</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLRDHUP EPOLLRDHUP</span><br>    EPOLLEXCLUSIVE = <span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">28</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLEXCLUSIVE EPOLLEXCLUSIVE</span><br>    EPOLLWAKEUP = <span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">29</span>,<br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLWAKEUP EPOLLWAKEUP</span><br>    EPOLLONESHOT = <span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">30</span>,	<span class="hljs-comment">// epoll 特有</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLONESHOT EPOLLONESHOT</span><br>    EPOLLET = <span class="hljs-number">1u</span> &lt;&lt; <span class="hljs-number">31</span>	<span class="hljs-comment">// epoll 特有</span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> EPOLLET EPOLLET</span><br>  &#125;;<br></code></pre></td></tr></table></figure></li>
+<li><p>返回值：成功时返回 0；失败返回 -1 并设置
+<code>errno</code>。</p></li>
+</ul>
+<h3 id="epoll_wait">3.2 epoll_wait</h3>
+<p><code>epoll_wait</code>
+函数在一段超时时间内等待一组文件描述符上的事件，其原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-comment">/* Wait for events on an epoll instance &quot;epfd&quot;. Returns the number of</span><br><span class="hljs-comment">   triggered events returned in &quot;events&quot; buffer. Or -1 in case of</span><br><span class="hljs-comment">   error with the &quot;errno&quot; variable set to the specific error code. The</span><br><span class="hljs-comment">   &quot;events&quot; parameter is a buffer that will contain triggered</span><br><span class="hljs-comment">   events. The &quot;maxevents&quot; is the maximum number of events to be</span><br><span class="hljs-comment">   returned ( usually size of &quot;events&quot; ). The &quot;timeout&quot; parameter</span><br><span class="hljs-comment">   specifies the maximum wait time in milliseconds (-1 == infinite).</span><br><span class="hljs-comment"></span><br><span class="hljs-comment">   This function is a cancellation point and therefore not marked with</span><br><span class="hljs-comment">   __THROW.  */</span><br><span class="hljs-keyword">extern</span> <span class="hljs-type">int</span> <span class="hljs-title function_">epoll_wait</span> <span class="hljs-params">(<span class="hljs-type">int</span> __epfd, <span class="hljs-keyword">struct</span> epoll_event *__events,</span><br><span class="hljs-params">		       <span class="hljs-type">int</span> __maxevents, <span class="hljs-type">int</span> __timeout)</span>;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>返回值：成功时返回就绪的文件描述符数量；失败时返回 -1 并设置
+<code>errno</code>。</li>
+<li><code>timeout</code>：与 <code>poll</code> 函数中意义相同。</li>
+<li><code>maxevents</code>：指定最多监听多少个事件，必须大于 0。</li>
+<li><code>events</code>：<code>epoll_wait</code>
+函数如果检测到事件，就将所有就绪的事件从内核事件表（由 <code>epfd</code>
+参数指定）中复制到它的第二个参数 <code>events</code>
+指向的数组中。这个数组只用于输出 <code>epoll_wait</code>
+检测到的就绪事件，而不像 <code>select</code> 和 <code>poll</code>
+的数组参数那样既用于传入用户注册的事件，又用于输出内核检测到的就绪事件。这就极大地提高了应用程序索引就绪文件描述符的效率。</li>
+</ul>
+<p><code>poll</code> 与 <code>epoll</code>
+索引就绪文件描述符示例代码如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">poll_and_epoll</span><span class="hljs-params">()</span> </span>&#123;<br>  <span class="hljs-comment">// 索引 poll 返回的就绪文件描述符</span><br>  <span class="hljs-type">int</span> ret = <span class="hljs-built_in">poll</span>(fds, MAX_EVENT_NUMBER, <span class="hljs-number">-1</span>);<br>  <span class="hljs-comment">// 必须遍历所有已注册文件描述符并找到其中的就绪者（当然，可以利用 ret 来稍做优化）</span><br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; MAX_EVENT_NUMBER; ++i) &#123;<br>    <span class="hljs-keyword">if</span> (fds[i].revents &amp; POLLIN)  <span class="hljs-comment">// 判断第 i 个文件描述符是否就绪</span><br>    &#123;<br>      <span class="hljs-type">int</span> sockfd = fds[i].fd;<br>      <span class="hljs-comment">// 处理 sockfd</span><br>    &#125;<br>  &#125;<br><br><br>  <span class="hljs-comment">// 索引 epoll 返回的就绪文件描述符</span><br>  <span class="hljs-type">int</span> ret = <span class="hljs-built_in">epoll_wait</span>(epollfd, events, MAX_EVENT_NUMBER, <span class="hljs-number">-1</span>);<br>  <span class="hljs-comment">// 仅遍历就绪的 ret 个文件描述符</span><br>  <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; ret; i++) &#123;<br>    <span class="hljs-type">int</span> sockfd = events[i].data.fd;<br>    <span class="hljs-comment">// sockfd 肯定就绪，直接处理</span><br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>从中可以看出 <code>epoll</code> 对比 <code>poll</code>
+的性能提升（需要遍历的文件描述符数变少了）。</p>
+<h3 id="lt-和-et-模式">3.3 LT 和 ET 模式</h3>
+<p><code>epoll</code> 对文件描述符的操作有两种模式：LT（Level
+Trigger，电平触发）模式和ET（Edge Trigger，边沿触发）模式。LT
+模式是默认的工作模式，这种模式下 <code>epoll</code> 相当于一个效率较高的
+<code>poll</code>。当往 <code>epoll</code>
+内核事件表中注册一个文件描述符上的 <code>EPOLLET</code>
+事件时，<code>epoll</code> 将以 ET 模式来操作该文件描述符。<strong>ET
+模式是 <code>epoll</code> 的高效工作模式</strong>。</p>
+<p>对于采用 LT 工作模式的文件描述符，当 <code>epoll_wait</code>
+检测到其上有事件发生并将此事件通知应用程序后，应用程序可以不立即处理该事件。这样，当应用程序下一次调用
+<code>epoll_wait</code> 时，<code>epoll_wait</code>
+还会再次向应用程序通告此事件，直到该事件被处理。而对于采用 ET
+工作模式的文件描述符，当 <code>epoll_wait</code>
+检测到其上有事件发生并将此事件通知应用程序后，应用程序必须立即处理该事件，因为后续的
+<code>epoll_wait</code> 调用将不再向应用程序通知这一事件。<strong>ET
+模式在很大程度上降低了同一个 <code>epoll</code>
+事件被重复触发的次数，因此效率要比 LT 模式高。</strong></p>
+<p>注意：<strong><em>每个使用 ET
+模式的文件描述符都应该是非阻塞的</em></strong>。如果文件描述符是阻塞的，那么读或写操作将会因为没有后续的事件而一直处于阻塞状态（饥渴状态）。</p>
+<h3 id="epolloneshot-事件">3.4 EPOLLONESHOT 事件</h3>
+<p>为了防止多个线程并发读取 <code>socket</code>，可以使用
+<code>epoll</code> 的 <code>EPOLLONESHOT</code> 事件。</p>
+<p>对于注册了 <code>EPOLLONESHOT</code>
+事件的文件描述符，操作系统最多触发其上注册的一个可读、可写或者异常事件，且只触发一次，除非我们使用
+<code>epoll_ctl</code> 函数重置该文件描述符上注册的
+<code>EPOLLONESHOT</code> 事件。这样，当一个线程在处理某个
+<code>socket</code> 时，其他线程是不可能有机会操作该 <code>socket</code>
+的。但反过来思考，注册了 <code>EPOLLONESHOT</code> 事件的
+<code>socket</code>
+一旦被某个线程处理完毕，该线程就应该立即重置这个<code>socket</code> 上的
+<code>EPOLLONESHOT</code> 事件，以确保这个 <code>socket</code>
+下一次可读时，其 <code>EPOLLIN</code>
+事件能被触发，进而让其他工作线程有机会继续处理这个
+<code>socket</code>。</p>
+<h2 id="三组-io-多路复用函数的比较">4. 三组 I/O 多路复用函数的比较</h2>
+<img src="/2024/05/04/I-O-%E5%A4%8D%E7%94%A8/image-20240504222700859.png" srcset="/img/loading.gif" lazyload class="" title="image-20240504222700859">
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Linux/" class="category-chain-item">Linux</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/Linux/%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/" class="category-chain-item">网络编程</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/select/">#select</a>
+      
+        <a href="/tags/poll/">#poll</a>
+      
+        <a href="/tags/epoll/">#epoll</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>I/O 复用</div>
+      <div>https://arcsin2.cloud/2024/05/04/I-O-复用/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年5月4日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/05/02/%E9%AB%98%E7%BA%A7-I-O-%E5%87%BD%E6%95%B0/" title="高级 I/O 函数">
+                        <span class="hidden-mobile">高级 I/O 函数</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

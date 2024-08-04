@@ -16,24 +16,24 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="前言： 最近在实习，博客很久没更新了。把一直想写却偷懒没写的 Dolphin DB 面试经历整理出来，以实现博客月更目标。本文同步更新于知乎：来聊聊大家在DolphinDB的面试感受？ - zeta的回答。  先介绍下本人 BG，25 届科班硕，投递的岗位是内核开发实习生。今年五月开始陆续投递了几家公司的实习，在室友的推荐下投递了 Dolphin DB。DDB 给我留下的第一印象">
+    <meta name="description" content="最近实习在公司内接触到了 Git 协作开发中一些比较实用的命令，在此记录供以后参考。  1. 多分支提交 在开发新特性或者进行 bug 修复时，可能会涉及到多个版本，因此我们需要将代码提交到多个分支。这时需要使用 git cherry-pick 命令： 12$ git checkout target-branch$ git cherry-pick commit-hash 其中">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Dolphin DB 实习面经">
-<meta property="og:url" content="https://arcsin2.cloud/2024/07/27/Dolphin-DB-%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/index.html">
+<meta property="og:title" content="Git 实用命令">
+<meta property="og:url" content="https://arcsin2.cloud/2024/08/04/Git-%E5%AE%9E%E7%94%A8%E5%91%BD%E4%BB%A4/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="前言： 最近在实习，博客很久没更新了。把一直想写却偷懒没写的 Dolphin DB 面试经历整理出来，以实现博客月更目标。本文同步更新于知乎：来聊聊大家在DolphinDB的面试感受？ - zeta的回答。  先介绍下本人 BG，25 届科班硕，投递的岗位是内核开发实习生。今年五月开始陆续投递了几家公司的实习，在室友的推荐下投递了 Dolphin DB。DDB 给我留下的第一印象">
+<meta property="og:description" content="最近实习在公司内接触到了 Git 协作开发中一些比较实用的命令，在此记录供以后参考。  1. 多分支提交 在开发新特性或者进行 bug 修复时，可能会涉及到多个版本，因此我们需要将代码提交到多个分支。这时需要使用 git cherry-pick 命令： 12$ git checkout target-branch$ git cherry-pick commit-hash 其中">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-07-27T08:40:20.000Z">
-<meta property="article:modified_time" content="2024-07-30T14:14:57.597Z">
+<meta property="article:published_time" content="2024-08-04T06:10:53.000Z">
+<meta property="article:modified_time" content="2024-08-04T07:30:16.134Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="面试">
+<meta property="article:tag" content="Git">
 <meta name="twitter:card" content="summary_large_image">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>Dolphin DB 实习面经 - arcsin2 的个人博客</title>
+  <title>Git 实用命令 - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,7 +238,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="Dolphin DB 实习面经"></span>
+            <span id="subtitle" data-typed-text="Git 实用命令"></span>
           
         </div>
 
@@ -249,8 +249,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-07-27 16:40" pubdate>
-          2024年7月27日 下午
+        <time datetime="2024-08-04 14:10" pubdate>
+          2024年8月4日 下午
         </time>
       </span>
     
@@ -261,7 +261,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.6k 字
+          1.3k 字
         
       </span>
     
@@ -272,7 +272,7 @@
         
         
         
-          6 分钟
+          5 分钟
         
       </span>
     
@@ -310,71 +310,77 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">Dolphin DB 实习面经</h1>
+            <h1 style="display: none">Git 实用命令</h1>
             
             
               <div class="markdown-body">
                 
                 <blockquote>
-<p>前言：</p>
-<p>最近在实习，博客很久没更新了。把一直想写却偷懒没写的 Dolphin DB
-面试经历整理出来，以实现博客月更目标。本文同步更新于知乎：<a
-target="_blank" rel="noopener" href="https://www.zhihu.com/question/533445774/answer/3575347446">来聊聊大家在DolphinDB的面试感受？
-- zeta的回答</a>。</p>
+<p>最近实习在公司内接触到了 Git
+协作开发中一些比较实用的命令，在此记录供以后参考。</p>
 </blockquote>
-<p>先介绍下本人 BG，25
-届科班硕，投递的岗位是内核开发实习生。今年五月开始陆续投递了几家公司的实习，在室友的推荐下投递了
-Dolphin DB。DDB 给我留下的第一印象就是流程很快，投递简历后 HR
-约笔试；笔试完成后约面试；面完后一周内就发了
-offer，光速签约入职。整个投递流程包括：</p>
+<h2 id="多分支提交">1. 多分支提交</h2>
+<p>在开发新特性或者进行 bug
+修复时，可能会涉及到多个版本，因此我们需要将代码提交到多个分支。这时需要使用
+<code>git cherry-pick</code> 命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">git checkout target-branch</span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">git cherry-pick commit-hash</span><br></code></pre></td></tr></table></figure>
+<p>其中 <code>cimmit-hash</code> 可以通过 <code>git log</code>
+命令查看。</p>
+<p>上述是最简单的使用 <code>git cherry-pick</code>
+的情况。有时我们需要将多个 commit 转移到另一个分支；或者在
+<code>cherry-pick</code>
+的过程中遇到了冲突，需要我们使用其他的命令选项或者解决冲突。具体请参考文末链接
+1 和 2。</p>
+<h2 id="定位哪次提交引入问题">2. 定位哪次提交引入问题</h2>
+<p>有时我们会发现新提交的代码引入了 bug
+或者性能等问题，需要确定是哪一次提交引入的，进而确定代码并修复。这时需要使用
+<code>git bisect</code>
+命令。它类似于二分查找，需要我们指定一个提交起始范围，然后 Git
+会进行二分搜索，搜索过程中需要我们在命令行告诉 Git
+当前代码是否正常。最后 Git
+会输出哪一次提交引入了问题。其涉及到的命令有：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">git bisect start [终点] [起点]    <span class="hljs-comment"># 指定搜索的提交起始范围</span></span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">git bisect good		<span class="hljs-comment"># 表示当前版本的代码正常</span></span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">git bisect bad		<span class="hljs-comment"># 表示当前版本的代码已经表现出问题</span></span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">git bisect reset		<span class="hljs-comment"># 退出 bisect 二分搜索</span></span><br></code></pre></td></tr></table></figure>
+<p>关于该命令使用的例子，请参考文末链接 3。</p>
+<h2 id="回退">3. 回退</h2>
+<p>有时我们本地的代码库提交出现了问题；或者远程代码仓库的代码可能有些问题，如引入了
+bug
+或者编译问题，我们需要回退到某个正常的版本，进行开发或测试等工作。这时需要使用
+<code>git reset</code> 命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">git reset --hard HEAD^         <span class="hljs-comment"># 回退到上个版本</span></span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">git reset --hard HEAD~3        <span class="hljs-comment"># 回退到前 3 次提交之前，以此类推，回退到 n 次提交之前</span></span><br><span class="hljs-meta prompt_">$ </span><span class="language-bash">git reset --hard commit-hash   <span class="hljs-comment"># 退到/进到 指定 commit-hash</span></span><br></code></pre></td></tr></table></figure>
+<h2 id="冲突解决">4. 冲突解决</h2>
+<p>有时进行代码的 merge 或者 rebase
+时，可能会有提交和我们的提交修改了相同的代码段，此时就会产生冲突，Git
+会暂停 merge 或 rebase，并需要我们人工介入进行冲突解决。</p>
+<p>这里个人推荐使用 VS Code Git 插件提供的冲突解决功能，可以选择：</p>
 <ul>
-<li>HR 对接：了解个人意向，约笔试等，HR
-全程参与流程，对相关问题回复得很快，非常认真负责。</li>
-<li>笔试：DDB 的笔试题给人的感觉很不一样，这个后面细说。</li>
-<li>面试：因为是实习，只有一次技术面，面完才后知后觉面试官是津铭。</li>
+<li>已提交代码</li>
+<li>即将提交代码</li>
+<li>保留二者并进行适当修改</li>
 </ul>
-<h2 id="笔试">1. 笔试</h2>
-<p>虽然问题是 “面试感受”，但由于 DDB
-的笔试题实在让我印象深刻，因此还是要提一下笔试。</p>
-<p>不同于很多互联网厂笔试的线上算法题 + 闭卷 + 时间固定，DDB
-的笔试题有涉及到算法的题目（不出意外的没写出来），也有类似大模拟、偏向设计的题目，且笔试时间很自由，可以自己挑选方便的时间段完成。另外，还要求在代码注释中给出算法的时间复杂度分析。完成笔试后在一个线上平台内提交，然后由面试官综合思路是否正确、代码实现是否正确、代码风格与规范等因素，决定是否通过笔试。</p>
-<p>在我做的笔试题中，有一道题让我印象非常深刻。具体题目不能透露，但是可以透露下其考察的知识点是非常基本的，而且是属于我们平常大概率接触过的东西，很考验代码基本功。这道题目不属于
-Leetcode
-上面的算法题，而是需要理解题目后，自行设计数据结构与接口并实现，完成题目所要求的功能。当时这道题
-C++ 手撸了 150+
-行，本地自测通过。后面面试的时候，津铭还提到我笔试做得不错，问有没有
-ICPC 背景。作为一名完全没接触过 ICPC
-的菜鸡，也是受宠若惊（这里推荐下：《算法笔记》，笔试全靠它了，值得拥有）。</p>
-<h2 id="面试">2. 面试</h2>
-<p>完成笔试后，就可以和 HR
-约面了。本人面试时有两位面试官，一位是津铭，一位是
-qiyi。在面试一开始，面试官就先介绍了面试流程，分别是：</p>
-<ul>
-<li>手撕。</li>
-<li>根据简历、项目等，面试官提问。</li>
-<li>反问。</li>
-</ul>
-<p>下面对这三个环节一一介绍吧。</p>
-<p><strong>手撕</strong></p>
-<p>DDB 的手撕题也很有风格，不是 Leetcode 上面的 Hot 100、Interview 150
-之类的题目，而是非常有数据库特色的题目。本人当时手撕的是数据库中某个执行算子的实现，当然都是简化后的，只考虑内存操作等最简单的情况，接口、数据结构等都需要自行确定。手撕题可根据面试官偏好，选择一边阐述自己思路一边编码；或者选择闷头写代码。DDB
-这边的面试官应该更偏好前者，通过交流也能明确题目背景和需求，面试官也会给出一些思路提示等，能够缓解紧张情绪，发挥得更好。</p>
-<p><strong>简历提问</strong></p>
-<p>DDB
-的面试官非常根据个人的简历情况进行针对性地提问，而不是个人比较讨厌的纯八股文提问背诵。因此，准备
-DDB
-的面试需要对简历上的内容都比较熟悉，尤其是项目、实习、研究方向等。本人在面试时，有不少时间都在和津铭聊
-Vector DB 相关的内容，聊常用的 ANN
-索引分类、优缺点、适用场景等，让我免了不少很深很细知识点的拷打。</p>
-<p>当然，面试时难免有些不会的知识点。这一点 DDB
-的面试体验也特别好，不会的东西面试官会提示或者直接跳过。整个面试流程不是面试官居高临下的提问，而更像是朋友间的一次技术交流与讨论，一起聊一聊遇到某些问题可以用什么方法来解决，这些方案的取舍和优缺点又是什么等等。</p>
-<p><strong>反问</strong></p>
-<p>经过上面的流程后，就是最为轻松的反问环节了。这一环节尽管大胆提问就好，对公司、实习、技术等等相关的问题都可以提问，面试官也会非常耐心、详细地进行解答。</p>
-<h2 id="总结">3. 总结</h2>
-<p>总的来说，Dolphin DB
-的面试体验是本人投递的不少公司中数一数二的。不管是笔试面试的专业性，还是整个流程中
-HR、面试官的态度与责任心都特别好，流程推进也很快。目前已在 Dolphin DB
-实习，后续更新实习体验~</p>
+<p>解决完冲突后，即可继续进行 merge、rebase、push 等操作。</p>
+<h2 id="拉取远程分支到本地新分支">5. 拉取远程分支到本地新分支</h2>
+<p>这一需求标题已经描述得很清楚了，只需要使用一条命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">git checkout -b local_branch_name origin/remote_branch_name</span><br></code></pre></td></tr></table></figure>
+<p>即可实现。</p>
+<p><br></p>
+<p><strong>Reference：</strong></p>
+<ol type="1">
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/shuofxz/p/16994923.html">git
+cherry-pick 同步修改到另一个分支 - 大数据王小皮 - 博客园
+(cnblogs.com)</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2020/04/git-cherry-pick.html">git
+cherry-pick 教程 - 阮一峰的网络日志 (ruanyifeng.com)</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2018/12/git-bisect.html">git
+bisect 命令教程 - 阮一峰的网络日志 (ruanyifeng.com)</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://developer.aliyun.com/article/324372">Git回滚代码到某个commit-阿里云开发者社区
+(aliyun.com)</a></li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/2055055">git
+拉取远程分支到本地及本地切换分支-腾讯云开发者社区-腾讯云
+(tencent.com)</a></li>
+</ol>
 
                 
               </div>
@@ -393,7 +399,7 @@ HR、面试官的态度与责任心都特别好，流程推进也很快。目前
     
       <span class="category-chain">
         
-  <a href="/categories/%E4%B8%80%E6%94%AF%E8%8A%A6%E8%8B%87/" class="category-chain-item">一支芦苇</a>
+  <a href="/categories/%E5%B7%A5%E5%85%B7/" class="category-chain-item">工具</a>
   
   
 
@@ -408,7 +414,7 @@ HR、面试官的态度与责任心都特别好，流程推进也很快。目前
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E9%9D%A2%E8%AF%95/">#面试</a>
+        <a href="/tags/Git/">#Git</a>
       
     </div>
   
@@ -420,8 +426,8 @@ HR、面试官的态度与责任心都特别好，流程推进也很快。目前
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>Dolphin DB 实习面经</div>
-      <div>https://arcsin2.cloud/2024/07/27/Dolphin-DB-实习面经/</div>
+      <div>Git 实用命令</div>
+      <div>https://arcsin2.cloud/2024/08/04/Git-实用命令/</div>
     </div>
     <div class="license-meta">
       
@@ -433,7 +439,7 @@ HR、面试官的态度与责任心都特别好，流程推进也很快。目前
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年7月27日</div>
+          <div>2024年8月4日</div>
         </div>
       
       
@@ -477,18 +483,12 @@ HR、面试官的态度与责任心都特别好，流程推进也很快。目前
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2024/08/04/Git-%E5%AE%9E%E7%94%A8%E5%91%BD%E4%BB%A4/" title="Git 实用命令">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Git 实用命令</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/06/30/GoogleTest-%E4%B8%8E-Benchmark-%E5%BA%93%E4%BD%BF%E7%94%A8%EF%BC%9A%E4%BB%A5%E4%BD%8D%E5%9B%BE-countOnes-%E5%87%BD%E6%95%B0%E4%B8%BA%E4%BE%8B/" title="GoogleTest 与 Benchmark 库使用：以位图 countOnes 函数为例">
-                        <span class="hidden-mobile">GoogleTest 与 Benchmark 库使用：以位图 countOnes 函数为例</span>
+                      <a href="/2024/07/27/Dolphin-DB-%E5%AE%9E%E4%B9%A0%E9%9D%A2%E7%BB%8F/" title="Dolphin DB 实习面经">
+                        <span class="hidden-mobile">Dolphin DB 实习面经</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

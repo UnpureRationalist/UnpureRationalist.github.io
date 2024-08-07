@@ -1,0 +1,1022 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文是 Are There Fundamental Limitations in Supporting Vector Data Management in Relational Databases? A Case Study of PostgreSQL 的论文阅读记录，感兴趣的读者请参阅原论文了解更多细节。 该论文的通讯作者是 Jianguo Wang @ Purdue ，刚好也是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DB 论文阅读：关系型数据库在 ANNS 上为什么慢？">
+<meta property="og:url" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本文是 Are There Fundamental Limitations in Supporting Vector Data Management in Relational Databases? A Case Study of PostgreSQL 的论文阅读记录，感兴趣的读者请参阅原论文了解更多细节。 该论文的通讯作者是 Jianguo Wang @ Purdue ，刚好也是">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807230103168.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807231539619.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807231816819.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807232521262.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807232834943.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807234036668.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807234626386.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807235107799.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807235556072.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240808000410571.png">
+<meta property="og:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240808001818029.png">
+<meta property="article:published_time" content="2024-08-07T15:05:41.000Z">
+<meta property="article:modified_time" content="2024-08-07T16:37:48.174Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="近似最近邻">
+<meta property="article:tag" content="ANN">
+<meta property="article:tag" content="向量相似度检索">
+<meta property="article:tag" content="PASE">
+<meta property="article:tag" content="Faiss">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807230103168.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>DB 论文阅读：关系型数据库在 ANNS 上为什么慢？ - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="DB 论文阅读：关系型数据库在 ANNS 上为什么慢？"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-08-07 23:05" pubdate>
+          2024年8月7日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          17 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">DB 论文阅读：关系型数据库在 ANNS 上为什么慢？</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>本文是 <a
+target="_blank" rel="noopener" href="https://www.cs.purdue.edu/homes/csjgwang/pubs/ICDE24_VecDB.pdf">Are
+There Fundamental Limitations in Supporting Vector Data Management in
+Relational Databases? A Case Study of PostgreSQL</a>
+的论文阅读记录，感兴趣的读者请参阅原论文了解更多细节。</p>
+<p>该论文的通讯作者是 <a
+target="_blank" rel="noopener" href="https://www.cs.purdue.edu/homes/csjgwang/">Jianguo Wang @
+Purdue</a> ，刚好也是 Milvus SIGMOD 论文的一作。根据主页信息来看，Milvus
+这篇 SIGMOD 论文是 Prof. Wang 与 Zilliz
+远程合作的项目。值得一提的是，Prof. Wang 从 2021
+年进入学术界开始，已经稳定地在 SIGMOD、VLDB、ICDE
+等顶级学术会议期刊上发表论文了，是数据库领域冉冉升起的学术新星。本文要介绍的论文，就发表于
+ICDE 2024。</p>
+</blockquote>
+<p>八卦结束，开始聊一聊这篇论文。正如标题所示，该论文旨在回答一个问题：<strong>关系型数据库在支持向量近似最近邻检索（ANNS）上，是否存在根本性的限制？</strong>具体地，该论文以
+PASE 和 Faiss 分别作为关系型数据库和向量数据库的代表（实际上 Faiss
+不能称得上是向量数据库，而是一个向量检索 library。不过其作为 ANNS
+的代表性库，有不少专用向量数据库都基于 Faiss 构建，包括
+Milvus。因此，本文后续仍称 Faiss 为向量数据库），比较二者在 ANNS
+的索引构建时间、索引大小、查询耗时等指标上的差异，并分析 PASE 作为基于
+PostgreSQL 的通用向量数据库，为什么在一些指标上成倍地逊于 Faiss
+这一专用向量数据库。</p>
+<p>幸运地是，<strong>尽管基于关系型数据库 PostgreSQL 构建的 PASE
+在很多指标上都逊于
+Faiss，但是导致这些问题的原因并非无法克服</strong>。该论文总结了 7 点
+PASE 逊于 Faiss 的原因和相应的解决方案。我们跟随论文来逐一介绍。</p>
+<h2 id="引言">1. 引言</h2>
+<p>目前提供向量 ANNS 功能的数据库可以分为两类：</p>
+<ul>
+<li>通用向量数据库：已有数据库新增对向量数据存储与检索的支持。</li>
+<li>专用向量数据库：为向量数据存储、索引与检索专门设计与优化的数据库。</li>
+</ul>
+<p>一般认为（该论文的实验也证实了），通用向量数据库（如：PASE、pgvector、AnalyticDB-V
+等基于 PostgreSQL
+的向量数据库）的性能要逊于专用向量数据库（如：Faiss、Milvus 和
+Pinecone）。</p>
+<p>那么问题来了：<strong>通用向量数据库的性能为什么逊于专用向量数据库？究竟是什么原因导致了通用向量数据库性能较差？是实现上的问题？还是说关系型数据库在支持向量
+ANNS 时存在根本性的缺陷与限制？</strong></p>
+<p>该论文就是为了回答这一问题。具体地，该论文选取了基于 PostgreSQL
+的通用向量数据库 PASE 与专用向量数据库 Faiss
+作为两类数据库的典型代表，对二者进行相关实验，比较性能差距和导致性能问题的原因。</p>
+<p>确定了实验选取的数据库后，还有个因素需要确定，就是：<strong>选取哪种
+ANNS 索引作为加速向量近似最近邻查询的索引结构？</strong></p>
+<p>考虑到哪些索引最常用、性能较好、在 PASE 和 Faiss
+中都得到了实现等因素，该论文最终选取了以下三种索引作为实验研究的索引结构：</p>
+<ul>
+<li><strong>IVF_FLAT</strong>：基于聚类与码本思想的 ANNS 索引，首先使用
+K-means
+算法计算出若干个聚类中心，然后将每个向量划分到距离其最近的中心，构成一个聚类，每个聚类称为一个
+bucket。搜索时，选取距离聚类中心最近的若干个 bucket，在这些 bucket
+内进行穷尽搜索并返回最终结果。</li>
+<li><strong>IVF_PQ</strong>：与 IVF_FLAT
+类似，首先将向量分解为子向量，在同一组中的子向量上进行聚类，相比
+IVF_FLAT 可以降低索引大小。更多信息可参考本人博客：<a
+href="https://arcsin2.cloud/2024/01/29/DB-论文阅读：Product-Quantization-for-Nearest-Neighbor-Search/">DB
+论文阅读：Product Quantization for Nearest Neighbor Search - arcsin2
+的个人博客</a>。</li>
+<li><strong>HNSW</strong>：基于图的、性能最好的、最常用的 ANNS
+索引之一，其核心思想是贪心+概率。更多信息可参考本人博客：<a
+href="https://arcsin2.cloud/2023/12/29/DB-论文阅读：Approximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs/">DB
+论文阅读：Approximate nearest neighbor algorithm based on navigable
+small world graphs - arcsin2 的个人博客</a>。</li>
+</ul>
+<p>至此，我们确定了选取哪些 ANNS
+索引、哪两个典型向量数据库进行实验对比。下面，我们来看实验具体是如何开展的。</p>
+<h2 id="实验设置">2. 实验设置</h2>
+<p><strong>实验关注点：</strong></p>
+<p>首先，我们要搞清楚该论文的实验关注什么场景，不讨论什么场景：</p>
+<ul>
+<li>该只考虑单节点场景，不考虑分布式场景；</li>
+<li>只考虑在 CPU 上进行执行，不考虑 GPU 加速的场景；</li>
+<li>只考虑索引大小不超过内存大小，不考虑面向磁盘存储的索引（PASE
+虽然是基于面向磁盘的关系型数据库 PostgreSQL
+的，但是论文实验中索引大小不超过内存，且使用内存文件系统
+<code>tmpfs</code> 实验结果并无明显变化）。</li>
+<li>如果不单独说明，实验设置都是单线程，不考虑线程间并发加速情况。</li>
+</ul>
+<p><strong>数据集与超参数：</strong></p>
+<p>实验选取的数据集是 SIFT1M、GIST1M、Deep1M 等 ANNS
+领域常用数据集；不同的 ANNS 索引会有超参数的设置问题，在进行实验时都保持
+PASE 与 Faiss 超参数设置相同。</p>
+<p><strong>评价指标：</strong></p>
+<p>该论文关注的问题是：通用向量数据库为什么比专用向量数据库慢，因此更多关注索引构建耗时、查询耗时、索引大小等因素，而不关心
+ANNS 领域关注的召回率指标。</p>
+<h2 id="实验结果">3. 实验结果</h2>
+<p>介绍完实验背景与设置后，我们正式来看实验结果，以及通用向量数据库为什么慢？</p>
+<h3 id="索引构建耗时">3.1 索引构建耗时</h3>
+<h4 id="ivf_flat">3.1.1 IVF_FLAT</h4>
+<p>实验结果如下图所示：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807230103168.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807230103168">
+<p>PASE 在构建 IVF_FLAT 索引时比 Faiss 慢 35 ~ 84.8 倍。</p>
+<p>经过 Perf 等工具分析，发现 PASE
+时间大部分花费在欧氏距离计算上，也就是 <code>fvec_L2sqr_ref</code>
+函数。经过查看源码，发现 <strong>Faiss 使用了 BLAS 库中的 SGEMM (Single
+Precision General Matrix Multiplication) 函数</strong>。构建 IVF_FLAT
+索引的 adding
+阶段是指：在计算出若干个聚类中心后，需要计算每个向量与所有聚类中心的聚类，并将向量分配给距离最近的聚类中心。PASE
+使用了朴素的算法实现，而 Faiss 将这一问题转换为矩阵乘法，并使用 SGEMM
+算法加速这一过程。这里其实就是一点简单的线性代数知识，但是懒得打公式了，感兴趣的读者请参阅原论文第
+5 页最后一段。SGEMM 算法这里暂不讨论，可参考：<a
+target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/518857175">CUDA
+SGEMM矩阵乘法优化笔记——从入门到cublas - 知乎
+(zhihu.com)</a>。总而言之，Faiss
+通过数学上的技巧消除了冗余运算，且使用了 SGEMM
+算法加速矩阵乘法，从而得到了比 PASE 快几十倍的性能。</p>
+<p>在手动 disable Faiss 的 SGEMM 算法后，得到新的实验结果：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807231539619.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807231539619">
+<p>可以看出，此时 PASE 与 Faiss 性能差异基本消除。</p>
+<p>IVF_PQ 索引的构建时间 PASE 同样慢于
+Faiss，且由相同的原因导致，这里不再详细介绍。</p>
+<h4 id="hnsw">3.1.2 HNSW</h4>
+<p>索引构建时间如下：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807231816819.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807231816819">
+<p>注意图片的纵坐标为指数，因此 PASE 的索引构建速度在不同数据集上仍慢于
+Faiss 1.6 ~ 8.7 倍不等。</p>
+<p>使用 Perf 分析性能瓶颈，得到以下表格：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807232521262.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807232521262">
+<p>可以看到，<code>SearchNbToAdd</code>
+函数耗时比例最大。该函数为新插入的向量搜索邻居来构造
+HNSW。该函数的耗时可进一步分解为下图：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807232834943.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807232834943">
+<p>可以看到，PASE 花费了大量时间来访问元组。这是因为 <strong>PASE 基于
+PostgreSQL，需要提供 page id 和 tuple id 通过 buffer pool 访问元组；而在
+Faiss 中仅需要通过内存指针来定位并访问元组</strong>。这一原因可总结为
+PASE 中继承自 PostgreSQL 的内存管理导致了较大的开销。</p>
+<h4 id="并行性的影响">3.1.3 并行性的影响</h4>
+<p>本小节研究多线程对索引构建速度的影响。由于 PASE
+不支持多线程索引构建，且 HNSW
+是基于图结构的索引，不易进行多线程加速，Faiss 也并不支持，因此仅考虑
+Faiss 多线程构建 IVF_FLAT 和 IVF_PQ 索引。</p>
+<p>下图展示了是否开启 SGEMM，IVF_FLAT 和 IVF_PQ
+索引在不同线程下的构建时间区别：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807234036668.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807234036668">
+<p>从图中可以看出，除了使用 SGEMM 的 IVF_FLAT (图
+9a)，其他情况索引构建性能都可以很好地随线程数缩放。这一结果说明了对并行性的支持，也是
+PASE 慢于 Faiss 的重要原因之一。</p>
+<h3 id="索引大小">3.2 索引大小</h3>
+<h4 id="ivf_flat-与-ivf_pq">3.2.1 IVF_FLAT 与 IVF_PQ</h4>
+<p>这两个索引，PASE 与 Faiss
+索引大小基本相同。相关图片这里不再展示。</p>
+<h4 id="hnsw-1">3.2.2 HNSW</h4>
+<p>实验结果如下图所示：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807234626386.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807234626386">
+<p>可以看出，PASE 的 HNSW 索引大小要比 Faiss 大 2.9 ~ 13.3
+倍。这实际上是<strong>因为 PostgreSQL 的页面式存储结构：PASE 中存储 HNSW
+的邻接表时，每个邻接表占据一个新的页面。而一个顶点的邻接表往往很小，这导致了
+page
+内部大量的空间浪费（类似于内存管理中的内部碎片）</strong>。PostgreSQL
+页面默认大小为 8 KB，在将这一参数调整为 4 KB 后，HNSW
+索引大小变化如下表所示：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807235107799.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807235107799">
+<p>这一结果证明了上面的结论。</p>
+<h3 id="查询耗时">3.3 查询耗时</h3>
+<h4 id="ivf_flat-1">3.3.1 IVF_FLAT</h4>
+<p>PASE 与 Faiss 的 IVF_FLAT 索引在不同数据集上查询耗时如下图所示：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240807235556072.png" srcset="/img/loading.gif" lazyload class="" title="image-20240807235556072">
+<p>PASE 比 Faiss 慢 2 ~ 3.4 倍不等。</p>
+<p>PASE 在 IVF_FLAT 上的性能问题由以下原因导致：</p>
+<ul>
+<li><strong>PASE 与 Faiss 的 K-means
+算法实现不同</strong>，导致后续搜索时耗时的区别。</li>
+<li>进行 Top-k ANNS 时，<strong>PASE 在维护 Top-k
+结果时使用的优先队列大小为 bucket 内元素数量，而不是通常较小的
+k</strong>，导致了 PASE 查询慢于 Faiss。（个人认为这实际上可以看作 bug
+了）</li>
+</ul>
+<h4 id="ivf_pq">3.3.2 IVF_PQ</h4>
+<p>实验结果如下图所示：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240808000410571.png" srcset="/img/loading.gif" lazyload class="" title="image-20240808000410571">
+<p>PASE 比 Faiss 慢 3.9 ~ 11.2 倍不等。这是因为 PASE IVF_PQ
+使用直接的实现来计算预计算表，而 Faiss
+使用优化的解决方案，将任务分为计算 L2 范数和内积（预计算表是 IVF_PQ
+中用于存储分块后的子向量与质心点之间的距离的表，以消除重复计算）。</p>
+<h4 id="hnsw-2">3.3.3 HNSW</h4>
+<p>PASE 的 HNSW 搜索速度同样慢于
+Faiss，原因同样是元组访问。这里不再赘述。</p>
+<h4 id="并行性的影响-1">3.3.4 并行性的影响</h4>
+<p>本小节关注查询内并行性，即：使用多个线程来回答一个查询。由于 PASE 与
+Faiss 均不支持 HNSW 索引的查询内并行，因此仅关注它们在 IVF_FLAT 和
+IVF_PQ 索引上的查询内并行性。实验结果如下图所示：</p>
+<img src="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/image-20240808001818029.png" srcset="/img/loading.gif" lazyload class="" title="image-20240808001818029">
+<p>由图片可知，Faiss IVF_FLAT 和 IVF_PQ 可以很好地随着线程的数量扩展，而
+PASE IVF_FLAT 和 IVF_PQ
+则不能，尽管它们使用相同的思想：分配多个线程来搜索不同的桶。这是因为：Faiss
+在不同线程内使用局部变量维护 Top-k 结果，最后进行 merge 过程；而 PASE
+线程间共享变量，锁争用导致了 PASE 慢于 Faiss。</p>
+<h2 id="总结">4. 总结</h2>
+<p>经过上文的实验与分析，我们可以得出结论：关系型数据库在 ANNS
+上不存在根本性的缺陷和限制。尽管 PASE 明显慢于
+Faiss，但都是因为实现上的问题。只要付出工程上的努力，通用向量数据库的性能是可以与专用向量数据库相当的。原论文总结了关系型数据库在
+ANNS
+任务上慢的原因，这些原因都在前文中用加粗字体显示了，这里就简单罗列下，不再详细介绍：</p>
+<ol type="1">
+<li><strong>SGEMM Optimization</strong>.</li>
+<li><strong>Memory Management.</strong></li>
+<li><strong>Parallel Execution.</strong></li>
+<li><strong>Memory-centric Page Structure</strong>.</li>
+<li><strong>K-means Implementation.</strong></li>
+<li><strong>Heap Size in Top-k Computation.</strong></li>
+<li><strong>Precomputed Table Implementation</strong>.</li>
+</ol>
+<blockquote>
+<p>以上就是对该论文的全部介绍。可以看到，这是一篇偏向实验报告性质的论文，但是，它回答了一个没有被回答过的问题：关系型数据库在
+ANNS
+任务上为什么慢？导致慢的原因能够被克服吗？该论文通过详尽的实验与分析，告诉了我们原因，也自然得出了问题的答案：关系型数据库能够高效地支持向量数据存储与检索需求，只要付出工程上的努力。</p>
+<p>其实，本篇论文阅读起来非常轻松，其涉及到的知识与技术也并不困难，可以说绝大多数
+CS 专业的大三大四学生，在学习完主要专业课，并花费一定时间精力了解 ANNS
+领域相关背景后，就可以完成本篇论文的主要工作。</p>
+<p>虽然看起来简单，但是该论文关注和解决的问题却是很有价值且从未被研究过的，因此其自然能够发表于
+ICDE。如何发现真正有价值的问题，或许是做研究最重要的一步吧。</p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/%E8%AF%BB%E8%AE%BA%E6%96%87/" class="category-chain-item">读论文</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB/">#近似最近邻</a>
+      
+        <a href="/tags/ANN/">#ANN</a>
+      
+        <a href="/tags/%E5%90%91%E9%87%8F%E7%9B%B8%E4%BC%BC%E5%BA%A6%E6%A3%80%E7%B4%A2/">#向量相似度检索</a>
+      
+        <a href="/tags/PASE/">#PASE</a>
+      
+        <a href="/tags/Faiss/">#Faiss</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>DB 论文阅读：关系型数据库在 ANNS 上为什么慢？</div>
+      <div>https://arcsin2.cloud/2024/08/07/DB-论文阅读：关系型数据库在向量近似最近邻检索上为什么慢？/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年8月7日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/08/04/Git-%E5%AE%9E%E7%94%A8%E5%91%BD%E4%BB%A4/" title="Git 实用命令">
+                        <span class="hidden-mobile">Git 实用命令</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

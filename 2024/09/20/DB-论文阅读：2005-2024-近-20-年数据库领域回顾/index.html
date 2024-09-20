@@ -1,0 +1,1033 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文是论文 What Goes Around Comes Around... And Around... 的阅读记录，该论文由图灵奖得主 Michael Stonebraker 和 CMU 多门知名数据库课程的负责人 Andy Pavlo 合作发表于 SIGMOD 2024。该论文总结回顾了 2005 年以来，数据库领域在 20 年内的发展与变化，并给出了不少对数据库领域未来发展的预">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DB 论文阅读：2005~2024 近 20 年数据库领域回顾">
+<meta property="og:url" content="https://arcsin2.cloud/2024/09/20/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A2005-2024-%E8%BF%91-20-%E5%B9%B4%E6%95%B0%E6%8D%AE%E5%BA%93%E9%A2%86%E5%9F%9F%E5%9B%9E%E9%A1%BE/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本文是论文 What Goes Around Comes Around... And Around... 的阅读记录，该论文由图灵奖得主 Michael Stonebraker 和 CMU 多门知名数据库课程的负责人 Andy Pavlo 合作发表于 SIGMOD 2024。该论文总结回顾了 2005 年以来，数据库领域在 20 年内的发展与变化，并给出了不少对数据库领域未来发展的预">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-09-20T12:00:25.000Z">
+<meta property="article:modified_time" content="2024-09-20T11:32:34.069Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="SQL">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>DB 论文阅读：2005~2024 近 20 年数据库领域回顾 - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="DB 论文阅读：2005~2024 近 20 年数据库领域回顾"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-09-20 20:00" pubdate>
+          2024年9月20日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          21 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">DB 论文阅读：2005~2024 近 20 年数据库领域回顾</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>本文是论文 <a
+target="_blank" rel="noopener" href="https://db.cs.cmu.edu/papers/2024/whatgoesaround-sigmodrec2024.pdf">What
+Goes Around Comes Around... And Around...</a>
+的阅读记录，该论文由图灵奖得主 <a
+target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Michael_Stonebraker">Michael
+Stonebraker</a> 和 CMU 多门知名数据库课程的负责人 <a
+target="_blank" rel="noopener" href="https://www.cs.cmu.edu/~pavlo/">Andy Pavlo</a> 合作发表于 SIGMOD
+2024。该论文总结回顾了 2005 年以来，数据库领域在 20
+年内的发展与变化，并给出了不少对数据库领域未来发展的预测和建议。本文按照原论文章节原论文中的部分内容，更多细节请参阅原论文。</p>
+</blockquote>
+<h2 id="introduction">1. Introduction</h2>
+<p>2005 年，Michael Stonebraker 在 <em>Red Book</em> 的 What Goes Around
+Comes Around 一章中总结了 20 世纪 60 年代以来，主要数据模型的变化：</p>
+<ul>
+<li>Hierarchical (e.g., IMS): late 1960s and 1970s</li>
+<li>Network (e.g., CODASYL): 1970s</li>
+<li>Relational: 1970s and early 1980s</li>
+<li>Entity-Relationship: 1970s</li>
+<li>Extended Relational: 1980s</li>
+<li>Semantic: late 1970s and 1980s</li>
+<li>Object-Oriented: late 1980s and early 1990s</li>
+<li>Object-Relational: late 1980s and early 1990s</li>
+<li>Semi-structured (e.g., XML): late 1990s and 2000s</li>
+</ul>
+<p>20
+年后，作者仍认为，具有可扩展类型系统（即对象-关系）的关系模型已经主导了所有领域，而其他模型在市场上都没有取得成功。</p>
+<p>论文首先分析了最近 20
+年数据模型和查询语言的发展；然后讨论了数据库系统架构的发展；最后，作者给出了对未来数据库领域发展的一些评论和建议。</p>
+<h2 id="data-models-query-languages">2. Data Models &amp; Query
+Languages</h2>
+<h3 id="mapreduce-systems">2.1 MapReduce Systems</h3>
+<p>MapReduce（MR）作为 Google 大数据的 “三驾马车”
+之一，早已被大家熟知。MR 起初用于 Google 内部的爬虫系统，后来 Yahoo!
+开发了 Hadoop，成为 MR 的开源版本。Hadoop 基于 HDFS，HDFS 是 Google
+GFS（Google File System） 的替代。Hadoop 性能不及为 OLAP 负载设计的
+RDBMS。MR 的优点之一是，不需要像 DBMS 那样需要先定义表的 schema，然后
+load 数据，最后才能进行查询。因此，MR
+更适用于那些只需要运行一次的任务，如：文本处理和 ETL 等。</p>
+<p>2014 年，Google 宣布其内部已放弃了 MR 路线。如今，分布式数据库是替代
+MR 的更好选择。</p>
+<h3 id="keyvalue-stores">2.2 Key/Value Stores</h3>
+<p>21
+世纪初，基于键值存储的分布式数据库主键被开发出来，这些系统的功能相比
+RDBMS 更有限，但是性能也更好。此外，还有嵌入式键值数据库，典型代表有
+LevelDB、RocksDB 等。</p>
+<p>在应用开发中，KV
+存储优点是简单方便；缺点是不适用于复杂应用场景，如不容易表示复杂数据类型、需要自行实现
+Join 等算法。总的来说，RDBMS 很容易模拟 KV 存储功能，而想让 KV
+存储支持复杂的数据模型却并非易事。如果需要轻量级的嵌入式 DBMS，SQLite 和
+DuckDB 可能是更好的选择。</p>
+<p>KV 存储带来的另一个影响是，过去 20 年的一个新架构趋势是使用嵌入式 KV
+存储作为全功能 DBMS 的底层存储管理器。使用现有的 KV
+存储允许开发人员在更短的时间内编写新的 DBMS。</p>
+<h3 id="document-databases">2.3 Document Databases</h3>
+<p>文档模型的典型代表就是 JSON，通过层次化的 field/value
+对，来表示较为复杂的数据结构。文档型数据库的发展掀起了称为 NoSQL
+的潮流，MongoDB 是文档数据库的典型代表。</p>
+<p>尽管开始时，NoSQL 数据库基本上不支持 SQL 和事务，但到 2010
+年代末，几乎每个 NoSQL DBMS 都添加了 SQL 接口。很多 NoSQL
+数据库也增加了对事务的支持。随着这些 NoSQL 系统支持 SQL 和事务，它们与
+RDBMS 的主要区别变成了对 JSON 支持的完善程度。但 SQL 标准在 2016
+年增加了 JSON 数据类型和操作。因此，作者认为随着 RDBMS
+的逐渐发展，这两种系统会逐渐变得基本相同。</p>
+<h3 id="column-family-databases">2.4 Column-Family Databases</h3>
+<p>列族（又称：宽列）是部分 NoSQL
+系统使用的另一种数据模型。尽管它的名字是列族，但它并不是列数据模型。相反，它是文档数据模型的简化版，只支持一层嵌套，而不是任意嵌套。第一个列族数据库是
+2004 年 Google 发表的 BigTable。</p>
+<p>在 2010 年代初，Google 在 BigTable 的基础上构建了 RDBMS，包括
+MegaStore 和第一个版本的 Spanner。从那以后，Google 重新编写了
+Spanner，删除了 BigTable，现在它是许多 Google
+内部应用程序的主数据库。列族模型拥有和文档模型一样的缺点，其并不适合作为
+DBMS 的底层存储模型。</p>
+<h3 id="text-search-engines">2.5 Text Search Engines</h3>
+<p>文本搜索引擎主要基于分词技术和倒排索引。目前领先的文本搜索系统包括
+Elastic-search 和 Solr，它们都使用 Lucene
+作为内部搜索库。这些系统为存储和索引文本数据提供了良好的支持，但没有提供或仅提供了比较有限的事务功能，不支持故障恢复。目前主要的
+RDBMS
+都已经支持了全文检索索引，基本上与专用系统不相上下。但是，这些系统提供的
+SQL API 则各有千秋。</p>
+<h3 id="array-databases">2.6 Array Databases</h3>
+<p>在计算领域，array 非常常见。这里的 array 泛指一维的 vector；二维的
+matrix 和高维的 tensor。</p>
+<p>为了高效支持面向 array 的存储和查询需求，DBMS
+的存储引擎和执行引擎都需要专门的优化，普通的 RDBMS
+在这些场景的查询性能表现不佳。但由于市场较小，没有主要的云提供商提供托管
+Array DBMS 服务。最近，SQL:2023
+标准包含了对真正多维数组（SQL/MDA）的支持。</p>
+<h3 id="vector-databases">2.7 Vector Databases</h3>
+<p>类似于列族模型是文档模型的简化，向量数据模型将数组数据模型简化为一维的
+vector。Vectoro DBMS 和 Array DBMS
+之间的关键区别在于它们的查询模式。前者是为相似性搜索而设计的，在高维空间中寻找向量与给定输入向量距离最短的记录；而
+Array DBMS
+使用一个向量的偏移、或者在多个向量上提取切片等做搜索匹配。</p>
+<p>Array DBMS
+需要定制的存储管理器和执行引擎来支持对多维数据的高效操作，而 Array DBMS
+本质上是具有专门的 ANN 索引的面向文档的
+DBMS。这样的索引是一种功能，而不是新系统架构的基础。因此，RDBMS
+支持向量存储与索引并不是困难的事情。在 2023 年，许多主要的 RDBMS
+都增加了向量索引，包括：Oracle、SingleStore、Rockset 和 Clickhouse
+等。</p>
+<p>作者预测，Vectoro DBMS 将经历与文档 DBMS
+相同的演变，通过添加更类似于关系的特性（例如，SQL、事务、可扩展性）。与此同时，关系型的现有企业将在他们已经很长的特性列表中添加向量索引，并转向下一个新兴趋势。</p>
+<blockquote>
+<p>关于 Vector DBMS 的更多介绍，可参考：<a
+target="_blank" rel="noopener" href="https://www.zhihu.com/question/610087406/answer/3446465314">可用的向量数据库(vector
+DB)有哪些？ - 知乎 (zhihu.com)</a> 、<a
+href="https://arcsin2.cloud/2023/08/03/什么是向量数据库？/">什么是向量数据库？
+- arcsin2 的个人博客</a> 。</p>
+</blockquote>
+<h3 id="graph-databases">2.8 Graph Databases</h3>
+<p>这一小节本文略过，感兴趣读者请参阅原论文。</p>
+<h3 id="summary">2.9 Summary</h3>
+<p>根据以上小节，可以得出一个合理的结论：非
+SQL、非关系型系统要么是一个很小的、专用的市场，要么正在迅速成为 SQL/RM
+系统。具体地：</p>
+<ul>
+<li><strong>MapReduce
+Systems</strong>：它们在几年前就已经过时了，目前充其量只是一项遗留技术。</li>
+<li><strong>Key-value Stores</strong>：许多要么成熟为 RM
+系统，要么仅用于特定问题。它们通常可以被现代高性能 RDBMS
+赶上或击败。</li>
+<li><strong>Document Databases</strong>：这种 NoSQL 系统正在和 RDBMS
+正处于冲突之中。这两种系统的差异随着时间的推移逐渐减少，未来将变得几乎无法区分。</li>
+<li><strong>Column-Family
+Systems</strong>：这仍然是一个很小的市场。如果没有谷歌，本文就不会讨论这一类别。</li>
+<li><strong>Text Search
+Engines</strong>：这些系统用于多存储架构中的文本字段。如果 RDBMS
+在搜索方面有更好的表现，那么这些系统就不必作为单独的产品了。</li>
+<li><strong>Array Databases</strong>：科学应用将继续倾向于使用定制的
+Array DBMS，而不是 RDBMS。尽管 SQL/MDA 有了新的增强功能，但 RDBMS
+仍无法有效地存储和分析数组，因此定制的 Array DBMS
+可能会变得更加重要。</li>
+<li><strong>Vector
+Databases</strong>：它们是具有加速最近邻搜索索引的单用途 DBMS。RM DBMS
+很快就会使用其可扩展的类型系统为这些数据结构和搜索方法提供原生支持，这将使此类专用数据库变得不必要。</li>
+<li><strong>Graph Databases</strong>：OLTP 图应用程序将主要由 RDBMS
+提供服务。此外，分析型图应用程序具有独特的要求，最好在具有专门数据结构的内存中完成。RDBMS
+将在 SQL 之上或通过扩展提供以图为中心的 API。我们预计专用图 DBMS
+不会成为一个庞大的市场。</li>
+</ul>
+<h2 id="system-architectures">3. System Architectures</h2>
+<h3 id="columnar-systems">3.1 Columnar Systems</h3>
+<p>列存主要是为 OLAP 负载设计的。由于 OLAP 负载不同于 OLTP 的特性：</p>
+<ul>
+<li>OLAP
+本质上是历史的（也就是说，它们是周期性加载的，然后是只读的）。</li>
+<li>组织只要能够负担得起存储，就可以保留所有内容。</li>
+<li>查询通常只访问表中属性的一小部分，并且本质上是即席（ad-hoc）的。</li>
+</ul>
+<p>列存在 OLAP 负载下有以下优势：</p>
+<ul>
+<li>压缩友好。</li>
+<li>易于向量化执行处理整个列。</li>
+<li>存储记录所需的额外空间（header）小。</li>
+</ul>
+<p>由于上述 OLAP
+特性和列存的优点，列存已经成为数仓型数据库的共同选择。</p>
+<h3 id="cloud-databases">3.2 Cloud Databases</h3>
+<p>云数据库是近 20 年来的另一个趋势。由于网络带宽的增长速度远超过磁盘 IO
+带宽的增长速度，使得 NAS（Network Attached Storage
+）成为一种有吸引力的附加存储方案。目前，所有主要的云厂商都通过对象存储提供
+NAS （例如，Amazon S3）与一些 DBMS
+功能（例如，复制，过滤）。对象存储由于其成本较低，且天生支持存算分离架构，一些新的
+DBMS 基于对象存储进行系统架构设计，典型代表有：Snowﬂake。</p>
+<p>作者认为，这种共享磁盘（shared-disk）将主导 DBMS
+体系结构，并且认为将来不会重新出现无共享（shared-nothing）架构。</p>
+<h3 id="data-lakes-lakehouses">3.3 Data Lakes / Lakehouses</h3>
+<p>云厂商引发的另一个趋势是从 OLAP
+工作负载的单片专用数据仓库转向由对象存储支持的数据湖。数据湖让用户能够上传文件到对象存储，然后即可进行查询，绕过了传统
+DBMS 的创建 schema 和 load
+数据过程。数据湖系统所采用的两种最流行的存储格式是 Twitter/Cloudera 的
+Parquet 和 Meta 的 ORC。它们都借鉴了早期列式存储研究的技术，比如
+PAX，压缩和嵌套数据分解。</p>
+<p>数据湖系统给查询优化带来了新的挑战。由于缺乏数据统计信息，从而无法一开始就生成高效的查询计划，因此必须让
+DBMS 能够在执行期间根据观察到的数据特征动态修改查询计划。</p>
+<h3 id="newsql-systems">3.4 NewSQL Systems</h3>
+<p>NewSQL 系统在 2010 年代早期出现，旨在为客户提供 NoSQL 系统的可扩展
+OLTP 工作负载，同时仍然支持 SQL。换句话说，这些新系统试图实现与 2000
+年代的 NoSQL DBMS 相同的可伸缩性，但仍然保留 20 世纪 90
+年代的数据库管理系统遗留的 RM 和 ACID 事务。</p>
+<p>由于历史惯性和对 OLTP 系统可靠性的重视，目前采用 NewSQL
+的企业并不多。此外，NewSQL 系统也存在：只支持标准 SQL
+的子集、多节点事务性能较差等不足之处。NewSQL
+系统带动出现了一批新的分布式事务性 SQL RDBMS，如：TiDB 等。</p>
+<h3 id="hardware-accelerators">3.5 Hardware Accelerators</h3>
+<p>早在 20 世纪 80 年代，就有一些使用专用硬件加速 DBMS
+的尝试，不过这些尝试中大部分都由于性价比不高、仅对少数执行 path
+有优化、可使用软件方案替代等因素失败了。在过去的 20
+年里，人们一直在使用商用硬件（FPGA、GPU）来加速查询，而不是为 DBMS
+构建定制硬件。</p>
+<p>作者认为，专用硬件加速 DBMS
+未来应该基本上只会由云厂商驱动发展；在接下来的二十年里，这个领域将会有很多尝试。</p>
+<h3 id="blockchain-databases">3.6 Blockchain Databases</h3>
+<p>区块链数据库目前呈现衰落趋势，很少有企业采用这一类型
+DBMS，本文不详细介绍。</p>
+<h3 id="summary-1">3.7 Summary</h3>
+<p>对上述小节内容总结如下：</p>
+<ul>
+<li><strong>Columnar Systems</strong>：向列存的转变彻底改变了 OLAP DBMS
+的架构。</li>
+<li><strong>Cloud
+Databases</strong>：云计算颠覆了构建可扩展数据库管理系统的传统智慧。除了嵌入式数据库管理系统外，任何不从云服务开始的产品很可能会失败。</li>
+<li><strong>Data Lakes /
+Lakehouses</strong>：使用开源存储格式的基于云的对象存储将成为未来十年的典型
+OLAP DBMS。</li>
+<li><strong>NewSQL
+Systems</strong>：它们利用了新的想法，但尚未产生与列存和云 DBMS
+相同的影响。这导致了支持更强大的 ACID 语义的新型分布式 DBMS
+的出现，以取代 NoSQL 较弱的 BASE 保证。</li>
+<li><strong>Hardware
+Accelerators</strong>：除了主要的云供应商，我们还没有看到专门硬件的使用案例，尽管初创企业将继续尝试。</li>
+<li><strong>Blockchain
+Databases</strong>：一种低效的、未被应用程序采用的技术。历史表明，这是进行系统开发的错误方法。</li>
+</ul>
+<h2 id="parting-comments">4. Parting Comments</h2>
+<p>作者对过去二十年数据库的分析给我们带来了几点启示。</p>
+<ul>
+<li><strong>永远不要低估营销对坏产品的价值</strong>：作者提到，尽管当时存在更好的选择，但较差的
+DBMS 产品通过强大的市场营销取得了成功，Oracle、MySQL、MongoDB
+都是例子。</li>
+<li><strong>小心来自大型非 DBMS 供应商的
+DBMS</strong>：在过去十年中，数据库的一个有趣的方面是技术公司内部构建
+DBMS
+的趋势，然后它们将其作为开源项目分离出来。这部分是因为企业的评价体系，促成了技术人员不采用已有的工具，而是重新实现新的内部系统。</li>
+<li><strong>不要忽视开箱即用的体验</strong>：许多非关系 DBMS
+的突出卖点之一是比 RDBMS 有更好的“开箱即用”体验。DBMS
+必须支持从本地文件或对象存储等方便地加载数据。</li>
+<li><strong>开发人员需要直接查询他们的数据库</strong></li>
+<li><strong>AI/ML 对 DBMS 的影响将是显著的</strong></li>
+</ul>
+<h2 id="conclusion">5. Conclusion</h2>
+<p>作者预测，未来几十年数据库领域将继续经历循环往复的趋势。新一代开发者可能会认为
+SQL 和 RM 不足以应对新兴应用领域，从而提出新的查询语言和数据模型。探索
+DBMS
+的新想法和概念具有巨大价值，但预计这些新数据模型不会取代关系模型。</p>
+<p>同时，新项目重复实现非创新但对构建 DBMS
+必需的组件（如配置处理器、解析器、缓冲池）的努力被浪费。为了加速下一代
+DBMS
+的发展，社区应促进开源可重用组件和服务的开发。目前，已有一些朝着这一目标的努力，包括文件格式、查询优化和执行引擎。呼吁数据库社区争取制定类似
+POSIX 的 DBMS
+内部标准，以加速互操作性。同时，提醒开发者要吸取历史教训，站在前人的肩膀上而非脚趾上。</p>
+<p>2044 年，将发表本文的后续版本，让我们期待未来 20
+年数据库领域将如何发展。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/%E8%AF%BB%E8%AE%BA%E6%96%87/" class="category-chain-item">读论文</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/">#数据库</a>
+      
+        <a href="/tags/SQL/">#SQL</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>DB 论文阅读：2005~2024 近 20 年数据库领域回顾</div>
+      <div>https://arcsin2.cloud/2024/09/20/DB-论文阅读：2005-2024-近-20-年数据库领域回顾/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年9月20日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/08/07/DB-%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%EF%BC%9A%E5%85%B3%E7%B3%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%9C%A8%E5%90%91%E9%87%8F%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB%E6%A3%80%E7%B4%A2%E4%B8%8A%E4%B8%BA%E4%BB%80%E4%B9%88%E6%85%A2%EF%BC%9F/" title="DB 论文阅读：关系型数据库在 ANNS 上为什么慢？">
+                        <span class="hidden-mobile">DB 论文阅读：关系型数据库在 ANNS 上为什么慢？</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

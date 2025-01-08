@@ -16,24 +16,28 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="前段时间忙着秋招和论文，现在总算有些时间写点东西，总结下一名普通 C++ 选手视角下的秋招，以及一点体会。 免责声明： 本文仅代表笔者个人主观、片面、浅薄的观点，不构成职业选择建议。  1. 个人情况 正式开始之前还是先介绍下个人情况，211 CS 科班本硕，研究生期间做过一段时间计算机视觉，后跑路转向系统方向。在系统方向属于无论文、无竞赛、无开源的三无产品，纯靠 CMU 15">
+    <meta name="description" content="本文简要记录如何在 Windows 11 + WSL2 上安装 CUDA 开发环境。  1. 安装 WSL2 在开始之前，先确保在 Windows 系统上安装了 WSL 相关环境，可参考本站点之前的博客：使用 WSL 搭建 Linux 开发环境。 2. 安装&#x2F;更新 Windows GPU 驱动 安装好 WSL 后，需要在 Windows 上安装或更新 GPU 驱动。 一般而言，">
 <meta property="og:type" content="article">
-<meta property="og:title" content="25 届 C++ 选手秋招小记">
-<meta property="og:url" content="https://arcsin2.cloud/2024/12/31/25%E5%B1%8A-C-%E9%80%89%E6%89%8B%E7%A7%8B%E6%8B%9B%E5%B0%8F%E8%AE%B0/index.html">
+<meta property="og:title" content="基于 WSL2 搭建 CUDA Linux 开发环境">
+<meta property="og:url" content="https://arcsin2.cloud/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="前段时间忙着秋招和论文，现在总算有些时间写点东西，总结下一名普通 C++ 选手视角下的秋招，以及一点体会。 免责声明： 本文仅代表笔者个人主观、片面、浅薄的观点，不构成职业选择建议。  1. 个人情况 正式开始之前还是先介绍下个人情况，211 CS 科班本硕，研究生期间做过一段时间计算机视觉，后跑路转向系统方向。在系统方向属于无论文、无竞赛、无开源的三无产品，纯靠 CMU 15">
+<meta property="og:description" content="本文简要记录如何在 Windows 11 + WSL2 上安装 CUDA 开发环境。  1. 安装 WSL2 在开始之前，先确保在 Windows 系统上安装了 WSL 相关环境，可参考本站点之前的博客：使用 WSL 搭建 Linux 开发环境。 2. 安装&#x2F;更新 Windows GPU 驱动 安装好 WSL 后，需要在 Windows 上安装或更新 GPU 驱动。 一般而言，">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2024-12-31T07:54:57.000Z">
-<meta property="article:modified_time" content="2024-12-31T09:38:57.648Z">
+<meta property="og:image" content="https://arcsin2.cloud/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/image-20250108154315155.png">
+<meta property="article:published_time" content="2025-01-08T06:04:42.000Z">
+<meta property="article:modified_time" content="2025-01-08T08:07:35.905Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="秋招">
+<meta property="article:tag" content="CUDA">
+<meta property="article:tag" content="HPC">
+<meta property="article:tag" content="WSL">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/image-20250108154315155.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>25 届 C++ 选手秋招小记 - arcsin2 的个人博客</title>
+  <title>基于 WSL2 搭建 CUDA Linux 开发环境 - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -238,7 +242,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="25 届 C++ 选手秋招小记"></span>
+            <span id="subtitle" data-typed-text="基于 WSL2 搭建 CUDA Linux 开发环境"></span>
           
         </div>
 
@@ -249,8 +253,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2024-12-31 15:54" pubdate>
-          2024年12月31日 下午
+        <time datetime="2025-01-08 14:04" pubdate>
+          2025年1月8日 下午
         </time>
       </span>
     
@@ -261,7 +265,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          2k 字
+          1.3k 字
         
       </span>
     
@@ -272,7 +276,7 @@
         
         
         
-          7 分钟
+          5 分钟
         
       </span>
     
@@ -310,87 +314,57 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">25 届 C++ 选手秋招小记</h1>
+            <h1 style="display: none">基于 WSL2 搭建 CUDA Linux 开发环境</h1>
             
             
               <div class="markdown-body">
                 
                 <blockquote>
-<p>前段时间忙着秋招和论文，现在总算有些时间写点东西，总结下一名普通 C++
-选手视角下的秋招，以及一点体会。</p>
-<p>免责声明：</p>
-<p>本文仅代表笔者个人主观、片面、浅薄的观点，不构成职业选择建议。</p>
+<p>本文简要记录如何在 Windows 11 + WSL2 上安装 CUDA 开发环境。</p>
 </blockquote>
-<h2 id="个人情况">1. 个人情况</h2>
-<p>正式开始之前还是先介绍下个人情况，211 CS
-科班本硕，研究生期间做过一段时间计算机视觉，后跑路转向系统方向。在系统方向属于无论文、无竞赛、无开源的三无产品，纯靠
-CMU 15-445 等国外课程学习和秋招。总结来说就是跟不上 AI
-潮流并跑路的纯混子选手。主攻语言 C/C++，略懂 Python，其他 Java、Go
-等基本属于看得懂，但是没大量写过代码。因此秋招期间投递的岗位主要是数据库内核，外加一些后端大类岗位。</p>
-<p>秋招投递了 20 个公司左右，BAT、TMD 等互联网大厂全军覆没，收到的 offer
-主要是一些非一线企业和创业公司的数据库内核开发 offer，以及部分公司的后端
-offer。最终在某数据库内核 offer 和某后端 offer 之间选择了后者，算是弃坑
-DB 了，以后估计只会作为兴趣爱好而非职业了。</p>
-<h2 id="db-or-not-db-thats-a-question">2. DB or not DB, that's a
-question?</h2>
-<p>本人更新的不少内容都是数据库相关的，尤其是向量数据库。在当初选择跑路
-CV 转向 vector db 时，想的是以后找个向量数据库相关的岗位，也算跟着 AI
-时代潮流混口饭吃。于是后面学习了 15-445 课程，并读了 vector db、ANN
-的相关 paper，对向量数据库和近似最近邻检索领域算是勉强入门了吧。</p>
-<p>然而，理想很丰满，现实很骨感。作为一名半路出家，主要靠自学，无论文、竞赛和开源经历的混子，投递国内
-vector db 的当红炸子鸡 Zilliz 时，简历都过不了；阿里云的
-PolarDB-X（分布式数据库）部门同样简历挂；腾讯 TEG 的 NoSQL
-部门三面挂；美团的分布式数据库（Blade）部门排序挂……除此之外还有部分 DB
-相关的被挂经历，不逐一列举了。</p>
-<p>在数据库方面，最终收获的 offer
-只有某公司预研部门、某创业公司和某加班无加班费公司。且薪资较低，最高不超过
-25k（当然已经很知足了）。</p>
-<p>其实知乎上劝退 DB 的帖子已经很多了，这里简单列几个：</p>
-<ul>
-<li><a
-target="_blank" rel="noopener" href="https://www.zhihu.com/question/27551617">应届毕业生想从事数据库方面的工作，前期需要准备什么？
-- 知乎</a></li>
-<li><a
-target="_blank" rel="noopener" href="https://www.zhihu.com/question/553813879">想走数据库内核方向，该怎么办？
-- 知乎</a></li>
-</ul>
-<p>这些问题下最新的回答基本上都是劝退入行 DB
-的，尤其是刚毕业的新人。劝退的原因这里就不赘述了，感兴趣的朋友请点击链接查看。</p>
-<p>从我个人的秋招经历来看，作为一名资质一般、对 DB
-了解有限、热爱底层技术小于热爱软妹币的普通人而言，DB
-即使不算坏的选择，也绝对算不上性价比高的选择。选择
-DB，意味着你可能需要付出更多、学习更多，但是考虑到目前企业对背景一般的候选人开出的薪资，实在找不到选择
-DB 而不选择普通后端的理由。</p>
-<p>当然，以上只是我作为一名混子选手的视角。如果你真的喜欢
-DB、有论文竞赛开源相关经历，拿到一个各方面令人满意的 DB 相关 offer
-也并非不可能。很多时候，做自己喜欢、擅长的事情，也许就是不错的选择。</p>
-<h2 id="我待-c-如初恋c-虐我千百遍">3. 我待 C++ 如初恋，C++
-虐我千百遍</h2>
-<p>聊完 DB，还想再聊一聊 C++。</p>
-<p>作为一名进入大学才开始接触编程，并且第一门编程语言课程是 C++
-的混子，很难说得清楚自己对 C++
-复杂的情感。从大一上课时的学不懂指针，到后面的狠读各种 C++
-书籍，包括但不限于：C++ Primer、Effective
-系列、对象模型、编译链接、设计与演化、Core Guidelines
-解析等，直到现在算是勉强称得上基本会用 C++ 了。</p>
-<p>然而，在学习 C++
-方面的付出与努力，尤其是将其作为主攻语言，在秋招中给自己带来的却似乎并非优势。在我大多数的面试经历中，我自以为学的还行的
-C++ 出现概率极低。虽然没有详细的统计，但是就我印象而言，C++
-相关面试题出现的概率应该在 5% 以下。此外，某客上，劝退 C++
-的帖子也不在少数。也许 C++ 和互联网的确不太匹配。使用 C++
-的互联网公司屈指可数，而更多是特定部门，才会使用 C++ 语言开发。</p>
-<p>对于想要做后端的同学而言，Java 或者 Go 也许才是更合适的选择。C++
-的相关需求相比前两者还是偏少，且和业务联系比较紧密，据我个人有限的了解，使用
-C++ 的相关岗位有：QT 客户端、游戏开发相关、AI Infra 中部分、量化、OS DB
-等底层相关的。</p>
-<p>虽然我们经常说学好 C++
-可以学好任何一门语言，但是对于校招生而言，做好自己职业规划，选择和职业规划匹配的编程语言、项目以及其他相关技术栈，也许是更正确的选择。</p>
-<p>当然，本文的目的不在于劝退
-C++。想要说的还是：做好求职规范，然后学习相关技术栈。C++
-仍然是我个人比较喜欢的编程语言，其也在秋招期间帮我找到了满意的工作。</p>
-<h2 id="总结">4. 总结</h2>
-<p>以上就是一名混子选手的秋招小记，以及一点点体会。感谢阅读，希望对你有点帮助。不管怎么样，秋招还是已经画上了句号，随着即将结束的
-2024。在此提前祝大家新年快乐！学习工作生活都顺利！</p>
+<h2 id="安装-wsl2">1. 安装 WSL2</h2>
+<p>在开始之前，先确保在 Windows 系统上安装了 WSL
+相关环境，可参考本站点之前的博客：<a
+href="/2023/07/31/使用-WSL-配置-Linux-开发环境/">使用 WSL 搭建 Linux
+开发环境</a>。</p>
+<h2 id="安装更新-windows-gpu-驱动">2. 安装/更新 Windows GPU 驱动</h2>
+<p>安装好 WSL 后，需要在 Windows 上安装或更新 GPU 驱动。</p>
+<p>一般而言，Windows 笔记本自带 Nvidia Experience
+软件（最新版更新后改名为 NVIDIA，在桌面可以直接启动），如下图所示：</p>
+<img src="/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/image-20250108154315155.png" srcset="/img/loading.gif" lazyload class="" title="image-20250108154315155">
+<p>点击“驱动程序”，然后根据页面显示内容，进行更新，耐心等待更新完毕即可。</p>
+<h2 id="在-wsl-上安装-cuda-环境">3. 在 WSL 上安装 CUDA 环境</h2>
+<p>在 Windows 上更新完 GPU 驱动后，我们需要进入 WSL 命令行中，参考
+NVIDIA 的官方文档，安装 CUDA 相关开发环境：<a
+target="_blank" rel="noopener" href="https://docs.nvidia.com/cuda/wsl-user-guide/index.html#cuda-support-for-wsl-2">CUDA
+on WSL User Guide</a>。上面 NVIDIA 官方文档中最重要的是：<a
+target="_blank" rel="noopener" href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;Distribution=WSL-Ubuntu&amp;target_version=2.0&amp;target_type=deb_local">CUDA
+Toolkit Downloads</a>，执行这一链接页面显示的命令，即可完成 CUDA
+开发环境安装。</p>
+<h2 id="配置-.bashrc-文件">4. 配置 <code>.bashrc</code> 文件</h2>
+<p>在 WSL 上安装完 CUDA 后，在命令行输入 <code>nvcc -V</code>
+会显示找不到该命令。这一问题需要通过配置 <code>.bashrc</code>
+文件解决，可参考：<a
+target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/555151725">Win11+WSL2+Ubuntu+Docker-Desktop
+支持GPU的深度学习环境搭建</a>。其中配置 <code>.bashrc</code>
+的相关命令是：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo vim ~/.bashrc</span><br></code></pre></td></tr></table></figure>
+<p>然后在文件尾部添加以下内容：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">export PATH=/usr/local/cuda-11.5/bin$&#123;PATH:+:$&#123;PATH&#125;&#125;<br>export LD_LIBRARY_PATH=/usr/local/cuda-11.5/lib64$&#123;LD_LIBRARY_PATH:+:$&#123;LD_LIBRARY_PATH&#125;&#125;<br></code></pre></td></tr></table></figure>
+<p>路径需要根据自己的实际安装版本确定，一般情况下在
+<code>/usr/local/cuda</code> 目录。</p>
+<p>编辑完保持后，输入命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">source</span> ~/.bashrc</span><br></code></pre></td></tr></table></figure>
+<p>然后，输入 <code>nvcc -V</code> 命令，若能输出，则安装成功。</p>
+<h2 id="vs-code-配置-clangd-插件智能提示">5. VS Code 配置 clangd
+插件智能提示</h2>
+<p>在使用 VS Code + clangd 插件编写 CUDA 相关代码时，可能会出现 clangd
+对 CUDA 相关头文件报错的情况。为了解决这个问题，可以在项目的根目录创建
+<code>.clangd</code> 文件，然后输入以下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs .clangd">CompileFlags:<br>    Add: [-std=c++20,<br>          --cuda-path=/usr/local/cuda,<br>          -I/usr/local/cuda/include,<br>          -L/usr/local/cuda/lib64,<br>        ]<br>    Compiler: /usr/local/cuda/bin/nvcc<br>Diagnostics:<br>    Suppress: [variadic_device_fn, ovl_no_viable_function_in_init]<br></code></pre></td></tr></table></figure>
+<p>这一解决方案参考了其他博客（没找到具体链接了...），但配置
+<code>.clangd</code>
+文件感觉还是不太优雅，后续再探索下有无其他解决方案。</p>
 
                 
               </div>
@@ -409,7 +383,7 @@ C++。想要说的还是：做好求职规范，然后学习相关技术栈。C+
     
       <span class="category-chain">
         
-  <a href="/categories/%E4%B8%80%E6%94%AF%E8%8A%A6%E8%8B%87/" class="category-chain-item">一支芦苇</a>
+  <a href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD%E8%AE%A1%E7%AE%97/" class="category-chain-item">高性能计算</a>
   
   
 
@@ -424,7 +398,11 @@ C++。想要说的还是：做好求职规范，然后学习相关技术栈。C+
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/%E7%A7%8B%E6%8B%9B/">#秋招</a>
+        <a href="/tags/CUDA/">#CUDA</a>
+      
+        <a href="/tags/HPC/">#HPC</a>
+      
+        <a href="/tags/WSL/">#WSL</a>
       
     </div>
   
@@ -436,8 +414,8 @@ C++。想要说的还是：做好求职规范，然后学习相关技术栈。C+
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>25 届 C++ 选手秋招小记</div>
-      <div>https://arcsin2.cloud/2024/12/31/25届-C-选手秋招小记/</div>
+      <div>基于 WSL2 搭建 CUDA Linux 开发环境</div>
+      <div>https://arcsin2.cloud/2025/01/08/基于-WSL2-搭建-CUDA-Linux-开发环境/</div>
     </div>
     <div class="license-meta">
       
@@ -449,7 +427,7 @@ C++。想要说的还是：做好求职规范，然后学习相关技术栈。C+
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2024年12月31日</div>
+          <div>2025年1月8日</div>
         </div>
       
       
@@ -493,18 +471,12 @@ C++。想要说的还是：做好求职规范，然后学习相关技术栈。C+
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" title="基于 WSL2 搭建 CUDA Linux 开发环境">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">基于 WSL2 搭建 CUDA Linux 开发环境</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/10/21/%E4%BB%8E%E9%9B%B6%E6%9E%84%E5%BB%BA%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93%EF%BC%9A%E6%9B%B4%E9%80%82%E5%90%88C-%E5%9F%BA%E6%9E%B6%E9%80%89%E6%89%8B%E4%BD%93%E8%B4%A8%E7%9A%84%E6%A0%A1%E6%8B%9B%E9%A1%B9%E7%9B%AE/" title="从零构建向量数据库：更适合 C++ 基架选手体质的校招项目">
-                        <span class="hidden-mobile">从零构建向量数据库：更适合 C++ 基架选手体质的校招项目</span>
+                      <a href="/2024/12/31/25%E5%B1%8A-C-%E9%80%89%E6%89%8B%E7%A7%8B%E6%8B%9B%E5%B0%8F%E8%AE%B0/" title="25 届 C++ 选手秋招小记">
+                        <span class="hidden-mobile">25 届 C++ 选手秋招小记</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

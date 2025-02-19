@@ -16,28 +16,25 @@
   <meta name="author" content="arcsin2">
   <meta name="keywords" content="">
   
-    <meta name="description" content="本文简要记录如何在 Windows 11 + WSL2 上安装 CUDA 开发环境。  1. 安装 WSL2 在开始之前，先确保在 Windows 系统上安装了 WSL 相关环境，可参考本站点之前的博客：使用 WSL 搭建 Linux 开发环境。 2. 安装&#x2F;更新 Windows GPU 驱动 安装好 WSL 后，需要在 Windows 上安装或更新 GPU 驱动。 一般而言，">
+    <meta name="description" content="本文分享下今年寒假期间翻过的几本书，以此记录人生的最后一个长达一个多月的寒假。  1. 经济学通识课 链接：经济学通识课 (豆瓣) 个人推荐指数：8 &#x2F; 10 这本书虽然叫《经济学通识课》，但是个人认为其更像一本简要介绍经济学史的读物。全书基本按时间顺序，介绍了历史上出现过的主流经济学理论，包括古希腊时期的理论、马克思恩格斯的经济学观点、现代的凯恩斯主义等。作为一名经济学方面的小白">
 <meta property="og:type" content="article">
-<meta property="og:title" content="基于 WSL2 搭建 CUDA Linux 开发环境">
-<meta property="og:url" content="https://arcsin2.cloud/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/index.html">
+<meta property="og:title" content="闲书阅读记录：致最后的寒假">
+<meta property="og:url" content="https://arcsin2.cloud/2025/02/19/%E9%97%B2%E4%B9%A6%E9%98%85%E8%AF%BB%E8%AE%B0%E5%BD%95%EF%BC%9A%E8%87%B4%E6%9C%80%E5%90%8E%E7%9A%84%E5%AF%92%E5%81%87/index.html">
 <meta property="og:site_name" content="arcsin2 的个人博客">
-<meta property="og:description" content="本文简要记录如何在 Windows 11 + WSL2 上安装 CUDA 开发环境。  1. 安装 WSL2 在开始之前，先确保在 Windows 系统上安装了 WSL 相关环境，可参考本站点之前的博客：使用 WSL 搭建 Linux 开发环境。 2. 安装&#x2F;更新 Windows GPU 驱动 安装好 WSL 后，需要在 Windows 上安装或更新 GPU 驱动。 一般而言，">
+<meta property="og:description" content="本文分享下今年寒假期间翻过的几本书，以此记录人生的最后一个长达一个多月的寒假。  1. 经济学通识课 链接：经济学通识课 (豆瓣) 个人推荐指数：8 &#x2F; 10 这本书虽然叫《经济学通识课》，但是个人认为其更像一本简要介绍经济学史的读物。全书基本按时间顺序，介绍了历史上出现过的主流经济学理论，包括古希腊时期的理论、马克思恩格斯的经济学观点、现代的凯恩斯主义等。作为一名经济学方面的小白">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://arcsin2.cloud/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/image-20250108154315155.png">
-<meta property="article:published_time" content="2025-01-08T06:04:42.000Z">
-<meta property="article:modified_time" content="2025-01-08T08:07:35.905Z">
+<meta property="article:published_time" content="2025-02-19T14:03:22.000Z">
+<meta property="article:modified_time" content="2025-02-19T14:30:37.959Z">
 <meta property="article:author" content="arcsin2">
-<meta property="article:tag" content="CUDA">
-<meta property="article:tag" content="HPC">
-<meta property="article:tag" content="WSL">
+<meta property="article:tag" content="经济学">
+<meta property="article:tag" content="代码之外">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://arcsin2.cloud/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/image-20250108154315155.png">
   
   
     <meta name="referrer" content="no-referrer-when-downgrade">
   
   
-  <title>基于 WSL2 搭建 CUDA Linux 开发环境 - arcsin2 的个人博客</title>
+  <title>闲书阅读记录：致最后的寒假 - arcsin2 的个人博客</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -242,7 +239,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="基于 WSL2 搭建 CUDA Linux 开发环境"></span>
+            <span id="subtitle" data-typed-text="闲书阅读记录：致最后的寒假"></span>
           
         </div>
 
@@ -253,8 +250,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-01-08 14:04" pubdate>
-          2025年1月8日 下午
+        <time datetime="2025-02-19 22:03" pubdate>
+          2025年2月19日 晚上
         </time>
       </span>
     
@@ -265,7 +262,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          1.3k 字
+          737 字
         
       </span>
     
@@ -276,7 +273,7 @@
         
         
         
-          5 分钟
+          3 分钟
         
       </span>
     
@@ -314,57 +311,39 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">基于 WSL2 搭建 CUDA Linux 开发环境</h1>
+            <h1 style="display: none">闲书阅读记录：致最后的寒假</h1>
             
             
               <div class="markdown-body">
                 
                 <blockquote>
-<p>本文简要记录如何在 Windows 11 + WSL2 上安装 CUDA 开发环境。</p>
+<p>本文分享下今年寒假期间翻过的几本书，以此记录人生的最后一个长达一个多月的寒假。</p>
 </blockquote>
-<h2 id="安装-wsl2">1. 安装 WSL2</h2>
-<p>在开始之前，先确保在 Windows 系统上安装了 WSL
-相关环境，可参考本站点之前的博客：<a
-href="/2023/07/31/使用-WSL-配置-Linux-开发环境/">使用 WSL 搭建 Linux
-开发环境</a>。</p>
-<h2 id="安装更新-windows-gpu-驱动">2. 安装/更新 Windows GPU 驱动</h2>
-<p>安装好 WSL 后，需要在 Windows 上安装或更新 GPU 驱动。</p>
-<p>一般而言，Windows 笔记本自带 Nvidia Experience
-软件（最新版更新后改名为 NVIDIA，在桌面可以直接启动），如下图所示：</p>
-<img src="/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/image-20250108154315155.png" srcset="/img/loading.gif" lazyload class="" title="image-20250108154315155">
-<p>点击“驱动程序”，然后根据页面显示内容，进行更新，耐心等待更新完毕即可。</p>
-<h2 id="在-wsl-上安装-cuda-环境">3. 在 WSL 上安装 CUDA 环境</h2>
-<p>在 Windows 上更新完 GPU 驱动后，我们需要进入 WSL 命令行中，参考
-NVIDIA 的官方文档，安装 CUDA 相关开发环境：<a
-target="_blank" rel="noopener" href="https://docs.nvidia.com/cuda/wsl-user-guide/index.html#cuda-support-for-wsl-2">CUDA
-on WSL User Guide</a>。上面 NVIDIA 官方文档中最重要的是：<a
-target="_blank" rel="noopener" href="https://developer.nvidia.com/cuda-downloads?target_os=Linux&amp;target_arch=x86_64&amp;Distribution=WSL-Ubuntu&amp;target_version=2.0&amp;target_type=deb_local">CUDA
-Toolkit Downloads</a>，执行这一链接页面显示的命令，即可完成 CUDA
-开发环境安装。</p>
-<h2 id="配置-.bashrc-文件">4. 配置 <code>.bashrc</code> 文件</h2>
-<p>在 WSL 上安装完 CUDA 后，在命令行输入 <code>nvcc -V</code>
-会显示找不到该命令。这一问题需要通过配置 <code>.bashrc</code>
-文件解决，可参考：<a
-target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/555151725">Win11+WSL2+Ubuntu+Docker-Desktop
-支持GPU的深度学习环境搭建</a>。其中配置 <code>.bashrc</code>
-的相关命令是：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">sudo vim ~/.bashrc</span><br></code></pre></td></tr></table></figure>
-<p>然后在文件尾部添加以下内容：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">export PATH=/usr/local/cuda-11.5/bin$&#123;PATH:+:$&#123;PATH&#125;&#125;<br>export LD_LIBRARY_PATH=/usr/local/cuda-11.5/lib64$&#123;LD_LIBRARY_PATH:+:$&#123;LD_LIBRARY_PATH&#125;&#125;<br></code></pre></td></tr></table></figure>
-<p>路径需要根据自己的实际安装版本确定，一般情况下在
-<code>/usr/local/cuda</code> 目录。</p>
-<p>编辑完保持后，输入命令：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash"><span class="hljs-built_in">source</span> ~/.bashrc</span><br></code></pre></td></tr></table></figure>
-<p>然后，输入 <code>nvcc -V</code> 命令，若能输出，则安装成功。</p>
-<h2 id="vs-code-配置-clangd-插件智能提示">5. VS Code 配置 clangd
-插件智能提示</h2>
-<p>在使用 VS Code + clangd 插件编写 CUDA 相关代码时，可能会出现 clangd
-对 CUDA 相关头文件报错的情况。为了解决这个问题，可以在项目的根目录创建
-<code>.clangd</code> 文件，然后输入以下内容：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs .clangd">CompileFlags:<br>    Add: [-std=c++20,<br>          --cuda-path=/usr/local/cuda,<br>          -I/usr/local/cuda/include,<br>          -L/usr/local/cuda/lib64,<br>        ]<br>    Compiler: /usr/local/cuda/bin/nvcc<br>Diagnostics:<br>    Suppress: [variadic_device_fn, ovl_no_viable_function_in_init]<br></code></pre></td></tr></table></figure>
-<p>这一解决方案参考了其他博客（没找到具体链接了...），但配置
-<code>.clangd</code>
-文件感觉还是不太优雅，后续再探索下有无其他解决方案。</p>
+<h2 id="经济学通识课">1. 经济学通识课</h2>
+<p>链接：<a
+target="_blank" rel="noopener" href="https://book.douban.com/subject/27104764/">经济学通识课
+(豆瓣)</a></p>
+<p>个人推荐指数：8 / 10</p>
+<p>这本书虽然叫《经济学通识课》，但是个人认为其更像一本简要介绍经济学史的读物。全书基本按时间顺序，介绍了历史上出现过的主流经济学理论，包括古希腊时期的理论、马克思恩格斯的经济学观点、现代的凯恩斯主义等。作为一名经济学方面的小白，在读这本书的过程中基本可以跟上，也能够对经济学领域的主要概念和理论有一个基本的认识。综合来看还是比较推荐阅读的。</p>
+<h2 id="你的第一本保险指南">2. 你的第一本保险指南</h2>
+<p>链接：<a
+target="_blank" rel="noopener" href="https://book.douban.com/subject/30302000/">你的第一本保险指南
+(豆瓣)</a></p>
+<p>个人推荐指数：9 / 10</p>
+<p>这本书介绍了我们日常生活中必然接触到的一个概念：保险。不过，不同于国家强制缴纳的社会保险，本书介绍的是商业保险，包括商业保险的相关知识、主要险种的概念和用途、选购保险的建议等。作为一名独生子女，特别是以后如果与另一名独生子女结婚后，面对两个劳动力养四名老人加若干个孩子的压力，如何规避家庭风险，避免因病、意外等，导致家人的生活水准出现重大下滑，是我们必须要面对的问题。保险是解决这一问题的一种可行方案。个人认为这本书还是非常值得一读的。</p>
+<h2 id="薄世宁医学通识讲义">3. 薄世宁医学通识讲义</h2>
+<p>链接：<a
+target="_blank" rel="noopener" href="https://book.douban.com/subject/34842793/">薄世宁医学通识讲义
+(豆瓣)</a></p>
+<p>个人推荐指数：7 / 10</p>
+<p>翻这本书，是因为想对医学领域有一个基本的了解。不过可能因为年龄不到，不太能接受本书的内容组织方式，因此没有仔细阅读本书。不过本书作者的履历非常优秀，同时本书的豆瓣评分
+8.7
+（5000+人评分），因此整体上还是值得一读的。只不过因为个人原因暂时没读进去，后面有机会再翻。</p>
+<h2 id="码农翻身2">4. 码农翻身2</h2>
+<p>链接：<a target="_blank" rel="noopener" href="https://book.douban.com/subject/36807496/">码农翻身2
+(豆瓣)</a></p>
+<p>个人推荐指数：8 / 10</p>
+<p>这本书算是技术相关的，不过是以故事的形式进行讲解的，个人也比较喜欢，值得一看。</p>
 
                 
               </div>
@@ -383,7 +362,7 @@ target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/555151725">Win
     
       <span class="category-chain">
         
-  <a href="/categories/%E9%AB%98%E6%80%A7%E8%83%BD%E8%AE%A1%E7%AE%97/" class="category-chain-item">高性能计算</a>
+  <a href="/categories/%E4%B8%80%E6%94%AF%E8%8A%A6%E8%8B%87/" class="category-chain-item">一支芦苇</a>
   
   
 
@@ -398,11 +377,9 @@ target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/555151725">Win
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/CUDA/">#CUDA</a>
+        <a href="/tags/%E7%BB%8F%E6%B5%8E%E5%AD%A6/">#经济学</a>
       
-        <a href="/tags/HPC/">#HPC</a>
-      
-        <a href="/tags/WSL/">#WSL</a>
+        <a href="/tags/%E4%BB%A3%E7%A0%81%E4%B9%8B%E5%A4%96/">#代码之外</a>
       
     </div>
   
@@ -414,8 +391,8 @@ target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/555151725">Win
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>基于 WSL2 搭建 CUDA Linux 开发环境</div>
-      <div>https://arcsin2.cloud/2025/01/08/基于-WSL2-搭建-CUDA-Linux-开发环境/</div>
+      <div>闲书阅读记录：致最后的寒假</div>
+      <div>https://arcsin2.cloud/2025/02/19/闲书阅读记录：致最后的寒假/</div>
     </div>
     <div class="license-meta">
       
@@ -427,7 +404,7 @@ target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/555151725">Win
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年1月8日</div>
+          <div>2025年2月19日</div>
         </div>
       
       
@@ -471,18 +448,12 @@ target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/555151725">Win
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2025/02/19/%E9%97%B2%E4%B9%A6%E9%98%85%E8%AF%BB%E8%AE%B0%E5%BD%95%EF%BC%9A%E8%87%B4%E6%9C%80%E5%90%8E%E7%9A%84%E5%AF%92%E5%81%87/" title="闲书阅读记录：致最后的寒假">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">闲书阅读记录：致最后的寒假</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2024/12/31/25%E5%B1%8A-C-%E9%80%89%E6%89%8B%E7%A7%8B%E6%8B%9B%E5%B0%8F%E8%AE%B0/" title="25 届 C++ 选手秋招小记">
-                        <span class="hidden-mobile">25 届 C++ 选手秋招小记</span>
+                      <a href="/2025/01/08/%E5%9F%BA%E4%BA%8E-WSL2-%E6%90%AD%E5%BB%BA-CUDA-Linux-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" title="基于 WSL2 搭建 CUDA Linux 开发环境">
+                        <span class="hidden-mobile">基于 WSL2 搭建 CUDA Linux 开发环境</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

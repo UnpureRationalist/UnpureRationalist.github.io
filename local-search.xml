@@ -4,6 +4,39 @@
   
   
   <entry>
+    <title>向量检索与向量数据库入门指南</title>
+    <link href="/2025/02/26/%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2%E4%B8%8E%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97/"/>
+    <url>/2025/02/26/%E5%90%91%E9%87%8F%E6%A3%80%E7%B4%A2%E4%B8%8E%E5%90%91%E9%87%8F%E6%95%B0%E6%8D%AE%E5%BA%93%E5%85%A5%E9%97%A8%E6%8C%87%E5%8D%97/</url>
+    
+    <content type="html"><![CDATA[<blockquote><p>最近考研分数放出，有很多同学即将开始研究生生涯。科研方向的选择和入门，是研究生面临的重要问题之一。随着人工智能、大语言模型等技术的火热发展，向量检索与向量数据库得到了工业界和学术界的不少关注。国内外也不乏一些做向量检索或向量数据库方向的课题组和老师。因此，本文对笔者读研阶段入门向量检索与向量数据库的学习路线进行分享，希望能够抛砖引玉，提供些参考。</p></blockquote><h2 id="年了还推荐进入向量检索和向量数据库领域吗">1. 2025年了，还推荐进入向量检索和向量数据库领域吗？</h2><p>向量数据库的概念是在 2023 年火起来的，也就是在 OpenAI 发布 ChatGPT后不久，作为 RAG系统的一个关键组件被大众熟知。如今虽然仅两年过去，但是向量数据库的热度相比2023 年当然是下降了不少；相比 DeepSeek等大语言模型的热度，的确也只能“坐小孩那桌”。因此，我们自然会问在 2025年的当下，是否还值得进入向量检索和向量数据库领域？</p><p>实际上，笔者认为对这个问题的答案是因人而异的。如果你对 AI更感兴趣，能够进入做大模型、多模态、生成式 AI等热门方向的组里从事相关的研究，不论从就业还是毕业的角度来看，都是更好的选择。如果你想从事偏算法、系统方向的研究和工作，那么向量检索和向量数据库也算是热门的方向。我们不妨从工业界的招聘需求和学术界的论文情况来看这个问题：</p><ul><li><strong>工业界招聘需求</strong>：首先，相比 AI相关的热门方向以及传统前后端等开发岗位，对向量检索和向量数据库做明确要求的岗位的确很少，但是也绝非没有。拿笔者参加的2024 年秋招来说，Zilliz 这类向量数据库公司在 JD上有描述对常用向量索引熟悉者优先；蚂蚁去年也开了面向博士和优秀硕士的“蚂蚁星”向量数据库研发岗位；中大型互联网公司的搜推架构等相关岗位，涉及到的特征召回等模块和向量检索相关技术是强相关的。</li><li><strong>学术界论文情况</strong>：在学术界，向量检索（近似最近邻，ANN）实际上是一个得到充分研究的问题，但是新的论文也不少，且论文发表的期刊会议从最初的数学算法分析领域；扩展到人工智能模式识别相关的领域；再到现在的数据库相关的期刊会议也出现不少向量检索相关的文章。向量数据库作为数据库领域的问题，这两年在SIGMOD、VLDB、ICDE 等会议上也出现了不少相关论文。去年的 SIGMOD 2024还开设了向量数据库方向的 <ahref="https://2024.sigmod.org/sigmod_tutorials.shtml">tutorial</a>。</li></ul><p>给出上述工业界和学术界基本情况的介绍后，笔者这里不想、也没能力给出一个Yes or No的答案。是否选择这个方向，需要读者根据自身的实际情况（个人兴趣、职业生涯规划、目标院校导师的研究方向等）做出判断。因此，本文就不再赘述了。</p><p>如果你的答案是Yes，或者只是想了解下这一方向的学习路线，那么请继续向下阅读。接下来，本文分别从向量检索和向量数据库两个方向，介绍些论文、代码等学习资源。</p><h2 id="向量检索学习路线">2. 向量检索学习路线</h2><p>向量检索研究的主要问题是高性能的 ANN索引，可以视作一个数据结构与算法问题，其主要的关注点是：如何设计高效的数据结构与算法（也可以说设计高效的索引结构），以实现准确、快速的近似最近邻检索。</p><p>ANN实际上是一个已经研究几十年的问题了，相关文献非常丰富。入门这个方向可以先看看相关的综述论文，然后看具体的方法论文，这里列几个论文的标题供参考，可以根据参考文献、最新文献等广泛阅读了解：</p><ul><li><em>Approximate Nearest Neighbor Search on High Dimensional Data —Experiments, Analyses, and Improvement</em>：一篇很好的survey，可以通过该文了解主流 ANN 方法的分类、优缺点等，进一步采用 DFS阅读该文引用的方法类文献，了解主流的 PQ、HNSW、LSH 等算法。</li><li><em>Billion-Scale Similarity Search with GPUs</em> 以及 <em>TheFaiss library</em> ：<ahref="https://github.com/facebookresearch/faiss">Faiss</a>，目前最流行的ANN 库之一。通过阅读这两篇论文，可以了解 Faiss的设计，进一步可阅读源码。</li><li><em>Approximate nearest neighbor algorithm based on navigable smallworld graphs</em>：NSW，基于图的算法。</li><li><em>Efficient and robust approximate nearest neighbor search usingHierarchical Navigable Small World graphs</em>： HNSW，NSW的改进版本，可以说是目前最流行的 ANN 索引之一，推荐。</li><li><em>Graph- and Tree-based Indexes for High-dimensional VectorSimilarity Search: Analyses, Comparisons, and FutureDirections</em>：关于基于图和树的 ANN 索引综述。</li><li><em>Product Quantization for Nearest NeighborSearch</em>：基于量化的经典算法。</li><li>对于基于 LSH、基于树的算法，需要了解的话可以根据上面 survey参考文献找来看看，不过目前实际应用较少。</li><li>另外，可关注下 SIGMOD、VLDB等顶会的近期论文，了解新工作的创新点和改进点。</li></ul><p>总的来说，理想的 ANN索引应该满足以下特性，也就是我们可以进行优化改进的方向（加粗的为最关注的点）：</p><ul><li><strong>搜索精度高</strong>（recall 高）</li><li><strong>搜索速度快</strong>（QPS 高）</li><li>索引构建速度快</li><li>索引占用空间小</li><li>索引是否支持增量添加/删除</li><li>索引是否能够保证搜索精度（理论保证）</li><li>索引面向磁盘存储时相关操作是否高效</li><li>利用现代 CPU、GPU 等硬件加速</li><li>……</li></ul><p>以上是笔者能想到的一些点，推荐阅读论文，总结目前索引的优缺点和可以改进的方向。</p><h2 id="向量数据库学习路线">3. 向量数据库学习路线</h2><p>向量数据库作为数据库下的一个方向，范围比较大，可以研究和解决的问题也比较多。入门这一方向，首先推荐几个向量数据库相关的综述：</p><ul><li><em>A Comprehensive Survey on Vector Database: Storage and RetrievalTechnique, Challenge</em></li><li><em>Survey of Vector Database Management Systems</em></li><li><em>Vector database management systems: Fundamental concepts,use-cases, and current challenges</em></li></ul><p>以及前文提到的 SIGMOD 2024 Vector Database Tutorial 的相关资料：</p><ul><li><ahref="https://www.cs.purdue.edu/homes/csjgwang/pubs/SIGMOD24_VecDB_Tutorial.pdf">paper</a></li><li><ahref="https://dbgroup.cs.tsinghua.edu.cn/ligl/papers/vdbms-tutorial2024.pdf">slides</a></li></ul><p>然后可以了解下目前工业界的向量数据库管理系统的设计与实现，相关文献包括：</p><ul><li><em>The Design and Implementation of a Real Time Visual SearchSystem on JD E-commerce Platform</em></li><li><em>AnalyticDB: Real-time OLAP Database System at AlibabaCloud</em></li><li><em>AnalyticDB-V: A Hybrid Analytical Engine Towards Query Fusionfor Structured and Unstructured Data</em></li><li><em>PASE: PostgreSQL Ultra-High-Dimensional Approximate NearestNeighbor Search Extension</em></li><li><em>Milvus: A Purpose-Built Vector Data Management System</em></li><li>Pinecone虽然没有开源和公开发表的论文，但是其官网的一些博客也值得一读：<ahref="https://www.pinecone.io/learn/">https://www.pinecone.io/learn/</a></li></ul><p>另外，数据库系统本身也需要学习了解下：</p><ul><li>CMU 15/445-645 课程（强烈推荐，B 站 YouTube都有各年的视频，官网有学习资源，推荐做项目）</li><li>进阶的 CMU 15/721 课程</li><li>如果不想看英文，可以学习国内清华大学的课程（<ahref="https://www.bilibili.com/video/BV15u4y1Q71R/">https://www.bilibili.com/video/BV15u4y1Q71R/</a>）</li></ul><p>然后，就可以看看 SIGMOD、VLDB等数据库相关的会议期刊上找一找最新的文章（以及结合前面的survey），了解最新工作的创新点和尚存在的问题，确定自己的研究方向。</p><h2 id="总结">4. 总结</h2><p>以上就是笔者根据自己有限的经验，列出的一些向量检索和向量数据库方向的学习资料。如有错误遗漏，欢迎评论区指出；如果有其它推荐的资料，也欢迎分享。希望本文能够帮助你快速入门，少走弯路。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>数据库</category>
+      
+      <category>向量数据库</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>ANN</tag>
+      
+      <tag>数据库</tag>
+      
+      <tag>向量数据库</tag>
+      
+      <tag>Vector Database</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>闲书阅读记录：致最后的寒假</title>
     <link href="/2025/02/19/%E9%97%B2%E4%B9%A6%E9%98%85%E8%AF%BB%E8%AE%B0%E5%BD%95%EF%BC%9A%E8%87%B4%E6%9C%80%E5%90%8E%E7%9A%84%E5%AF%92%E5%81%87/"/>
     <url>/2025/02/19/%E9%97%B2%E4%B9%A6%E9%98%85%E8%AF%BB%E8%AE%B0%E5%BD%95%EF%BC%9A%E8%87%B4%E6%9C%80%E5%90%8E%E7%9A%84%E5%AF%92%E5%81%87/</url>

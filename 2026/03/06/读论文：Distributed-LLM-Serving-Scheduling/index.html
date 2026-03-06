@@ -1,0 +1,1012 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="0. Background  不同工作负载 prompts&#x2F;response token 数之比、共享前缀比例、共享一个前缀的 request 数量：  关键问题：实现最大 KV Cache 复用与 GPU 间负载均衡   Load balance ratio(CV) is: \[ CV &#x3D; \frac{ \sqrt{ \frac{1}{n} \sum_{i&#x3D;1}^{n}{\le">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读论文：Distributed LLM Serving Scheduling">
+<meta property="og:url" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="0. Background  不同工作负载 prompts&#x2F;response token 数之比、共享前缀比例、共享一个前缀的 request 数量：  关键问题：实现最大 KV Cache 复用与 GPU 间负载均衡   Load balance ratio(CV) is: \[ CV &#x3D; \frac{ \sqrt{ \frac{1}{n} \sum_{i&#x3D;1}^{n}{\le">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212611195.png">
+<meta property="og:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212640155.png">
+<meta property="og:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212708392.png">
+<meta property="og:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212800340.png">
+<meta property="og:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212816444.png">
+<meta property="og:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212829777.png">
+<meta property="og:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212853147.png">
+<meta property="article:published_time" content="2026-03-06T13:22:56.000Z">
+<meta property="article:modified_time" content="2026-03-06T13:33:57.581Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="LLM Serving Scheduler">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212611195.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>读论文：Distributed LLM Serving Scheduling - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="读论文：Distributed LLM Serving Scheduling"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-03-06 21:22" pubdate>
+          2026年3月6日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.7k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          13 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">读论文：Distributed LLM Serving Scheduling</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="background">0. Background</h2>
+<ul>
+<li><p>不同工作负载 prompts/response token
+数之比、共享前缀比例、共享一个前缀的 request 数量：
+<img src="/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212611195.png" srcset="/img/loading.gif" lazyload class="" title="image-20260306212611195"></p></li>
+<li><p>关键问题：实现最大 KV Cache 复用与 GPU 间负载均衡
+<img src="/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212640155.png" srcset="/img/loading.gif" lazyload class="" title="image-20260306212640155"></p></li>
+</ul>
+<p>Load balance ratio(CV) is: <span class="math display">\[
+CV = \frac{ \sqrt{ \frac{1}{n} \sum_{i=1}^{n}{\left( x_{i} - u \right)
+}^{2} } } {u}
+\]</span> where, <span class="math inline">\(x_{i}\)</span> denotes the
+number of pending prefill tokens on instance <span
+class="math inline">\(i\)</span> , <span class="math inline">\(u =
+\sum_{i=1}^{n}{x_{i}}\)</span> .</p>
+<h2
+id="preble-efficient-distributed-prompt-scheduling-for-llm-serving">1.
+Preble: Efficient Distributed Prompt Scheduling for LLM Serving</h2>
+<h3 id="architecture">1.1 Architecture</h3>
+<img src="/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212708392.png" srcset="/img/loading.gif" lazyload class="" title="image-20260306212708392">
+<h3 id="global-scheduler">1.2 Global Scheduler</h3>
+<ul>
+<li>Data Structures：global radix tree
+<ul>
+<li>当有新 request 时，进行最大前缀匹配查找，然后进行 tree node
+split</li>
+<li>每个 node 保存以下信息：
+<ul>
+<li>当前节点的 token 数量</li>
+<li>保存这个 tree node KV Cache 的 GPU 集合</li>
+<li>在历史窗口 <span class="math inline">\(H\)</span> 内，每个 GPU
+共享这个 tree node 的请求数量</li>
+</ul></li>
+<li>当一个树节点既没有缓存它的 GPU，且整个系统中在窗口 <span
+class="math inline">\(H\)</span>
+内也没有共享它的请求时，进行节点删除</li>
+</ul></li>
+<li>Per-request scheduling policy：
+<ul>
+<li>前缀匹配 token 数量大于未匹配 token 数量时，选择“利用”，发送 request
+给具有最长匹配且负载最小的 GPU 以复用 KV Cache</li>
+<li>反之（前缀匹配 token 数量小于未匹配 token
+数量），选择“探索”。考虑三种 load（token 数量 + 模型与GPU
+型号决定的线性回归函数），选择负载最小的 GPU：
+<ul>
+<li>时间窗口内历史 request 总计算成本（prompts 未匹配 token 数量 +
+历史平均 response token 数量）</li>
+<li>驱逐 KV Cache 导致的重计算成本（global scheduler 决定驱逐 radix tree
+中哪些 node，计算这些 tree node 驱逐后导致的重计算成本之和。每个 node
+驱逐后导致的重计算成本 = Prefill tree node token 数量 <span
+class="math inline">\(H\)</span> 内共享该 node 的 request 比例）</li>
+<li>新 request Prefill 计算成本</li>
+</ul></li>
+<li>GPU load cost 伪代码：</li>
+<li><img src="/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212800340.png" srcset="/img/loading.gif" lazyload class="" title="image-20260306212800340"></li>
+</ul></li>
+<li>Post-assignment load adjustment：对于热点
+prefix，采取以下两个方法缓解负载不均衡：
+<ul>
+<li>如果负载最大的 GPU 达到最小的 <span
+class="math inline">\(Th_{bal}\)</span> 倍，直接将 request
+发送给负载最小的 GPU</li>
+<li>当某个前缀时间窗口 <span class="math inline">\(H\)</span>
+内的平均排队时间翻倍时，进行 radix tree node split，可能导致某些 GPU KV
+Cache 驱逐以及重计算。</li>
+</ul></li>
+<li>Prefill-decoding balancing：
+<ul>
+<li>在 explore 分支，如果某个 GPU 的 Decode 比例大于阈值，直接选择
+Decode 比例最大的 GPU 执行 request。</li>
+</ul></li>
+</ul>
+<p>Global Scheduler 完整算法流程：</p>
+<img src="/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212816444.png" srcset="/img/loading.gif" lazyload class="" title="image-20260306212816444">
+<h3 id="local-scheduler">1.3 Local Scheduler</h3>
+<ul>
+<li>Local scheduler mechanism：类似于 vLLM 单个 GPU 的 scheduler
+<ul>
+<li>当显存不够需要驱逐 KV Cache 时，进行 local 驱逐并异步通知 global
+scheduler</li>
+</ul></li>
+<li>Waiting queue request ordering：
+<ul>
+<li>同时考虑排队时间与 KV Cache 复用减少重计算开销：划分 <span
+class="math inline">\(P\)</span> 个队列，根据 prompts 前缀匹配比例将
+request 划分到某个队列。选择 request 组成一个 batch
+执行时，从匹配比例高的队列中选择较多的 request，按照匹配比例递减。</li>
+</ul></li>
+</ul>
+<img src="/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212829777.png" srcset="/img/loading.gif" lazyload class="" title="image-20260306212829777">
+<h2
+id="dualmap-enabling-both-cache-affinity-and-load-balancing-for-distributed-llm-serving">2.
+DualMap: Enabling Both Cache Affinity and Load Balancing for Distributed
+LLM Serving</h2>
+<h3 id="overview">2.1 Overview</h3>
+<img src="/2026/03/06/%E8%AF%BB%E8%AE%BA%E6%96%87%EF%BC%9ADistributed-LLM-Serving-Scheduling/image-20260306212853147.png" srcset="/img/loading.gif" lazyload class="" title="image-20260306212853147">
+<h3 id="slo-aware-request-routing">2.2 SLO-aware Request Routing</h3>
+<p>根据 request，基于两个哈希函数计算得到两个
+instance，从中选择一个。</p>
+<p>问题 1：</p>
+<ul>
+<li>多长的 prefix token 作为 hash key？
+<ul>
+<li>太长：KV cache reuse 概率降低</li>
+<li>太短：hash 冲突，导致负载不均衡</li>
+</ul></li>
+<li>Solution：自适应哈希前缀长度机制，动态调整每个 request 的前缀长度。
+<ul>
+<li>global scheduler 维护一个请求前缀热度树（request prefix hotness
+tree），每个节点记录前缀信息。哈希函数的输入（hash
+prefix）就是从根节点到叶子节点路径。
+<ul>
+<li>当一个叶子节点变热时，增加子节点以扩展前缀。</li>
+<li>当一个父节点变冷时，删除子节点以缩短前缀长度。</li>
+</ul></li>
+<li>前缀热度（Prefix hotness）：通过滑动窗口实时监控每个前缀的流量占比
+<span class="math inline">\(\rho\)</span> 来追踪
+<ul>
+<li><span class="math inline">\(\rho\)</span> 定义为时间窗口内共享该
+node 的请求占所有请求的比例。</li>
+<li><span class="math inline">\(\rho \gt \frac{2}{n}\)</span> ：hot</li>
+<li><span class="math inline">\(\rho \gt \frac{2}{n}\)</span> drops to
+<span class="math inline">\(\rho \lt \frac{1}{n}\)</span>
+：cold，删除子节点。</li>
+</ul></li>
+</ul></li>
+</ul>
+<p>问题 2:</p>
+<ul>
+<li>2 个 instance 如何选择？</li>
+<li>Baseline：
+<ul>
+<li>符号：request 为 <span class="math inline">\(r\)</span> , instance
+为 <span class="math inline">\(i\)</span></li>
+<li><span class="math inline">\(T_{q}\left( r, i \right)\)</span>
+排队时间</li>
+<li><span class="math inline">\(T_{c}\left( r, i \right)\)</span>
+计算时间</li>
+<li><span class="math inline">\(TTFT\left(r, i \right) = T_{q}\left( r,
+i \right) + T_{c}\left( r, i \right)\)</span></li>
+<li>问题：可能导致频繁切换 instance</li>
+</ul></li>
+<li>Solution：SLO-Aware Strategy
+<ul>
+<li>The key idea is to maintain cache affinity whenever possible, and
+only trade it off when load imbalance threatens to breach SLO
+constraints.</li>
+<li>使用每个 instance 上排队的 prefill token 数量来估计
+TTFT，当超过预定义的 TTFT SLO 时，切换到 load-balance 策略。</li>
+</ul></li>
+</ul>
+<p>Corner case：</p>
+<ul>
+<li>如果两个哈希函数映射到了同一个 instance_id，则取 <span
+class="math inline">\(instance\_id_{2} = \left( instance\_id_{1} + 1
+\right) \ \mod \ \text{num\_instances}\)</span> 。</li>
+</ul>
+<h3 id="hotspot-aware-rebalancing">2.3 Hotspot-Aware Rebalancing</h3>
+<p>问题：</p>
+<ul>
+<li>由于实际的 request 分布倾斜，部分 instance 可能过载，导致尾部 TTFT
+明显增长，而部分 instance 处于低负载。</li>
+</ul>
+<p>Solution：</p>
+<ul>
+<li>对于 request 映射到的两个 instance，如果其中一个负载过大，则将部分
+request 重定向到另一个 instance</li>
+<li>注意点：仅当目标 instance 负载较小，估计迁移 request
+有收益时，才会执行该策略。</li>
+<li>定义 request <span class="math inline">\(r\)</span> 从 instance
+<span class="math inline">\(i\)</span> 迁移到 instance <span
+class="math inline">\(j\)</span> 的收益为：</li>
+<li><span class="math inline">\(B_{r}^{\left(i \to j \right)} =
+TTFT_{r,i} - TTFT_{r,j} = (T_q(r, i) + T_c(r, i)) - (T_q(r, j) + T_c(r,
+j))\)</span></li>
+<li>仅当 <span class="math inline">\(B_{r}^{\left(i \to j
+\right)}\)</span> 为正数且 <span class="math inline">\(TTFT_{r,j} \lt
+TTFT_{SLO}\)</span> 的 request 进行迁移。按照从大到小顺序迁移，直到过载
+instance 上队列的 request 都可以满足 TTFT SLO。</li>
+</ul>
+<h3 id="lightweight-dual-hash-ring-scaling">2.4 Lightweight
+Dual-hash-ring Scaling</h3>
+<p>问题：</p>
+<ul>
+<li>扩缩容</li>
+<li>Solution：
+<ul>
+<li>一致性哈希</li>
+</ul></li>
+</ul>
+<h2 id="conclusion">3、Conclusion</h2>
+<ul>
+<li>必要的 meta 信息维护，以进行 request route
+<ul>
+<li>Preble：Global Radix Tree
+<ul>
+<li>需要较精确感知 cluster 内每个 instance KV Cache 信息（instance evict
+后通知 global scheduler）</li>
+<li>route 自由度更大</li>
+</ul></li>
+<li>DualMap：LazyPrefixTable
+<ul>
+<li>通过 LazyPrefixTable 和监控 prefix hotness 动态调整 hash prefix
+长度，对 instance KV Cache 信息维护更轻量（不需要 instance 与 global
+scheduler 间通信，而是 global scheduler 模拟每个 instance
+维护一个逻辑上的 KV Cache 使用情况，并进行前缀匹配查找/淘汰）</li>
+<li>只能 route 到 hash 函数映射到的两个 instance</li>
+</ul></li>
+<li>trade-off
+<ul>
+<li>实现复杂度</li>
+<li>route 效果</li>
+</ul></li>
+</ul></li>
+<li>识别热点 prefix，进行多 GPU 迁移
+<ul>
+<li>Preble：时间窗口内平均排队时间，TreeNode split</li>
+<li>DualMap：Prefix Hotness，增加 Hash key Prefix 长度</li>
+<li>trade-off
+<ul>
+<li>及时性</li>
+<li>准确性</li>
+</ul></li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/LLM-Serving-Scheduler/">#LLM Serving Scheduler</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>读论文：Distributed LLM Serving Scheduling</div>
+      <div>https://arcsin2.cloud/2026/03/06/读论文：Distributed-LLM-Serving-Scheduling/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年3月6日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/11/16/%E4%BB%8E-AlphaGo-%E5%88%B0-ChatGPT%EF%BC%8CAI-%E6%B5%AA%E6%BD%AE%E4%B8%8B%E4%B8%80%E5%90%8D%E6%99%AE%E9%80%9A-00-%E5%90%8E%E7%9A%84%E5%8D%81%E5%B9%B4/" title="从 AlphaGo 到 ChatGPT，AI 浪潮下一名普通 00 后的十年">
+                        <span class="hidden-mobile">从 AlphaGo 到 ChatGPT，AI 浪潮下一名普通 00 后的十年</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

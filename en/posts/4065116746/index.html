@@ -1,0 +1,1123 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/en/img/back.jpg">
+  <link rel="icon" href="/en/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="This article is the learning note of CMU 11868 LLM Systems course Lecture 1. For more details, please refer to the original slides.  0. Learning Objective of This Course  Understand key techni">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems 01: Introduction">
+<meta property="og:url" content="https://arcsin2.cloud/en/posts/4065116746/index.html">
+<meta property="og:site_name" content="arcsin2&#39;s blog">
+<meta property="og:description" content="This article is the learning note of CMU 11868 LLM Systems course Lecture 1. For more details, please refer to the original slides.  0. Learning Objective of This Course  Understand key techni">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://arcsin2.cloud/en/posts/4065116746/image-20260912222710694.png">
+<meta property="og:image" content="https://arcsin2.cloud/en/posts/4065116746/image-20260912222722222.png">
+<meta property="og:image" content="https://arcsin2.cloud/en/posts/4065116746/image-20260912222727560.png">
+<meta property="og:image" content="https://arcsin2.cloud/en/posts/4065116746/image-20260912222740447.png">
+<meta property="article:published_time" content="2026-09-12T14:00:57.000Z">
+<meta property="article:modified_time" content="2026-09-12T14:34:36.676Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/en/posts/4065116746/image-20260912222710694.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems 01: Introduction - arcsin2&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/en/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/en/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/en/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/en/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/en/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/en/js/utils.js" ></script>
+  <script  src="/en/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/en/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>Links</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/../">
+                <i class="iconfont icon-icon_English"></i>
+                <span>中文</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/en/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems 01: Introduction"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-09-12 22:00" pubdate>
+          September 12, 2026 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.6k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          26 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems 01: Introduction</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>This article is the learning note of CMU 11868 LLM Systems course
+Lecture 1. For more details, please refer to the original <a
+target="_blank" rel="noopener" href="https://llmsystem.github.io/llmsystem2026spring/assets/files/llmsys-01-intro-14e74a426e4a7e3ed485a026e1f65b70.pdf">slides</a>.</p>
+</blockquote>
+<h2 id="learning-objective-of-this-course">0. Learning Objective of This
+Course</h2>
+<ul>
+<li>Understand key techniques for modern LLM systems
+<ul>
+<li>How much resources do you need to train a 100B model?</li>
+</ul></li>
+<li>Engineering skills to implement key components for LLM systems
+<ul>
+<li>Fast CUDA kernel for LLM</li>
+<li>Scalable training system</li>
+<li>Efficient inference</li>
+</ul></li>
+<li>Innovation: discover opportunities and solve new critical challenges
+in LLM system research</li>
+</ul>
+<h2 id="capabilities-of-llms">1. Capabilities of LLMs</h2>
+<ul>
+<li>Translation</li>
+<li>Answer daily life questions</li>
+<li>Summarize</li>
+<li>Polish Email</li>
+<li>Math Calculation</li>
+<li>Write Code</li>
+<li>ChatBot to Mimic a User</li>
+<li>Rewrite Text with Style</li>
+<li>Commonsense Reasoning</li>
+<li>Math Reasoning</li>
+<li>...</li>
+</ul>
+<h2 id="mathematical-foundations">2. Mathematical Foundations</h2>
+<h3 id="probability-model-of-llm">Probability Model of LLM</h3>
+<p>The forward process of LLM is a probability problem:</p>
+<blockquote>
+<p>Given a prompt with <code>t</code> tokens, what is the probability of
+output token <span class="math inline">\(t_{t}\)</span> ?</p>
+</blockquote>
+<p>In the formula of math equation: <span class="math display">\[
+P(\text{next word } y_{t} | \text{Prompt } {x}, \text{provious words }
+y_{1:t-1} )
+\]</span></p>
+<p>The LLM forward(inference) process just get the probability of all
+words in it's word dictionary(embedding), and you can just think we
+select the word with the biggest probability as the output token (In
+fact, there are different sampling strategies, which will be discussed
+in the following lectures, but just ignore it right now).</p>
+<p>Based on the probability model of next token, we can induce the
+probability model of a full sequence:</p>
+<blockquote>
+<p>Probability(“Pittsburgh is a city of bridges”) = 𝑃(“𝑃𝑖𝑡𝑡𝑠𝑏𝑢𝑟𝑔ℎ”) ∙
+𝑃(“𝑖𝑠”|“𝑃𝑖𝑡𝑡𝑠𝑏𝑢𝑟𝑔ℎ”) ∙ 𝑃(“𝑎”|”𝑃𝑖𝑡𝑡𝑠𝑏𝑢𝑟𝑔ℎ 𝑖𝑠”) ∙ 𝑃(“𝑐𝑖𝑡𝑦”| … ) ∙ 𝑃(“𝑜𝑓”|
+… ) ∙ 𝑃(“𝑏𝑟𝑖𝑑𝑔𝑒𝑠”| … )</p>
+</blockquote>
+<p>Also in the formula of math equation: <span class="math display">\[
+\text{Prob.}\left( x_{1..T} \right) = \prod_{t=1}^{T}{P\left( x_{t+1} |
+x_{1..t} \right)}
+\]</span></p>
+<p>The probability <span class="math inline">\(P\left( x_{t+1} |
+x_{1..t} \right)\)</span> is gotten by predicting using Neural
+Networks(Transformer network, CNN, RNN).</p>
+<h3 id="types-of-language-models">Types of Language Models</h3>
+<p>There are 3 types of LLM classified by model architecture:</p>
+<ul>
+<li><p><strong>Encoder-only</strong>:</p>
+<ul>
+<li>Key Features:
+<ul>
+<li>Masked LM</li>
+<li>Non-autoregressive: it predicts masked tokens in parallel, not
+one-by-one from left to right.</li>
+<li>Example: BERT.</li>
+</ul></li>
+<li>Masked Prediction: <span class="math inline">\(P\left( x_{mask} | x
+\right)\)</span> , which means: given unmasked sequence <span
+class="math inline">\(x\)</span>, predict the token(s) <span
+class="math inline">\(x_{mask}\)</span> that are masked. This process is
+shown in the following picture:</li>
+<li><img src="/en/posts/4065116746/image-20260912222710694.png" srcset="/en/img/loading.gif" lazyload class="" title="image-20260912222710694"></li>
+<li>The attention of BERT is <strong>bidirectional</strong>, since each
+<code>[MASK]</code> can see the contexts in front of and behind it,
+which is different from the GPT's unidirectional/causal attention (Each
+token can only see tokens in front of it).</li>
+<li>Usually used in <strong>language understanding tasks</strong>, such
+as classification, NER(Named Entity Recognition), and extractive
+question answering.</li>
+<li>Encoder-only LLMs can also be used to generate language. e.g. NAT,
+REDER (reversible duplex model)
+<ul>
+<li>NAT(Non-Autoregressive Translation): predicts many/all tokens in
+parallel, often with iterative refinement.</li>
+<li>REDER(Reversible Duplex Model): A reversible, duplex model that can
+support generation by recovering or filling masked/noised tokens, rather
+than strictly decoding left-to-right.</li>
+</ul></li>
+</ul></li>
+<li><p><strong>Encode-Decoder</strong>:</p>
+<ul>
+<li>Key Features
+<ul>
+<li>Models conditional probability <span
+class="math inline">\(P(Y|X)\)</span>: given input sequence <span
+class="math inline">\(X\)</span>, generate output sequence <span
+class="math inline">\(Y\)</span>.</li>
+<li>Designed for <strong>sequence-to-sequence (seq2seq)</strong> tasks,
+e.g. machine translation, summarization.</li>
+<li>Encoder encodes the input <span class="math inline">\(X\)</span>;
+decoder generates the output <span class="math inline">\(Y\)</span>
+conditioned on the encoder’s representations.</li>
+</ul></li>
+<li><img src="/en/posts/4065116746/image-20260912222722222.png" srcset="/en/img/loading.gif" lazyload class="" title="image-20260912222722222"></li>
+<li>Encoder choices: Bi-LSTM, Transformer, CNN.</li>
+<li>Decoder choices: LSTM, Transformer, Non-autoregressive Transformer,
+CNN.</li>
+<li>Decoder can be <strong>autoregressive</strong> (e.g.
+LSTM/Transformer, left-to-right) or <strong>non-autoregressive</strong>
+(parallel generation).</li>
+</ul></li>
+<li><p><strong>Decoder-only</strong>: Autoregressive</p>
+<ul>
+<li>Key Features:
+<ul>
+<li><strong>Causal Language Model</strong>: <span
+class="math inline">\(P(X)=\prod_{n=1}^{N}{P(x_{n}|x_{1..n-1})}\)</span>,
+i.e. predict the next token given all previous tokens.</li>
+<li><strong>Autoregressive generation</strong>: generate one token at a
+time from left to right; each predicted token is appended and fed back
+as context for the next prediction.</li>
+</ul></li>
+<li><img src="/en/posts/4065116746/image-20260912222727560.png" srcset="/en/img/loading.gif" lazyload class="" title="image-20260912222727560"></li>
+<li>Model choice: Transformer or (uni-directional) LSTM.</li>
+<li>Most popular choice of LLM architecture.</li>
+</ul></li>
+</ul>
+<h3 id="llm-learning-framework">LLM Learning Framework</h3>
+<p>The training process of LLMs includes 3 main steps:</p>
+<img src="/en/posts/4065116746/image-20260912222740447.png" srcset="/en/img/loading.gif" lazyload class="" title="image-20260912222740447">
+<ul>
+<li><strong>Pre-Training</strong>
+<ul>
+<li>Data: <strong>raw text corpus</strong> (e.g. Wikipedia, books,
+Reddit).
+<ul>
+<li>the larger the better, often crawled from the web</li>
+<li>quality is important: Wikipedia, books, filtered Reddit posts</li>
+</ul></li>
+<li>Design of Model Architecture
+<ul>
+<li>Sparse Attention, Mixture of Expert, etc.</li>
+</ul></li>
+<li>Objective
+<ul>
+<li>cross-entropy loss for next token prediction(to learn general
+language and world knowledge).</li>
+<li><span
+class="math inline">\(CE=-\frac{1}{N}\sum_{n=1}^{N}{\log{P_{\theta}\left(x_{n}
+| x_{\lt n}\right)}}\)</span></li>
+</ul></li>
+</ul></li>
+<li><strong>SFT(Supervised Fine-Tuning)</strong>
+<ul>
+<li>Data: <strong>instruction–response pairs</strong>, e.g. question
+<code>Why is the sky blue?</code> → answer
+<code>The sky appears blue because …</code></li>
+<li>Objective: fine-tune the pretrained model to follow instructions and
+generate helpful answers.</li>
+</ul></li>
+<li><strong>RL(Post-Training)</strong>
+<ul>
+<li>Data: <strong>preference data</strong>, e.g. comparing
+<code>The sky appears blue because …</code> vs.
+<code>The sky is not always blue …</code></li>
+<li>Objective: align model outputs with human preferences (e.g. via
+RLHF), improving helpfulness, honesty, and harmlessness.</li>
+</ul></li>
+</ul>
+<p>Overall: raw text → supervised demonstrations → human preferences,
+progressively making the model more capable and aligned.</p>
+<h3 id="measuring-performance-of-language-model">Measuring Performance
+of Language Model</h3>
+<ul>
+<li><p><strong>Perplexity (PPL)</strong>: for open-ended generation.</p>
+<ul>
+<li><p>Measures how well the LM predicts a sequence: <span
+class="math display">\[
+PPL = \exp\left(-\frac{1}{N}\sum_{n=1}^N \log{P_{LM}(x_n \mid
+x_{&lt;n})}\right)
+\]</span></p></li>
+<li><p>Lower PPL = better; it is the exponentiated average negative
+log-likelihood (cross-entropy).</p></li>
+<li><p>Limitation: low PPL does not always mean high generation
+quality.</p></li>
+</ul></li>
+<li><p><strong>Reference-based metric</strong>: requires reference
+text(s).</p>
+<ul>
+<li><strong>Model-based score</strong>: SEScore2 / COMET / BLEURT.
+<ul>
+<li>Use pretrained models to score semantic similarity / quality, beyond
+surface n-gram overlap.</li>
+</ul></li>
+<li><strong>N-gram matching</strong>: BLEU (translation) / ROUGE
+(summarization).
+<ul>
+<li>old but classic; based on n-gram overlap between generated and
+reference text.</li>
+</ul></li>
+<li><strong>InstructScore</strong>: explainable score <a
+target="_blank" rel="noopener" href="https://arxiv.org/abs/2305.14282">Xu et al. 2023</a>.
+<ul>
+<li>Uses LLM to provide a score together with an explanation.</li>
+</ul></li>
+</ul></li>
+<li><p><strong>Using downstream task performance metrics</strong>:
+choose metric by task.</p>
+<ul>
+<li><strong>Named entity recognition</strong>: <strong>F1</strong> —
+harmonic mean of precision and recall, <span class="math inline">\(F1 =
+2 \cdot \frac{P \cdot R}{P + R}\)</span>.</li>
+<li><strong>Question Answering</strong>: <strong>accuracy</strong>,
+<strong>matching rate</strong> (e.g. exact match / overlap with
+reference answer).</li>
+<li><strong>Code generation</strong>: <strong>pass@k</strong> — fraction
+of problems solved by at least one of k generated samples.</li>
+<li><strong>Retrieval</strong>: <strong>NDCG</strong> (Normalized
+Discounted Cumulative Gain) — rewards relevant items ranked higher.</li>
+<li><strong>Summarization</strong>: <strong>ROUGE</strong> — n-gram
+overlap with reference summaries, recall-oriented.</li>
+<li><strong>Translation</strong>: <strong>COMET / SEScore2 /
+BLEU</strong> — model-based semantic scores plus classic n-gram
+overlap.</li>
+<li>Takeaway: no single metric fits all; use task-specific metrics,
+often combined with human evaluation.</li>
+</ul></li>
+</ul>
+<h2 id="challenges-in-llm-systems">3. Challenges in LLM Systems</h2>
+<h3 id="key-system-problem-goal">3.1 Key System Problem &amp; Goal</h3>
+<ul>
+<li><strong>Goal</strong>: compute (train/inference)
+<strong>larger</strong> LLMs on <strong>bigger</strong> datasets with
+<strong>fewer</strong> resources (GPU/memory/power)
+<strong>faster</strong>.</li>
+<li><strong>Key tension</strong>: scaling up (model, data, context) vs.
+limited resources.</li>
+<li><strong>Tradeoffs</strong>: every design choice involves fundamental
+constraints and different success metrics (latency, throughput, memory,
+cost, quality).</li>
+</ul>
+<h3 id="what-computation-actually-looks-like">3.2 What Computation
+Actually Looks Like</h3>
+<ul>
+<li><strong>High-level layers</strong>: Multi-head Attention, Layer
+Norm, Dropout, Linear, activation (Tanh / ReLU / GELU), Softmax.</li>
+<li><strong>Low-level operators</strong>: matmul / tensor multiply,
+reduction (sum, avg), map (element-wise), memory movement.</li>
+<li><strong>Key insight</strong>: computation is not the only cost —
+<strong>data movement</strong> (parameters, gradients, activations
+across devices) often dominates.
+<ul>
+<li>Large models → huge parameter transfer cost.</li>
+<li>Long context → large working memory.</li>
+</ul></li>
+</ul>
+<h3 id="where-the-challenges-appear-by-abstraction-level">3.3 Where the
+Challenges Appear (by abstraction level)</h3>
+<table>
+
+<thead>
+<tr class="header">
+<th>Level</th>
+<th>Challenge</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Model / data</td>
+<td>scaling to gigantic model, gigantic dataset, very long sequence /
+context</td>
+</tr>
+<tr class="even">
+<td>System / framework</td>
+<td>partitioning, scheduling, communication, distributed / parallel
+systems</td>
+</tr>
+<tr class="odd">
+<td>Developer / framework</td>
+<td>easy dev &amp; modify model, easy dev ML algorithm</td>
+</tr>
+<tr class="even">
+<td>Kernel / operator</td>
+<td>fast CUDA / TPU kernels</td>
+</tr>
+<tr class="odd">
+<td>Compression</td>
+<td>data / model compression</td>
+</tr>
+</tbody>
+</table>
+<h3 id="how-to-address-them">3.4 How to Address Them</h3>
+<ul>
+<li><strong>Model-Algorithm-System Co-design</strong>
+<ul>
+<li>Model architecture</li>
+<li>Training / inference algorithms</li>
+<li>Software optimization: partitioning, scheduling, data movement,
+latency hiding</li>
+<li>Hardware acceleration: device-specific instructions</li>
+</ul></li>
+<li><strong>Right abstraction</strong> at each level:
+<ul>
+<li><strong>Upper</strong>: integrate models into product system; track
+&amp; improve quality over time.</li>
+<li><strong>Middle</strong>: training / inference software, streaming
+dataflow.</li>
+<li><strong>Lower</strong>: GPU kernels, compilers.</li>
+<li>A good abstraction hides one or more concerns (performance,
+failures) while supporting many apps.</li>
+</ul></li>
+</ul>
+<p><strong>Takeaway</strong>: LLM systems are not just about fast
+computation. The real challenges are <strong>data movement, resource
+constraints, and abstraction design</strong> — solved by
+<strong>co-designing model, algorithm, software, and
+hardware</strong>.</p>
+<h2 id="logistics">4. Logistics</h2>
+<p><em>(omitted)</em></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/en/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/en/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/en/tags/LLM-System/">#LLM System</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems 01: Introduction</div>
+      <div>https://arcsin2.cloud/en/posts/4065116746/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>September 12, 2026</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - Non-commercial">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - Share-alike">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/en/posts/2032429701/" title="LLM Systems 02: GPU Programming">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems 02: GPU Programming</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/en/posts/4109494713/" title="Some Missing Knowledge Points of C Programming Language for C++ Programmer">
+                        <span class="hidden-mobile">Some Missing Knowledge Points of C Programming Language for C++ Programmer</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        Total visits 
+        <span id="busuanzi_value_site_pv"></span>
+         times    
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        Total visitors 
+        <span id="busuanzi_value_site_uv"></span>
+         people
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/en/js/events.js" ></script>
+<script  src="/en/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/en/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/en/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/en/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,861 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="前段时间忙着秋招和论文，现在总算有些时间写点东西，总结下一名普通 C++ 选手视角下的秋招，以及一点体会。 免责声明： 本文仅代表笔者个人主观、片面、浅薄的观点，不构成职业选择建议。  1. 个人情况 正式开始之前还是先介绍下个人情况，211 CS 科班本硕，研究生期间做过一段时间计算机视觉，后跑路转向系统方向。在系统方向属于无论文、无竞赛、无开源的三无产品，纯靠 CMU 15">
+<meta property="og:type" content="article">
+<meta property="og:title" content="25 届 C++ 选手秋招小记">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2024/12/1856060966/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="前段时间忙着秋招和论文，现在总算有些时间写点东西，总结下一名普通 C++ 选手视角下的秋招，以及一点体会。 免责声明： 本文仅代表笔者个人主观、片面、浅薄的观点，不构成职业选择建议。  1. 个人情况 正式开始之前还是先介绍下个人情况，211 CS 科班本硕，研究生期间做过一段时间计算机视觉，后跑路转向系统方向。在系统方向属于无论文、无竞赛、无开源的三无产品，纯靠 CMU 15">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-12-31T07:54:57.000Z">
+<meta property="article:modified_time" content="2026-09-12T14:07:20.365Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="秋招">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>25 届 C++ 选手秋招小记 - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="25 届 C++ 选手秋招小记"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-12-31 15:54" pubdate>
+          2024年12月31日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          7 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">25 届 C++ 选手秋招小记</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>前段时间忙着秋招和论文，现在总算有些时间写点东西，总结下一名普通 C++
+选手视角下的秋招，以及一点体会。</p>
+<p>免责声明：</p>
+<p>本文仅代表笔者个人主观、片面、浅薄的观点，不构成职业选择建议。</p>
+</blockquote>
+<h2 id="个人情况">1. 个人情况</h2>
+<p>正式开始之前还是先介绍下个人情况，211 CS
+科班本硕，研究生期间做过一段时间计算机视觉，后跑路转向系统方向。在系统方向属于无论文、无竞赛、无开源的三无产品，纯靠
+CMU 15-445 等国外课程学习和秋招。总结来说就是跟不上 AI
+潮流并跑路的纯混子选手。主攻语言 C/C++，略懂 Python，其他 Java、Go
+等基本属于看得懂，但是没大量写过代码。因此秋招期间投递的岗位主要是数据库内核，外加一些后端大类岗位。</p>
+<p>秋招投递了 20 个公司左右，BAT、TMD 等互联网大厂全军覆没，收到的 offer
+主要是一些非一线企业和创业公司的数据库内核开发 offer，以及部分公司的后端
+offer。最终在某数据库内核 offer 和某后端 offer 之间选择了后者，算是弃坑
+DB 了，以后估计只会作为兴趣爱好而非职业了。</p>
+<h2 id="db-or-not-db-thats-a-question">2. DB or not DB, that's a
+question?</h2>
+<p>本人更新的不少内容都是数据库相关的，尤其是向量数据库。在当初选择跑路
+CV 转向 vector db 时，想的是以后找个向量数据库相关的岗位，也算跟着 AI
+时代潮流混口饭吃。于是后面学习了 15-445 课程，并读了 vector db、ANN
+的相关 paper，对向量数据库和近似最近邻检索领域算是勉强入门了吧。</p>
+<p>然而，理想很丰满，现实很骨感。作为一名半路出家，主要靠自学，无论文、竞赛和开源经历的混子，投递国内
+vector db 的当红炸子鸡 Zilliz 时，简历都过不了；阿里云的
+PolarDB-X（分布式数据库）部门同样简历挂；腾讯 TEG 的 NoSQL
+部门三面挂；美团的分布式数据库（Blade）部门排序挂……除此之外还有部分 DB
+相关的被挂经历，不逐一列举了。</p>
+<p>在数据库方面，最终收获的 offer
+只有某公司预研部门、某创业公司和某加班无加班费公司。且薪资较低，最高不超过
+25k（当然已经很知足了）。</p>
+<p>其实知乎上劝退 DB 的帖子已经很多了，这里简单列几个：</p>
+<ul>
+<li><a
+target="_blank" rel="noopener" href="https://www.zhihu.com/question/27551617">应届毕业生想从事数据库方面的工作，前期需要准备什么？
+- 知乎</a></li>
+<li><a
+target="_blank" rel="noopener" href="https://www.zhihu.com/question/553813879">想走数据库内核方向，该怎么办？
+- 知乎</a></li>
+</ul>
+<p>这些问题下最新的回答基本上都是劝退入行 DB
+的，尤其是刚毕业的新人。劝退的原因这里就不赘述了，感兴趣的朋友请点击链接查看。</p>
+<p>从我个人的秋招经历来看，作为一名资质一般、对 DB
+了解有限、热爱底层技术小于热爱软妹币的普通人而言，DB
+即使不算坏的选择，也绝对算不上性价比高的选择。选择
+DB，意味着你可能需要付出更多、学习更多，但是考虑到目前企业对背景一般的候选人开出的薪资，实在找不到选择
+DB 而不选择普通后端的理由。</p>
+<p>当然，以上只是我作为一名混子选手的视角。如果你真的喜欢
+DB、有论文竞赛开源相关经历，拿到一个各方面令人满意的 DB 相关 offer
+也并非不可能。很多时候，做自己喜欢、擅长的事情，也许就是不错的选择。</p>
+<h2 id="我待-c-如初恋c-虐我千百遍">3. 我待 C++ 如初恋，C++
+虐我千百遍</h2>
+<p>聊完 DB，还想再聊一聊 C++。</p>
+<p>作为一名进入大学才开始接触编程，并且第一门编程语言课程是 C++
+的混子，很难说得清楚自己对 C++
+复杂的情感。从大一上课时的学不懂指针，到后面的狠读各种 C++
+书籍，包括但不限于：C++ Primer、Effective
+系列、对象模型、编译链接、设计与演化、Core Guidelines
+解析等，直到现在算是勉强称得上基本会用 C++ 了。</p>
+<p>然而，在学习 C++
+方面的付出与努力，尤其是将其作为主攻语言，在秋招中给自己带来的却似乎并非优势。在我大多数的面试经历中，我自以为学的还行的
+C++ 出现概率极低。虽然没有详细的统计，但是就我印象而言，C++
+相关面试题出现的概率应该在 5% 以下。此外，某客上，劝退 C++
+的帖子也不在少数。也许 C++ 和互联网的确不太匹配。使用 C++
+的互联网公司屈指可数，而更多是特定部门，才会使用 C++ 语言开发。</p>
+<p>对于想要做后端的同学而言，Java 或者 Go 也许才是更合适的选择。C++
+的相关需求相比前两者还是偏少，且和业务联系比较紧密，据我个人有限的了解，使用
+C++ 的相关岗位有：QT 客户端、游戏开发相关、AI Infra 中部分、量化、OS DB
+等底层相关的。</p>
+<p>虽然我们经常说学好 C++
+可以学好任何一门语言，但是对于校招生而言，做好自己职业规划，选择和职业规划匹配的编程语言、项目以及其他相关技术栈，也许是更正确的选择。</p>
+<p>当然，本文的目的不在于劝退
+C++。想要说的还是：做好求职规范，然后学习相关技术栈。C++
+仍然是我个人比较喜欢的编程语言，其也在秋招期间帮我找到了满意的工作。</p>
+<h2 id="总结">4. 总结</h2>
+<p>以上就是一名混子选手的秋招小记，以及一点点体会。感谢阅读，希望对你有点帮助。不管怎么样，秋招还是已经画上了句号，随着即将结束的
+2024。在此提前祝大家新年快乐！学习工作生活都顺利！</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E4%B8%80%E6%94%AF%E8%8A%A6%E8%8B%87/" class="category-chain-item">一支芦苇</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E7%A7%8B%E6%8B%9B/">#秋招</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>25 届 C++ 选手秋招小记</div>
+      <div>https://arcsin2.cloud/posts/2024/12/1856060966/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年12月31日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2025/01/2971350057/" title="基于 WSL2 搭建 CUDA Linux 开发环境">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">基于 WSL2 搭建 CUDA Linux 开发环境</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2024/10/872246889/" title="从零构建向量数据库：更适合 C++ 基架选手体质的校招项目">
+                        <span class="hidden-mobile">从零构建向量数据库：更适合 C++ 基架选手体质的校招项目</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

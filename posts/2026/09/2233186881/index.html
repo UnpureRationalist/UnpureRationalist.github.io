@@ -1,0 +1,1231 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Architecture of a modern GPU    GPU 计算单元由若干个 SM 组成（通常几十到一百多）  每个 SM 有若干个处理单元，称为 CUDA Cores（简称 cores） Memory（on-chip memory） Example：A100 GPU，108 SMs，每个 SM 64 个 cores  global memory（off-chip">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PMPP Chapter 04: Compute architecture and scheduling">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/09/2233186881/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="Architecture of a modern GPU    GPU 计算单元由若干个 SM 组成（通常几十到一百多）  每个 SM 有若干个处理单元，称为 CUDA Cores（简称 cores） Memory（on-chip memory） Example：A100 GPU，108 SMs，每个 SM 64 个 cores  global memory（off-chip">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211552223.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211606496.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211630370.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211640319.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211649939.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211701845.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211722879.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211735009.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211743134.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919212010070.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919212019264.png">
+<meta property="article:published_time" content="2026-09-19T12:53:05.000Z">
+<meta property="article:modified_time" content="2026-09-19T13:59:39.604Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="CUDA">
+<meta property="article:tag" content="PMPP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/09/2233186881/image-20260919211552223.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>PMPP Chapter 04: Compute architecture and scheduling - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="PMPP Chapter 04: Compute architecture and scheduling"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-09-19 20:53" pubdate>
+          2026年9月19日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          23 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">PMPP Chapter 04: Compute architecture and scheduling</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="architecture-of-a-modern-gpu">Architecture of a modern GPU</h2>
+<img src="/posts/2026/09/2233186881/image-20260919211552223.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211552223">
+<p><br/></p>
+<ul>
+<li>GPU 计算单元由若干个 SM 组成（通常几十到一百多）
+<ul>
+<li>每个 SM 有若干个处理单元，称为 CUDA Cores（简称 cores）</li>
+<li>Memory（on-chip memory）</li>
+<li>Example：A100 GPU，108 SMs，每个 SM 64 个 cores</li>
+</ul></li>
+<li>global memory（off-chip memory）
+<ul>
+<li>较早的 GPU 或者非数据中心 GPU 采用 GDDR 内存</li>
+<li>最近的数据中心 GPU 采用 HBM 内存</li>
+</ul></li>
+</ul>
+<h2 id="block-scheduling">Block scheduling</h2>
+<img src="/posts/2026/09/2233186881/image-20260919211606496.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211606496">
+<p><br/></p>
+<ul>
+<li>进行 kernel launch 时，CUDA runtime 以 block 为单位加载一个 block 到
+SM 上执行，一个 block 内所有 threads 同时被分配到同一个 SM
+上。<strong>为什么必须“同块同 SM”？</strong>：
+<ul>
+<li>Block 内线程能够协作的<strong>根本前提</strong>。</li>
+<li>使得 Block 内线程可以进行 <strong>Barrier
+Synchronization（屏障同步，如
+<code>__syncthreads()</code>）</strong>。</li>
+<li>使得 Block 内线程可以访问 SM 上<strong>低延迟的 Shared
+Memory（共享内存）</strong>。</li>
+<li>跨 block 可以通过 Cooperative Groups API 同步。</li>
+</ul></li>
+<li><strong>多块驻留</strong>：一个 SM 可以同时驻留多个
+Block（如图中显示一个 SM 同时处理 3 个
+Block）。具体能驻留多少，取决于硬件资源限制（寄存器、共享内存、线程数等）。</li>
+<li><strong>调度与排队</strong>：由于 SM 数量和每个 SM 能容纳的 Block
+数量都有限，设备能同时执行的 Block 总数是有上限的。如果 Grid 里的 Block
+很多（通常都是如此），CUDA 运行时系统会维护一个待执行列表，当某个 Block
+执行完毕后，再将新的 Block 动态分配给空出来的 SM。</li>
+</ul>
+<h2 id="synchronization-and-transparent-scalability">Synchronization and
+transparent scalability</h2>
+<p>同一 block 内线程可以调用 <code>__syncthreads()</code> 实现 block
+内线程同步（barrier）的目的。</p>
+<img src="/posts/2026/09/2233186881/image-20260919211630370.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211630370">
+<p>调用 <code>__syncthreads()</code> 时，必须保证 block
+内所有线程都同时执行，不存在 if/early return
+等情况。<strong>错误示例</strong>：</p>
+<img src="/posts/2026/09/2233186881/image-20260919211640319.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211640319">
+<p>只要求一个 block 内线程同时在一个 SM 上执行，而不需要 block
+间同步的特性，允许 CUDA 运行时对性能更好的 device（更多的
+SM）实现透明扩展（transparent scalability）。</p>
+<h2 id="warps-and-simd-hardware">Warps and SIMD hardware</h2>
+<p>warp：32 个线程（threadIdx 连续的 32 个线程），是 SM
+进行线程调度的单位。</p>
+<img src="/posts/2026/09/2233186881/image-20260919211649939.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211649939">
+<p>上图说明：</p>
+<ul>
+<li>3 个 block 同时调度到一个 SM</li>
+<li>每个 block 256 线程，即 256/32 = 8 个 warps</li>
+<li>SM 共有 3 * 8 = 24 warps</li>
+</ul>
+<p>如果一个 block 的线程数不是 32 的倍数，SM 执行最后几个线程时会进行
+padding：增加几个不活跃（inactive）线程凑成一个 warp 进行调度执行。</p>
+<p>如果 <code>blockDim(x, y, z)</code> 是多维的，warp 划分规则如下：</p>
+<ul>
+<li>首先将多维 <code>threadIdx(x, y, z)</code>
+展平（flatten），展平规则如下：
+<ul>
+<li>y, z 相同的情况下，先连续排列 x；z 相同的情况下，连续排列 y。</li>
+<li>相当于将 x 作为连续（变化最快）的维度，将多维 threads
+展平为一维行主序布局。</li>
+</ul></li>
+<li>flatten 后的连续 32 个线程构成一个 warp。</li>
+<li>例子：注意，thread 坐标顺序为 (y, x)</li>
+<li><img src="/posts/2026/09/2233186881/image-20260919211701845.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211701845"></li>
+</ul>
+<p><br/></p>
+<p>SM 执行一个 warp 时，采用了 SIMD 模型。</p>
+<img src="/posts/2026/09/2233186881/image-20260919211722879.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211722879">
+<ul>
+<li><strong>SIMD 执行方式</strong>：
+<ul>
+<li>同一时刻，warp
+内所有线程执行<strong>同一条指令</strong>，但作用于<strong>不同数据</strong>。</li>
+<li>因此 warp 的执行行为常被称为 <strong>SIMT (Single Instruction,
+Multiple Thread)</strong>。</li>
+</ul></li>
+<li><strong>SM 内部组织</strong>：
+<ul>
+<li>SM 的 cores 被划分为多个 <strong>processing block</strong>。</li>
+<li>每个 processing block 包含若干 core，并<strong>共享一个 instruction
+fetch/dispatch 单元</strong>。</li>
+<li>例：Ampere A100 的 SM 有 64 个 core，分为 <strong>4 个 processing
+block，每块 16 个 core</strong>。</li>
+<li>同一个 warp 的线程被分配到<strong>同一个 processing
+block</strong>。</li>
+</ul></li>
+<li><strong>设计优势</strong>：
+<ul>
+<li>控制硬件（取指/分发）由多个执行单元共享，降低控制开销。</li>
+<li>更大比例的硬件可用于<strong>提升算术吞吐</strong>，而非控制逻辑。</li>
+<li>这种 warp 划分方式预计在未来仍是主流实现技术。</li>
+</ul></li>
+<li><strong>Warp 大小</strong>：
+<ul>
+<li>目前所有 CUDA 设备均为 <strong>32 线程/warp</strong>。</li>
+<li>未来可能随实现变化。</li>
+</ul></li>
+</ul>
+<h2 id="control-divergence">Control divergence</h2>
+<p>如果一个 warp 内 thread 条件不同，不同 thread 需要执行 if-else
+语句的不同控制流，硬件将需要分别对 if 执行路径和 else
+执行路径进行两次执行（不满足条件的线程的指令不生效）。当同一个 warp
+中的线程遵循不同的执行路径时，我们说这些线程表现出<strong>控制分歧/分支发散（control
+divergence）</strong>。控制分歧的代价在于：<strong>硬件需要额外的遍数来让
+warp
+中的不同线程做出各自的决策，以及每一遍中不活跃线程所消耗的执行资源</strong>。例子：</p>
+<img src="/posts/2026/09/2233186881/image-20260919211735009.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211735009">
+<ul>
+<li><strong>分支发散示例</strong>：
+<ul>
+<li>Warp 到达 if-else：threads 0–23 走 <strong>then</strong> 路径（执行
+A），threads 24–31 走 <strong>else</strong> 路径（执行 B）。</li>
+<li>硬件执行两个 pass：
+<ol type="1">
+<li><strong>Pass 1</strong>：threads 0–23 执行 A，threads 24–31 被
+mask（inactive）。</li>
+<li><strong>Pass 2</strong>：threads 24–31 执行 B，threads 0–23 被
+mask。</li>
+</ol></li>
+<li>之后所有线程 <strong>reconverge</strong>，一起执行 C。</li>
+<li><strong>架构差异</strong>：
+<ul>
+<li><strong>Pascal 及更早</strong>：两个 pass
+<strong>顺序执行</strong>（一个 pass 完全执行完，再执行另一个）。</li>
+<li><strong>Volta 及之后</strong>：两个 pass
+<strong>可以并发/交错执行</strong>，称为 <strong>Independent Thread
+Scheduling（独立线程调度）</strong>。</li>
+</ul></li>
+</ul></li>
+<li><strong>嵌套 if 与分支发散的成本</strong>：
+<ul>
+<li>单个 warp 最多 32 个线程 → 最多 32 条不同执行路径。</li>
+<li>嵌套 if 理论上产生 2^n 条路径，但实际受限于 32 线程，最多 32
+条。</li>
+<li>硬件串行执行不同路径，总指令发射数 ≈ Σ(各路径指令数)。</li>
+<li>最坏情况：32 个线程走 32 条不同路径，执行时间约为单路径的 32
+倍。</li>
+<li>不会出现排列/组合爆炸式的乘法级增长。</li>
+<li>循环发散：总时间 ≈ 最大循环次数 × 循环体指令数。</li>
+<li>整体 kernel 中，多个 warp 独立调度，总吞吐受 SM 资源限制，但单个
+warp 内不会指数爆炸。</li>
+</ul></li>
+</ul>
+<p>for 循环控制分歧例子：</p>
+<img src="/posts/2026/09/2233186881/image-20260919211743134.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919211743134">
+<ul>
+<li>不同线程的循环次数不同（4 到 8），导致控制分歧</li>
+</ul>
+<p><strong>Summary：</strong></p>
+<ul>
+<li>在根据 threadIdx 和输入数据 shape
+进行边界条件检查时，可能引入控制分歧（launch 的 threads
+可能比处理数据需要的多，屏蔽部分 threads 避免越界访问）。</li>
+<li>只有一个 warp 内线程执行路径不同时，才有控制分歧，前面的若干个处理
+full tile 的 warps 不存在控制分歧。</li>
+<li>这种边界判断引入的控制发散对性能的影响随着处理数据规模的增大而减小。</li>
+<li>控制发散的一个重要含义是：不能假定一个 warp
+中的所有线程具有相同的执行时序。因此，如果必须让一个 warp
+中的所有线程都完成其执行的某个阶段之后，其中任何一个线程才能继续推进，那么就必须使用屏障同步机制（例如
+<code>__syncwarp()</code>）来确保正确性。</li>
+</ul>
+<h2 id="warp-scheduling-and-latency-tolerance">Warp scheduling and
+latency tolerance</h2>
+<ul>
+<li><strong>核心问题</strong>：SM
+中驻留的线程数远多于其执行单元（cores）能同时执行的线程数。为什么需要这么多线程？
+<ul>
+<li>答案：为了<strong>容忍长延迟操作</strong>（如全局内存访问），即<strong>延迟隐藏（latency
+hiding）</strong>。</li>
+</ul></li>
+<li><strong>Warp 调度机制</strong>：
+<ul>
+<li>每个时刻 SM 只能执行所有驻留 warp 的一个子集（早期一次执行 1 个
+warp，现代可同时执行少量 warp）。</li>
+<li>当一个 warp 需要等待长延迟操作的结果时，它不会被选中执行。</li>
+<li>调度器转而选择一个<strong>已就绪</strong>（不再等待）的 warp
+来执行。</li>
+<li>若有多个就绪 warp，则按优先级机制选择一个。</li>
+<li>通过执行其他 warp 的工作来填补等待时间，称为<strong>延迟容忍 /
+延迟隐藏</strong>。</li>
+</ul></li>
+<li><strong>零开销线程调度 (Zero-overhead Scheduling)</strong>：
+<ul>
+<li>GPU 将所有驻留 warp
+的执行状态（PC、寄存器等）<strong>保存在硬件寄存器中</strong>，无需像
+CPU 那样在切换时保存/恢复状态到内存。</li>
+<li>因此 warp 之间的切换<strong>不引入额外空闲周期</strong>。</li>
+<li>对比：CPU 上下文切换需要保存/恢复寄存器，开销显著。</li>
+</ul></li>
+<li><strong>GPU 如何实现“零开销”？</strong>
+<ul>
+<li><strong>所有驻留 warp 的执行状态都常驻在硬件寄存器中</strong>。
+<ul>
+<li>每个 warp 有自己的 PC、寄存器组、状态信息。</li>
+<li>这些状态从 warp 被分配到 SM 开始，直到执行结束，<strong>一直留在 SM
+的寄存器文件里</strong>。</li>
+</ul></li>
+<li><strong>切换 warp 时，不需要保存/恢复任何状态</strong>。
+<ul>
+<li>调度器只需改变“当前选择哪个 warp”的指针。</li>
+<li>被换出的 warp
+的寄存器内容原封不动地留在寄存器文件中，下次被选中时直接继续执行。</li>
+<li>被换入的 warp 的状态也已经在寄存器中，无需从内存加载。</li>
+</ul></li>
+<li><strong>结果</strong>：warp
+切换在硬件层面几乎是瞬时的，不引入额外空闲周期。</li>
+<li>可以理解为：<strong><em>用海量的存储资源（寄存器、共享内存）来换取控制逻辑的精简，并通过超量线程（TLP）来隐藏延迟。</em></strong></li>
+</ul></li>
+<li><strong>与 CPU 的差异</strong>：
+<ul>
+<li>GPU 不依赖大容量缓存和分支预测来隐藏延迟，而是依靠<strong>大量驻留
+warp</strong>。</li>
+<li>因此 GPU
+可将更多芯片面积用于<strong>浮点执行单元和内存访问通道</strong>。</li>
+</ul></li>
+<li><strong>延迟容忍的有效性条件</strong>：
+<ul>
+<li>SM 需要<strong>超量订阅（oversubscription）</strong>
+线程：驻留线程数远大于执行单元数。</li>
+<li>例如 Ampere A100：SM 有 64 个 core，但可同时驻留 <strong>2048
+个线程</strong>（约 32 倍）。</li>
+<li>这样当某个 warp 遇到长延迟操作时，更有可能找到其他就绪 warp
+来执行。</li>
+</ul></li>
+<li><strong>Sidebar 类比：邮局</strong>
+<ul>
+<li>顾客 = warp，柜员 = 执行单元。</li>
+<li>需要填表的顾客 = 等待长延迟操作的 warp。</li>
+<li>好柜员会让填表顾客先到旁边填，同时服务其他已就绪的顾客，避免阻塞。</li>
+<li>即：不要让整个执行单元空等，而是切换到其他就绪 warp。</li>
+</ul></li>
+<li><strong>补充</strong>：
+<ul>
+<li>Warp 调度也用于容忍其他延迟，如流水线浮点运算、分支指令等。</li>
+<li>只要驻留 warp 足够多，硬件总能在某一时刻找到可执行的
+warp，充分利用执行硬件。</li>
+</ul></li>
+<li><strong>GPU 架构哲学：用存储换控制，用 TLP 隐藏延迟</strong>
+<ul>
+<li><strong>存储资源</strong>：巨大的寄存器文件（A100:
+256KB/SM），保存所有驻留 warp 的执行状态。</li>
+<li><strong>控制逻辑</strong>：精简调度器，无分支预测、无乱序执行，节省芯片面积和功耗。</li>
+<li><strong>延迟处理</strong>：靠超量驻留 warp（如 2048
+threads/SM）和零开销切换来隐藏延迟。</li>
+<li><strong>代价</strong>：单线程性能弱、对分支发散敏感、寄存器压力限制驻留
+warp 数。</li>
+<li><strong>结果</strong>：GPU 将更多面积用于 ALU
+和访存通道，适合高吞吐数据并行任务。</li>
+</ul></li>
+</ul>
+<h2 id="resource-partitioning-and-occupancy">Resource partitioning and
+occupancy</h2>
+<h3 id="占用率occupancy定义">1. 占用率（occupancy）定义</h3>
+<ul>
+<li><strong>Occupancy（占用率）</strong> = 实际分配给 SM 的 warp 数 / SM
+支持的最大 warp 数 或等价地：实际线程数 / SM 最大线程数。</li>
+<li>目标：尽可能提高占用率，以更好地容忍长延迟操作。</li>
+</ul>
+<h3 id="sm-的执行资源">2. SM 的执行资源</h3>
+<ul>
+<li><strong>寄存器 (Registers)</strong></li>
+<li><strong>共享内存 (Shared Memory)</strong></li>
+<li><strong>线程块槽位 (Block Slots)</strong></li>
+<li><strong>线程槽位 (Thread Slots)</strong></li>
+<li>这些资源由 SM <strong>动态划分</strong>给各线程块使用。</li>
+</ul>
+<h3 id="动态划分-vs.-固定划分">3. 动态划分 vs. 固定划分</h3>
+<ul>
+<li><strong>动态划分</strong>：按需分配，灵活支持“多块少线程”或“少块多线程”。</li>
+<li><strong>固定划分</strong>：每个块获得固定资源，容易浪费或不足。</li>
+<li>动态划分可能导致资源限制之间的复杂交互，造成资源利用率不足。</li>
+</ul>
+<h3 id="限制占用率的典型因素">4. 限制占用率的典型因素</h3>
+<p><strong>① 线程块槽位限制</strong></p>
+<ul>
+<li>例：Ampere A100 SM 支持最多 <strong>32 个 block</strong>、<strong>64
+个 warp（2048 线程）</strong>。</li>
+<li>若 block size = 32，则需 64 个 block 才能填满 2048 线程，但最多只有
+32 个 block → 仅 1024 线程 → 占用率 <strong>50%</strong>。</li>
+<li>结论：要满占用，每个 block 至少需要 <strong>64
+个线程</strong>。</li>
+</ul>
+<p><strong>② 最大线程数不能被 block size 整除</strong></p>
+<ul>
+<li>例：A100 最大 2048 线程/SM，若 block size = 768，则最多 2 个
+block（1536 线程），剩余 512 槽位空闲 → 占用率
+<strong>75%</strong>。</li>
+</ul>
+<p><strong>③ 寄存器限制</strong></p>
+<ul>
+<li><p>例：A100 每个 SM 最多 <strong>65,536 个寄存器</strong>。</p></li>
+<li><p>要满占用（2048 线程），每线程最多使用： <span
+class="math display">\[
+\frac{65536}{2048} = 32 \text{ registers/thread}
+\]</span></p></li>
+<li><p>若每线程用 64 个寄存器，则最多支持： <span
+class="math display">\[
+\frac{65536}{64} = 1024 \text{ threads}
+\]</span></p>
+<p>占用率最多 50%。</p></li>
+<li><p>若每线程用 33 个寄存器，2048 线程需： <span
+class="math display">\[
+2048 \times 33 = 67584 &gt; 65536
+\]</span></p>
+<p>运行时只能分配 3 个 block（如 512 线程/block），即 1536 线程 →
+占用率从 100% 降到 75%。</p></li>
+<li><p><strong>性能悬崖 (Performance
+Cliff)</strong>：资源使用微增（如多两个自动变量），导致并行度和性能显著下降。</p></li>
+<li><p>编译器可能进行 <strong>寄存器溢出 (register spilling)</strong>
+以降低每线程寄存器需求，但会增加访存和执行时间，可能得不偿失。</p></li>
+</ul>
+<h3 id="关键结论">5. 关键结论</h3>
+<ul>
+<li>所有动态划分资源相互制约，精确确定每个 SM
+能运行的线程数很复杂。</li>
+<li>提高占用率不一定总是最优：有时低占用率但每个线程做更多工作（如更多寄存器）反而更快。</li>
+</ul>
+<h3 id="速记公式">6. 速记公式</h3>
+<ul>
+<li><p>占用率： <span class="math display">\[
+\text{Occupancy} = \frac{\text{Assigned threads per SM}}{\text{Max
+threads per SM}}
+\]</span></p></li>
+<li><p>满占用时每线程寄存器上限： <span class="math display">\[
+\text{Regs/thread} \le \frac{\text{Total regs per SM}}{\text{Max threads
+per SM}}
+\]</span></p></li>
+<li><p>每 SM 可驻留 block 数： <span class="math display">\[
+\min\left(\text{Block slots limit},\ \left\lfloor\frac{\text{Max
+threads}}{\text{Block size}}\right\rfloor,\
+\left\lfloor\frac{\text{Total regs}}{\text{Block size} \times
+\text{Regs/thread}}\right\rfloor,\ \dots\right)
+\]</span></p></li>
+<li><p>shared memory 对占用率影响将在后续章节讨论</p></li>
+</ul>
+<h2 id="querying-device-properties">Querying device properties</h2>
+<p>实际编程时，需要查询 GPU 设备的属性（设备 SM 数量、SM 可以执行的
+block 数和 thread 数等），以更好的利用高性能 GPU 以及对普通 GPU
+保持兼容性。</p>
+<p>SM 数量通常与计算能力直接关联：</p>
+<ul>
+<li><strong>计算能力 (Compute Capability)</strong>：
+<ul>
+<li>每个 CUDA 设备 SM 中的资源数量由设备的 <strong>计算能力 (compute
+capability)</strong> 指定。</li>
+<li>一般来说，计算能力等级越高，每个 SM 中可用的资源越多。</li>
+<li>GPU 的计算能力逐代增加。</li>
+<li>例如：Ampere A100 的计算能力为 <strong>8.0</strong>。</li>
+</ul></li>
+</ul>
+<p><strong>查询 CUDA device 数量 API</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-type">int</span> devCount;<br><br><span class="hljs-built_in">cudaGetDeviceCount</span>(&amp;devCount);<br></code></pre></td></tr></table></figure>
+<p><strong>查询指定 id 的 CUDA device 属性</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs C++">cudaDeviceProp devProp;<br><span class="hljs-keyword">for</span>(<span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; devCount; i++) &#123;<br>	<span class="hljs-built_in">cudaGetDeviceProperties</span>(&amp;devProp, i);<br>	<span class="hljs-comment">// Decide if device has sufficient resources/capabilities</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>更多信息见官方文档：<a
+target="_blank" rel="noopener" href="https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__DEVICE.html">Device
+Management</a></li>
+<li>最近的新版 CUDA API 使用
+<code>cudaDeviceGetAttribute( int* value, cudaDeviceAttr attr, int device )</code>
+API 进行属性查询，相关链接
+<ul>
+<li><a
+target="_blank" rel="noopener" href="https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__DEVICE.html#group__CUDART__DEVICE_1gb22e8256592b836df9a9cc36c9db7151">cudaDeviceGetAttribute
+Docs</a>
+<ul>
+<li><img src="/posts/2026/09/2233186881/image-20260919212010070.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212010070"></li>
+</ul></li>
+<li><a
+target="_blank" rel="noopener" href="https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g49e2f8c2c0bd6fe264f2fc970912e5cd">cudaDeviceAttr
+Docs</a>
+<ul>
+<li><img src="/posts/2026/09/2233186881/image-20260919212019264.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212019264"></li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><strong>SM 组织</strong>：
+<ul>
+<li>GPU 由多个 SM 组成，每个 SM 包含多个 processing
+block，共享控制逻辑和内存资源。</li>
+<li>Grid 启动后，block 以<strong>任意顺序</strong>分配给 SM，实现 CUDA
+应用的<strong>透明可扩展性</strong>。</li>
+<li>限制：<strong>不同 block 的线程之间不能同步</strong>。</li>
+</ul></li>
+<li><strong>线程分配与执行</strong>：
+<ul>
+<li>线程以 <strong>block 为单位</strong>分配到 SM；block 进一步划分为
+<strong>warp</strong>。</li>
+<li>Warp 内线程按 <strong>SIMD 模型</strong>执行。</li>
+<li>若 warp 内发生<strong>分支发散</strong>，不同路径分
+<strong>pass</strong> 串行执行，线程仅在其对应路径的 pass 中活跃。</li>
+</ul></li>
+<li><strong>延迟容忍与占用率</strong>：
+<ul>
+<li>SM 可驻留的线程数远多于其能同时执行的线程数。</li>
+<li>SM 只执行驻留 warp 的一个子集，其余 warp
+等待长延迟操作，从而<strong>隐藏延迟、维持吞吐</strong>。</li>
+<li><strong>Occupancy（占用率）</strong> = 分配给 SM 的线程数 / SM
+支持的最大线程数。</li>
+<li>占用率越高，越能隐藏长延迟操作。</li>
+</ul></li>
+<li><strong>资源限制</strong>：
+<ul>
+<li>每个 CUDA 设备的 SM 资源限制可能不同：block
+数、线程数、寄存器数、共享内存等。</li>
+<li>每个 kernel
+可能受一种或多种资源限制，成为占用率的<strong>瓶颈</strong>。</li>
+<li>CUDA C 提供运行时查询 GPU 资源的能力（如
+<code>cudaGetDeviceProperties</code>）。</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/CUDA/">#CUDA</a>
+      
+        <a href="/tags/PMPP/">#PMPP</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>PMPP Chapter 04: Compute architecture and scheduling</div>
+      <div>https://arcsin2.cloud/posts/2026/09/2233186881/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年9月19日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/09/881023638/" title="PMPP Chapter 05: Memory architecture and data locality">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">PMPP Chapter 05: Memory architecture and data locality</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/09/3085498718/" title="PMPP Chapter 03: Multidimensional grids and data">
+                        <span class="hidden-mobile">PMPP Chapter 03: Multidimensional grids and data</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

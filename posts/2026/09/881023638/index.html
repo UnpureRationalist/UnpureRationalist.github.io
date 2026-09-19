@@ -1,0 +1,1551 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本章主要关注 GPU 的 on-chip memory，重点是利用 shared memory 减少 global memory 访问，提升 kernel 性能。  Importance of memory access efficiency Compute to Global Memory Access Ratio（算术强度 &#x2F; 计算强度）  定义：  指程序某区域内，每">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PMPP Chapter 05: Memory architecture and data locality">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/09/881023638/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本章主要关注 GPU 的 on-chip memory，重点是利用 shared memory 减少 global memory 访问，提升 kernel 性能。  Importance of memory access efficiency Compute to Global Memory Access Ratio（算术强度 &#x2F; 计算强度）  定义：  指程序某区域内，每">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212258131.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212337699.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212423730.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212440636.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212452285.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212501224.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212515090.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212611748.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212825082.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212832343.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212957032.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919213832765.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919213926010.png">
+<meta property="article:published_time" content="2026-09-19T12:53:28.000Z">
+<meta property="article:modified_time" content="2026-09-19T13:52:51.710Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="CUDA">
+<meta property="article:tag" content="PMPP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/09/881023638/image-20260919212258131.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>PMPP Chapter 05: Memory architecture and data locality - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="PMPP Chapter 05: Memory architecture and data locality"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-09-19 20:53" pubdate>
+          2026年9月19日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          15k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          51 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">PMPP Chapter 05: Memory architecture and data locality</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>本章主要关注 GPU 的 on-chip memory，重点是利用 shared memory 减少
+global memory 访问，提升 kernel 性能。</p>
+</blockquote>
+<h2 id="importance-of-memory-access-efficiency">Importance of memory
+access efficiency</h2>
+<h3 id="compute-to-global-memory-access-ratio算术强度-计算强度">Compute
+to Global Memory Access Ratio（算术强度 / 计算强度）</h3>
+<ul>
+<li><p><strong>定义</strong>：</p>
+<ul>
+<li><p>指程序某区域内，每访问 1
+字节全局内存所执行的浮点运算次数（FLOPs）。</p></li>
+<li><p>公式： <span class="math display">\[
+\text{Compute to Global Memory Access Ratio} =
+\frac{\text{FLOPs}}{\text{Bytes accessed from global memory}}
+\]</span></p></li>
+<li><p>文献中也称为 <strong>arithmetic intensity</strong> 或
+<strong>computational intensity</strong>。</p></li>
+</ul></li>
+<li><p><strong>例子：最简单的矩阵乘法 kernel（第三章）</strong></p>
+<ul>
+<li><p>主要执行部分：沿 k 维度做向量点积。</p></li>
+<li><img src="/posts/2026/09/881023638/image-20260919212258131.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212258131"></li>
+<li><p>每次循环（内层 k 迭代）：</p>
+<ul>
+<li><p><strong>访存</strong>：读取矩阵 M 和 N 各一个 float 元素 → 4 + 4
+= 8 字节。</p></li>
+<li><p><strong>计算</strong>：一次浮点乘法 + 一次浮点加法 → 2
+FLOP。</p></li>
+<li><p><strong>比率</strong>： <span class="math display">\[
+\frac{2 \text{ FLOP}}{8 \text{ B}} = 0.25 \text{ FLOP/B}
+\]</span></p></li>
+</ul></li>
+<li><p>这一比例即为该 kernel 的 compute to global memory access
+ratio。</p></li>
+<li><p>对于 A100
+GPU，为了充分利用其计算能力，计算强度需要达到至少：19,500
+GOP/second)/(1555 GB/second)=12.5 OP/B。</p></li>
+</ul></li>
+<li><p><strong>意义</strong>：</p>
+<ul>
+<li>比率低 → 每次计算需要搬运大量数据 → 容易成为
+<strong>memory-bound</strong>（内存带宽瓶颈）。</li>
+<li>比率高 → 计算密集，可能成为 <strong>compute-bound</strong>。</li>
+<li>优化方向：通过 <strong>tiling / shared memory</strong>
+提高数据复用，减少全局内存访问，从而提高算术强度。</li>
+</ul></li>
+</ul>
+<h3 id="the-roofline-model">The Roofline Model</h3>
+<center>
+<img src="/posts/2026/09/881023638/image-20260919212337699.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212337699">
+</center>
+<ul>
+<li><strong>定义</strong>：一种可视化模型，用于评估应用性能相对于硬件极限的位置。</li>
+<li><strong>坐标轴</strong>：
+<ul>
+<li><strong>x 轴</strong>：算术强度 / 计算强度（Arithmetic /
+Computational Intensity），单位 <strong>FLOP/B</strong>。表示每加载 1
+字节数据所完成的计算量。</li>
+<li><strong>y 轴</strong>：计算吞吐量（Computational Throughput），单位
+<strong>GFLOPS</strong>。</li>
+</ul></li>
+<li><strong>硬件极限线</strong>：
+<ul>
+<li><strong>水平线</strong>：由硬件的<strong>峰值计算吞吐量</strong>（GFLOPS）决定。</li>
+<li><strong>从原点出发的正斜率线</strong>：由硬件的<strong>峰值内存带宽</strong>决定。</li>
+<li>所有实际应用的性能点都位于这两条线下方（不可能超过硬件峰值）。</li>
+</ul></li>
+<li><strong>点的含义</strong>：
+<ul>
+<li>每个点代表一个应用：x 坐标是它的计算强度，y
+坐标是它实际达到的吞吐量。</li>
+<li>点越靠近两条线，说明资源利用越高效；点远低于线，说明资源利用低效。</li>
+</ul></li>
+<li><strong>交点（脊点）</strong>：
+<ul>
+<li>两条线的交点对应的计算强度，是应用从 <strong>memory-bound</strong>
+转向 <strong>compute-bound</strong> 的临界值。</li>
+<li>交点强度 = 峰值计算吞吐 / 峰值内存带宽。</li>
+</ul></li>
+<li><strong>区域划分</strong>：
+<ul>
+<li><strong>低计算强度 →
+memory-bound</strong>：受内存带宽限制，无法达到峰值计算吞吐。</li>
+<li><strong>高计算强度 →
+compute-bound</strong>：受计算单元限制，不受内存带宽限制。</li>
+</ul></li>
+<li><strong>示例（图中点）</strong>：
+<ul>
+<li><strong>A1、A2</strong>：memory-bound 应用。
+<ul>
+<li><strong>A1</strong>：高效，接近峰值内存带宽。要提升吞吐，只能<strong>提高计算强度</strong>。</li>
+<li><strong>A2</strong>：低效，离峰值内存带宽较远。可通过优化内存访问效率来提升吞吐。</li>
+</ul></li>
+<li><strong>A3</strong>：compute-bound 应用，接近峰值计算吞吐。</li>
+</ul></li>
+<li><strong>优化启示</strong>：
+<ul>
+<li>memory-bound
+应用：优化内存访问（合并、缓存、tiling）或提高计算强度。</li>
+<li>compute-bound
+应用：优化计算单元利用率（指令级并行、减少分支发散等）。</li>
+</ul></li>
+</ul>
+<h2 id="cuda-memory-types">CUDA memory types</h2>
+<p>CUDA device 内存模型：</p>
+<img src="/posts/2026/09/881023638/image-20260919212423730.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212423730">
+<ul>
+<li><strong>global memory</strong>：host 可读可写；device
+可读可写。</li>
+<li><strong>constant memory</strong>：host 可读可写；device
+可读不可写。</li>
+<li><strong>local memory</strong>：实际上位于 global memory，但是 thread
+间不共享，每个 thread 有自己私有的 global memory 一段作为 local
+memory。通常在寄存器不够用的时候才会触发 local memory 分配与访问。
+<ul>
+<li>This data includes statically allocated arrays, spilled registers,
+and other *<strong>elements of the thread’s call stack*</strong>.</li>
+</ul></li>
+<li>on-chip memory：可被快速访问。
+<ul>
+<li><strong>shared memory</strong>：分配给 block，同一 block
+内所有线程都可以访问。</li>
+<li><strong>registers</strong>：每线程私有。</li>
+</ul></li>
+</ul>
+<img src="/posts/2026/09/881023638/image-20260919212440636.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212440636">
+<ul>
+<li>该图展示了 global memory 相当于上图的 Memory，在 Processor
+外，所以也叫 off-chip memory。</li>
+<li>Register File 以及 shared memory 在 Processor 内，所以叫 on-chip
+memory。</li>
+</ul>
+<img src="/posts/2026/09/881023638/image-20260919212452285.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212452285">
+<ul>
+<li>shared memory 虽然也是 on-chip memory，但是其读取带宽/时延都远大于
+register，同时与 shared memory 类似，也需要 Load 指令从 shared memory
+读取。</li>
+<li>shared memory 可被 block 内所有线程访问，register
+是线程私有的。</li>
+</ul>
+<p><strong>如何声明上述不同类型 memory 上的变量</strong></p>
+<img src="/posts/2026/09/881023638/image-20260919212501224.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212501224">
+<ul>
+<li>注意：<strong>自动数组变量默认分配在 Local
+Memory</strong>，而不是寄存器。
+<ul>
+<li>原因：寄存器不支持运行期动态索引（如
+<code>arr[i]</code>），数组通常需要动态寻址。</li>
+<li>例外：仅当数组极小且所有索引在编译期展开为常量时，编译器可能通过“标量替换”将其放入寄存器。</li>
+<li>Local Memory 物理上位于全局内存，受 L1/L2
+缓存，延迟高于寄存器。</li>
+</ul></li>
+<li><strong>CUTLASS Fragment：寄存器支持的数组</strong>
+<ul>
+<li>CUTLASS 中的 <strong>Fragment</strong>
+是一个由寄存器支持的数组，用于存储每个线程持有的 tile 部分。</li>
+<li>实现原理：
+<ol type="1">
+<li><strong>编译期确定大小</strong>：Fragment
+的模板参数（元素类型、元素数量）都是编译期常量。</li>
+<li><strong>强制静态索引访问</strong>：通过 CuTe Layout
+和模板元编程，确保所有访问索引都是 <code>constexpr</code>
+或在完全展开的循环中。</li>
+<li><strong>编译器标量替换</strong>：满足条件后，编译器将数组的每个元素视为独立标量，分配到寄存器中。</li>
+</ol></li>
+<li>与普通自动数组的对比：
+<ul>
+<li>普通数组：索引为运行时变量 → 无法用寄存器寻址 → 放入 Local
+Memory。</li>
+<li>Fragment：索引在编译期解析为常量 → 可被标量替换 → 放入寄存器。</li>
+</ul></li>
+<li>结论：Fragment
+并非魔法，而是通过严格的编译期约束，引导编译器做出最优的寄存器分配决策。</li>
+</ul></li>
+<li><strong>Global Variables 与跨块协作</strong>
+<ul>
+<li>Global variables 可用于<strong>跨 block 的线程协作</strong>。</li>
+<li>限制：目前没有简单方法在不同 block 的线程之间同步，或保证访问 global
+memory 时的数据一致性，除非：
+<ul>
+<li>使用 <strong>原子操作 (atomic operations)</strong>，或</li>
+<li><strong>终止当前 kernel 执行</strong>（例如通过 kernel 拆分）。</li>
+</ul></li>
+<li>因此，global variables 常用于<strong>从一个 kernel 调用向另一个
+kernel 调用传递信息</strong>。</li>
+<li><strong>内存栅栏 (memory fencing)</strong> 的补充条件：
+<ul>
+<li>若 <strong>block 数 &lt; SM 数</strong>，可使用 CUDA 内存栅栏（如
+<code>__threadfence()</code>）来确保 block 间的数据一致性。</li>
+<li>原因：此时所有 block 可同时驻留，不会因 block 排队导致死锁。</li>
+<li>但内存栅栏只保证<strong>写入的可见顺序</strong>，不提供同步/等待语义，仍需配合原子操作或标志位。</li>
+<li>该技术可移植性差，更推荐使用 <strong>Cooperative Groups 的
+<code>grid.sync()</code></strong> 或<strong>拆分多个 kernel
+启动</strong>来实现跨块同步。</li>
+<li>详见 CUDA Programming Guide。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="tiling-for-reduced-memory-traffic">Tiling for reduced memory
+traffic</h2>
+<h3 id="motivation">Motivation</h3>
+<ul>
+<li><strong>固有权衡</strong>：
+<ul>
+<li>Global memory：大但慢。</li>
+<li>Shared memory：小但快。</li>
+</ul></li>
+<li><strong>分块策略 (Tiling)</strong>：
+<ul>
+<li>将数据划分为子集，称为 <strong>tiles</strong>，使每个 tile 能放入
+shared memory。</li>
+<li>类比：一堵大墙（global memory 数据）由小瓷砖（可分别放入 shared
+memory 的子集）覆盖。</li>
+</ul></li>
+<li><strong>关键条件</strong>：
+<ul>
+<li>各 tile 上的 kernel 计算必须<strong>相互独立</strong>。（对于任意
+kernel 函数，并非所有数据结构都能划分成 tiles。）</li>
+</ul></li>
+</ul>
+<p>第三章的简单矩阵乘法实现说明：</p>
+<img src="/posts/2026/09/881023638/image-20260919212515090.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212515090">
+<ul>
+<li>4 个 block，每个 block 负责一个 <span class="math inline">\(2 \times
+2\)</span> tile 的计算（每个线程负责 tile 中一个元素）</li>
+<li><span class="math inline">\(\text{block}_{0,0}\)</span> 的 4
+个线程为了计算 P 矩阵的 4 个元素，分别需要访问矩阵 M/N 的元素：
+<ul>
+<li><span class="math inline">\(\text{thread}_{0,0}\)</span>
+为了计算得到 <span class="math inline">\(P_{0,0}\)</span> 需要访问矩阵 M
+的第 0 行全部 4 个元素；以及矩阵 N 的第 0 列全部 4 个元素</li>
+<li><span class="math inline">\(\text{thread}_{0,1}\)</span>
+为了计算得到 <span class="math inline">\(P_{0,1}\)</span> 需要访问矩阵 M
+的第 0 行全部 4 个元素；以及矩阵 N 的第 1 列全部 4 个元素</li>
+<li>类似的，<span class="math inline">\(\text{block}_{0,0}\)</span>
+的四个线程访问 global memory 顺序如下图所示：</li>
+<li><img src="/posts/2026/09/881023638/image-20260919212611748.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212611748"></li>
+<li>可以看到，每个线程需要访问矩阵 M/N 的个 4 个元素，总访存量：<span
+class="math inline">\(4 *2* 4 = 32\)</span> 次 global memory
+内存访问。</li>
+<li>但是，<span class="math inline">\(\text{block}_{0,0}\)</span>
+为了计算得到矩阵 P 对应 tile 的输出结果，理论上只需要访问矩阵 M/N
+的共：<span class="math inline">\(2 *4* 2 = 16\)</span>
+个元素。目前实现，矩阵 M/N 中元素实际上都被访问了两次。</li>
+<li>如果能让 block 内的 4 个线程协作加载，使得每个元素只从 global memory
+加载一次，就可以将 global memory 访问量<strong>减少一半</strong>（从 32
+次降到 16 次）。</li>
+<li>这正是 <strong>tiling</strong>
+减少内存流量的核心思想：通过线程间协作（如 shared memory），消除同一
+block 内对 global memory 的冗余访问。</li>
+</ul></li>
+<li>一般化结论：
+<ul>
+<li>在矩阵乘法中，通过 tiling 实现的 global memory 流量减少量与
+<strong>block 的宽度成正比</strong>。</li>
+<li>对于 <span class="math inline">\(Width \times Width\)</span> 的
+block，每个元素被重复访问的次数为 <span
+class="math inline">\(Width\)</span>，因此理论上可将 global memory
+流量减少到原来的 <span
+class="math inline">\(\frac{1}{Width}\)</span>。</li>
+<li>例：
+<ul>
+<li><span class="math inline">\(2 \times 2 block\)</span> → 每个元素访问
+2 次 → 流量减半（1/2）。</li>
+<li><span class="math inline">\(16 \times 16\)</span> block →
+流量可降至原来的 1/16。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="tiled-matrix-multiplication-algorithm-analysis">Tiled matrix
+multiplication algorithm &amp; analysis</h3>
+<p><strong>核心思想：</strong></p>
+<ul>
+<li>线程<strong>协作</strong>将 M 和 N 的子集（tiles）加载到
+<strong>shared memory</strong> 中，然后再各自用这些元素做点积计算。</li>
+<li>共享内存容量很小，加载时必须注意<strong>不能超过其容量</strong>。
+<ul>
+<li>解决办法：将 M 和 N 划分成更小的 <strong>tiles</strong>，tile
+的尺寸选择为<strong>能放入 shared memory</strong>。</li>
+<li>最简单形式：<strong>tile 的维度等于 block
+的维度</strong>（如下图所示）。</li>
+<li><img src="/posts/2026/09/881023638/image-20260919212825082.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212825082"></li>
+</ul></li>
+<li>矩阵 M/N tile 之后，kernel 内点积计算过程需要分为多个阶段循环进行：
+<ul>
+<li>在每个阶段，线程协作将 M/N 一个元素从 global memory 读到 shared
+memory，如下图所示：</li>
+<li><img src="/posts/2026/09/881023638/image-20260919212832343.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212832343"></li>
+<li><strong>阶段 1（以 <span
+class="math inline">\(\text{block}_{0,0}\)</span> 为例）</strong>：</li>
+<li><strong>阶段 2</strong>：
+<ul>
+<li>四个线程协作加载 M 的一个 <span class="math inline">\(2 \times
+2\)</span> tile 到 <code>Mds</code>：
+<ul>
+<li><span class="math inline">\(\text{thread}_{0,0}\)</span> 加载 <span
+class="math inline">\(M_{0,0} \to \text{Mds}_{0,0}\)</span></li>
+<li><span class="math inline">\(\text{thread}_{0,1}\)</span> 加载 <span
+class="math inline">\(M_{0,1} \to \text{Mds}_{0,1}\)</span></li>
+<li><span class="math inline">\(\text{thread}_{1,0}\)</span> 加载 <span
+class="math inline">\(M_{1,0} \to \text{Mds}_{1,0}\)</span></li>
+<li><span class="math inline">\(\text{thread}_{1,1}\)</span> 加载 <span
+class="math inline">\(M_{1,1} \to \text{Mds}_{1,1}\)</span></li>
+</ul></li>
+<li>类似地，四个线程协作加载 N 的一个 <span class="math inline">\(2
+\times 2\)</span> tile 到 <code>Nds</code>。</li>
+<li>加载完成后，调用 <code>__syncthreads()</code>
+确保所有线程都完成写入。</li>
+<li>每个线程用 <code>Mds</code> 和 <code>Nds</code>
+中的元素计算部分点积，累加到局部变量。</li>
+</ul></li>
+<li>重复直到覆盖整个 k 维度（本例中 k=4，tile 宽度=2，共 2
+个阶段）。</li>
+<li>最后将累加结果写回 <code>P[row][col]</code>。</li>
+</ul></li>
+</ul>
+<p><strong>整体流程（每个 block 负责一个输出 tile）：</strong></p>
+<ol type="1">
+<li>将 M 和 N 划分成与 block 同尺寸的 tile。</li>
+<li>每个线程协作把 M 和 N 的当前 tile 从 global memory 加载到 shared
+memory。</li>
+<li><code>__syncthreads()</code> 确保所有线程完成加载。</li>
+<li>每个线程用 shared memory 中的 tile 计算部分点积。</li>
+<li>重复加载下一个 tile（沿 k 维度），累加结果。</li>
+<li>最后将结果写回 P。</li>
+</ol>
+<p><strong>关键优势：</strong></p>
+<ul>
+<li>每个 M/N 元素从 global memory
+只加载一次（而不是每个线程各加载一次）。</li>
+<li>全局内存访问量降低为原来的 <span
+class="math inline">\(1/Width\)</span>（<span
+class="math inline">\(Width\)</span> 为 block 宽度）。</li>
+<li>用 shared memory 的高带宽替代 global memory
+的低带宽，显著提升性能。</li>
+</ul>
+<p><strong>注意点：</strong></p>
+<ul>
+<li>必须使用 <code>__syncthreads()</code>
+保证加载完成后再计算，计算完成后再加载下一个 tile（避免读写冲突）。</li>
+<li>shared memory 大小有限，tile 尺寸不能超过硬件限制。</li>
+<li>边界情况：矩阵维度不是 tile 尺寸整数倍时，需要边界检查。</li>
+</ul>
+<h2 id="a-tiled-matrix-multiplication-kernel">A tiled matrix
+multiplication kernel</h2>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-meta">#<span class="hljs-keyword">define</span> TILE_WIDTH 16</span><br><br><span class="hljs-function">__global__ <span class="hljs-type">void</span> <span class="hljs-title">matrixMulKernel</span><span class="hljs-params">(<span class="hljs-type">float</span>* M, <span class="hljs-type">float</span>* N, <span class="hljs-type">float</span>* P, <span class="hljs-type">int</span> Width)</span> </span>&#123;<br><br>    __shared__ <span class="hljs-type">float</span> Mds[TILE_WIDTH][TILE_WIDTH];<br>    __shared__ <span class="hljs-type">float</span> Nds[TILE_WIDTH][TILE_WIDTH];<br><br>    <span class="hljs-type">int</span> bx = blockIdx.x;  <span class="hljs-type">int</span> by = blockIdx.y;<br>    <span class="hljs-type">int</span> tx = threadIdx.x; <span class="hljs-type">int</span> ty = threadIdx.y;<br><br>    <span class="hljs-comment">// Identify the row and column of the P element to work on</span><br>    <span class="hljs-type">int</span> Row = by * TILE_WIDTH + ty;<br>    <span class="hljs-type">int</span> Col = bx * TILE_WIDTH + tx;<br><br>    <span class="hljs-comment">// Loop over the M and N tiles required to compute P element</span><br>    <span class="hljs-type">float</span> Pvalue = <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> ph = <span class="hljs-number">0</span>; ph &lt; Width/TILE_WIDTH; ++ph) &#123;<br><br>        <span class="hljs-comment">// Collaborative loading of M and N tiles into shared memory</span><br>        Mds[ty][tx] = M[Row*Width + ph*TILE_WIDTH + tx];<br>        Nds[ty][tx] = N[(ph*TILE_WIDTH + ty)*Width + Col];<br>        __syncthreads();<br><br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> k = <span class="hljs-number">0</span>; k &lt; TILE_WIDTH; ++k) &#123;<br>            Pvalue += Mds[ty][k] * Nds[k][tx];<br>        &#125;<br>        __syncthreads();<br><br>    &#125;<br>    P[Row*Width + Col] = Pvalue;<br><br>&#125;<br><br><span class="hljs-comment">// launch kernel</span><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123;<br><br>	<span class="hljs-comment">// 假设 Width 是 TILE_WIDTH 的整数倍（例如 Width=1024, TILE_WIDTH=16）</span><br>	<span class="hljs-comment">// 每个 block 负责一个 TILE_WIDTH x TILE_WIDTH 的输出 </span><br>	<span class="hljs-comment">// 注意：`gridDim` 和 `blockDim` 的 x/y 维度分别对应矩阵的列和行方向</span><br><br>	<span class="hljs-function">dim3 <span class="hljs-title">blockDim</span><span class="hljs-params">(TILE_WIDTH, TILE_WIDTH)</span></span>;                 <span class="hljs-comment">// 16 x 16</span><br>	<span class="hljs-function">dim3 <span class="hljs-title">gridDim</span><span class="hljs-params">(Width / TILE_WIDTH, Width / TILE_WIDTH)</span></span>;  <span class="hljs-comment">// 64 x 64</span><br><br>	matrixMulKernel&lt;&lt;&lt;gridDim, blockDim&gt;&gt;&gt;(d_M, d_N, d_P, Width);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>上述 kernel 执行示意图：</p>
+<img src="/posts/2026/09/881023638/image-20260919212957032.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919212957032">
+<p><strong>kernel 详细解释</strong></p>
+<ul>
+<li><p><strong>共享内存声明（第 04–05 行）</strong>：</p>
+<ul>
+<li><code>Mds</code> 和 <code>Nds</code> 是 shared memory 数组，作用域为
+<strong>block</strong>。</li>
+<li>每个 block 会创建自己的一份 <code>Mds</code>/<code>Nds</code>，block
+内所有线程共享访问。</li>
+</ul></li>
+<li><p><strong>寄存器变量（第 07–08 行）</strong>：</p>
+<ul>
+<li><code>bx, by, tx, ty</code> 是自动标量变量，存储在
+<strong>寄存器</strong> 中，每个线程私有。</li>
+<li>目的是简化代码、避免重复访问 <code>blockIdx</code> /
+<code>threadIdx</code>。</li>
+</ul></li>
+<li><p><strong>输出元素索引（第 11–12 行）</strong>：</p>
+<ul>
+<li>每个线程负责计算一个 P 元素。</li>
+<li>列索引：<span class="math inline">\(\text{Col} = bx \times
+\text{TILE\_WIDTH} + tx\)</span>
+<ul>
+<li>每个 block 横向覆盖 <code>TILE_WIDTH</code> 个 P 元素。</li>
+<li>前面的 <code>bx</code> 个 block 覆盖 <span class="math inline">\(bx
+\times \text{TILE\_WIDTH}\)</span> 个元素，再加 block 内偏移
+<code>tx</code>。</li>
+</ul></li>
+<li>行索引：<span class="math inline">\(\text{Row} = by \times
+\text{TILE\_WIDTH} + ty\)</span></li>
+<li>例：<span class="math inline">\(\text{block}_{1,0}\)</span> 的 <span
+class="math inline">\(\text{thread}_{0,1}\)</span> 计算 <span
+class="math inline">\(P_{2,1}\)</span>（列=1，行=2）。</li>
+</ul></li>
+<li><p><strong>阶段循环（第 16 行）</strong>：</p>
+<ul>
+<li><code>ph</code> 表示已完成的阶段数，每阶段处理一个 M tile 和一个 N
+tile。</li>
+<li>循环次数 = <code>Width / TILE_WIDTH</code>（假设整除）。</li>
+</ul></li>
+<li><p><strong>协作加载（第 19–20 行）</strong>：</p>
+<ul>
+<li>每个线程加载 M 和 N 各一个元素到 shared memory。</li>
+<li>M 元素线性索引：<span class="math inline">\(M[\text{Row} \times
+\text{Width} + ph \times \text{TILE\_WIDTH} + tx]\)</span>
+<ul>
+<li>行 = <code>Row</code>，列 = <span class="math inline">\(ph \times
+\text{TILE\_WIDTH} + tx\)</span>。</li>
+</ul></li>
+<li>N 元素线性索引：<span class="math inline">\(N[(ph \times
+\text{TILE\_WIDTH} + ty) \times \text{Width} + \text{Col}]\)</span>
+<ul>
+<li>行 = <span class="math inline">\(ph \times \text{TILE\_WIDTH} +
+ty\)</span>，列 = <code>Col</code>。</li>
+</ul></li>
+<li>由于 <code>Row</code> 是 <code>ty</code> 的线性函数，且每个线程
+<code>(tx, ty)</code> 唯一，因此 <code>TILE_WIDTH²</code>
+个线程各自加载唯一的 M/N 元素。</li>
+</ul></li>
+<li><p><strong>第一个 <code>__syncthreads()</code>（第 21
+行）</strong>：</p>
+<ul>
+<li>保证所有线程完成 tile 加载后，才开始计算。</li>
+<li>对应 <strong>read-after-write (true)
+dependence</strong>：读线程真正需要写线程的数据，必须等待。</li>
+</ul></li>
+<li><p><strong>内层点积循环（第 23–25 行）</strong>：</p>
+<ul>
+<li><p>每个线程用 shared memory 中的 tile 做部分点积： <span
+class="math display">\[
+\text{Pvalue }  += \text{Mds}[ty][k] \times \text{Nds}[k][tx]
+\]</span></p></li>
+<li><p>访问方向沿 <code>k</code> 维度，数据来自
+<code>Mds</code>/<code>Nds</code>，不再访问 global memory。</p></li>
+</ul></li>
+<li><p><strong>第二个 <code>__syncthreads()</code>（第 26
+行）</strong>：</p>
+<ul>
+<li>保证所有线程用完当前 tile 后，才能进入下一阶段覆写 shared
+memory。</li>
+<li>对应 <strong>write-after-read (false)
+dependence</strong>：写线程不需要读线程的数据，只是因为复用同一内存位置才需要等待。</li>
+</ul></li>
+<li><p><strong>写回结果（第 29 行）</strong>：</p>
+<ul>
+<li>所有阶段完成后，<code>Pvalue</code> 即为完整点积结果。</li>
+<li>写回 <code>P[Row * Width + Col]</code>。</li>
+</ul></li>
+<li><p><strong>Strip-mining（循环拆分）</strong>：</p>
+<ul>
+<li>原始长循环（沿 k 维度）被拆成 <strong>外层循环（阶段）+
+内层循环（tile 内 k）</strong>。</li>
+<li>每个阶段前后加 barrier，强制 block
+内所有线程聚焦同一段输入数据。</li>
+<li>这是 tiling 在数据并行程序中的关键实现手段。</li>
+</ul></li>
+<li><p><strong>性能收益</strong>：</p>
+<ul>
+<li>global memory 访问量降至原来的 1 / 。</li>
+<li>算术强度从 0.25 OP/B 提升到 4 OP/B（TILE_WIDTH=16）。</li>
+<li>例（A100，1555 GB/s）：
+<ul>
+<li>无 tiling：<span class="math inline">\(1555 \times 0.25 \approx
+389\)</span> GFLOPS</li>
+<li>有 tiling：<span class="math inline">\(1555 \times 4 \approx
+6220\)</span> GFLOPS</li>
+<li>峰值：19,500 GFLOPS → tiling 后达到约 <strong>32%
+峰值</strong>。</li>
+</ul></li>
+<li>进一步优化可用 <strong>cuBLAS / CUTLASS</strong> 等高度优化库。</li>
+</ul></li>
+<li><p><strong>CPU vs. GPU tiling 的区别</strong>：</p>
+<ul>
+<li>CPU：依赖 <strong>cache</strong> 隐式保留复用数据。</li>
+<li>GPU：显式使用 <strong>shared memory</strong> 保留复用数据。</li>
+<li>原因：SM 同时运行大量线程，cache 槽位竞争激烈，不可靠；shared memory
+由软件显式管理，更可控。</li>
+</ul></li>
+<li><p><strong>简化假设（本节 kernel）</strong>：</p>
+<ol type="1">
+<li>矩阵宽度是 <code>TILE_WIDTH</code> 的整数倍。</li>
+<li>矩阵是方阵。</li>
+</ol>
+<ul>
+<li>下一节会加入边界检查，去掉这些假设。</li>
+</ul></li>
+<li><p><strong>从教学版 tiled GEMM 到 CUTLASS GEMM 的演进</strong>：</p>
+<ul>
+<li>核心 pipeline 结构相同：K 维度分 tile → load → sync → compute →
+sync。</li>
+<li>差异在于每个环节的工程化优化：
+<ul>
+<li>索引：手写线性索引 → CuTe Layout</li>
+<li>计算：CUDA core → Tensor Core MMA</li>
+<li>搬运：同步 ld.global → TMA / cp.async 异步拷贝</li>
+<li>流水线：单缓冲 → multi-stage 双/多缓冲</li>
+<li>同步：<code>__syncthreads()</code> → <code>mbarrier</code></li>
+<li>Shared memory：简单二维 → swizzled 布局（避免 bank conflict）</li>
+<li>寄存器：每线程一个累加器 → Fragment（MMA 所需的分片）</li>
+<li>层次：block tile → CtaTile / WarpTile / MmaTile</li>
+<li>Epilogue：直接写回 → epilogue pipeline</li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="boundary-checks">Boundary checks</h2>
+<p>扩展上一小节 kernel 支持 width 不是 tile 倍数情况。以 M/N/P 是 3
+矩阵，tile 还是 <span class="math inline">\(2 \times 2\)</span>
+为例：</p>
+<img src="/posts/2026/09/881023638/image-20260919213832765.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919213832765">
+<ul>
+<li>上图展示了 <span class="math inline">\(\text{block}_{0,0}\)</span>
+的第二个 phase 线程访存情况
+<ul>
+<li><span class="math inline">\(\text{thread}_{1,0}\)</span> 和 <span
+class="math inline">\(\text{thread}_{1,1}\)</span> 试图访问不存在的矩阵
+M 中元素 <span class="math inline">\(M_{0,3}\)</span> 和 <span
+class="math inline">\(M_{1,3}\)</span> （矩阵 N
+情况类似，只不过是列越界）</li>
+<li>由于矩阵 M 是 row-major 存储，<span
+class="math inline">\(\text{thread}_{1,0}\)</span> 试图访问的 <span
+class="math inline">\(M_{0,3}\)</span> 存储位置上真实元素是 <span
+class="math inline">\(M_{1,0}\)</span> ，这将导致错误的计算结果。（矩阵
+N 对应的 tile 会有线程越界访问未分配给 N 的内存，可能导致 illegal memory
+access）</li>
+</ul></li>
+<li>并非只有最后一个 phase 才需要考虑边界情况，以 <span
+class="math inline">\(\text{block}_{1,1}\)</span> 为例，其第一个 phase
+就可能访问不存在的元素：</li>
+</ul>
+<img src="/posts/2026/09/881023638/image-20260919213926010.png" srcset="/img/loading.gif" lazyload class="" title="image-20260919213926010">
+<ul>
+<li>并不是仅让不需要计算 P 输出的线程不访问 M/N
+就可以的，因为这些线程虽然不需要负责计算并写入 P，但是可能需要加载 M/N
+tile 到 shared memory，比如：<span
+class="math inline">\(\text{block}_{1,1}\)</span> 的线程 <span
+class="math inline">\(\text{thread}_{0,1}\)</span>
+理论上需要计算不存在的 <span class="math inline">\(P_{2,
+3}\)</span>，但是其需要加载 <span class="math inline">\(M_{2,
+1}\)</span> 供其他线程计算使用，因此不能简单屏蔽不需要计算 P
+的线程。</li>
+<li>负责计算 P 合法位置的线程也可能需要访问不存在的 M/N 元素。</li>
+<li>因此：
+<ul>
+<li><strong>加载任务与计算任务解耦</strong>：计算无效 P
+元素的线程仍需参与加载。</li>
+<li><strong>需要三套独立边界检查</strong>：加载 M、加载 N、计算 P
+各自检查。</li>
+<li>不能用计算边界条件跳过整个线程的加载，否则共享内存数据缺失。</li>
+<li><em>A rule of thumb to follow is that every memory access needs to
+have a corresponding check that ensures that the indices used in the
+access are within the bounds of the array being accessed.</em></li>
+</ul></li>
+<li>边界检查代码如下：</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">// 1. 加载 M 的边界检查</span><br><span class="hljs-keyword">if</span> (Row &lt; Width &amp;&amp; (ph * TILE_WIDTH + tx) &lt; Width) &#123;<br>    Mds[ty][tx] = M[Row * Width + ph * TILE_WIDTH + tx];<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    Mds[ty][tx] = <span class="hljs-number">0.0f</span>;  <span class="hljs-comment">// 越界补 0</span><br>&#125;<br><br><span class="hljs-comment">// 2. 加载 N 的边界检查</span><br><span class="hljs-keyword">if</span> ((ph * TILE_WIDTH + ty) &lt; Width &amp;&amp; Col &lt; Width) &#123;<br>    Nds[ty][tx] = N[(ph * TILE_WIDTH + ty) * Width + Col];<br>&#125; <span class="hljs-keyword">else</span> &#123;<br>    Nds[ty][tx] = <span class="hljs-number">0.0f</span>;  <span class="hljs-comment">// 越界补 0</span><br>&#125;<br>__syncthreads();<br><br><span class="hljs-comment">// 3. 计算（所有线程都参与点积，因为 shared memory 中已经没有越界数据，越界位置是 0）</span><br><span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> k = <span class="hljs-number">0</span>; k &lt; TILE_WIDTH; ++k) &#123;<br>    Pvalue += Mds[ty][k] * Nds[k][tx];<br>&#125;<br>__syncthreads();<br><br><span class="hljs-comment">// 4. 写回 P 的边界检查</span><br><span class="hljs-keyword">if</span> (Row &lt; Width &amp;&amp; Col &lt; Width) &#123;<br>    P[Row * Width + Col] = Pvalue;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>带有边界检查的矩阵乘法 kernel main loop：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">// Loop over the M and N tiles required to compute P element</span><br><span class="hljs-type">float</span> Pvalue = <span class="hljs-number">0</span>;<br><span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> ph = <span class="hljs-number">0</span>; ph &lt; <span class="hljs-built_in">ceil</span>(Width/(<span class="hljs-type">float</span>)TILE_WIDTH); ++ph) &#123;<br><br>    <span class="hljs-comment">// Collaborative loading of M and N tiles into shared memory</span><br>    <span class="hljs-keyword">if</span> ((Row &lt; Width) &amp;&amp; (ph*TILE_WIDTH+tx) &lt; Width)<br>        Mds[ty][tx] = M[Row*Width + ph*TILE_WIDTH + tx];<br>    <span class="hljs-keyword">else</span> Mds[ty][tx] = <span class="hljs-number">0.0f</span>;<br>    <span class="hljs-keyword">if</span> ((ph*TILE_WIDTH+ty) &lt; Width &amp;&amp; Col &lt; Width)<br>        Nds[ty][tx] = N[(ph*TILE_WIDTH + ty)*Width + Col];<br>    <span class="hljs-keyword">else</span> Nds[ty][tx] = <span class="hljs-number">0.0f</span>;<br>    __syncthreads();<br><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> k = <span class="hljs-number">0</span>; k &lt; TILE_WIDTH; ++k) &#123;<br>        Pvalue += Mds[ty][k] * Nds[k][tx];<br>    &#125;<br>    __syncthreads();<br><br>&#125;<br><span class="hljs-keyword">if</span> (Row &lt; Width &amp;&amp; Col &lt; Width)<br>    P[Row*Width + Col] = Pvalue;<br></code></pre></td></tr></table></figure>
+<ul>
+<li><strong>从方阵乘法扩展到通用矩阵乘法 (Rectangular Matrix
+Multiplication)</strong>
+<ul>
+<li><strong>当前限制</strong>：目前实现的 kernel 仅支持方阵（<span
+class="math inline">\(Width \times Width\)</span>）。</li>
+<li><strong>通用情况</strong>：矩阵乘法支持矩形矩阵，即一个 <span
+class="math inline">\(m \times k\)</span> 的 M 矩阵乘以一个 <span
+class="math inline">\(k \times n\)</span> 的 N 矩阵，得到一个 <span
+class="math inline">\(m \times n\)</span> 的 P 矩阵。</li>
+<li><strong>扩展方法（只需简单修改）</strong>：
+<ul>
+<li>将原来的单一 <code>Width</code> 参数替换为三个参数：<code>m</code>,
+<code>k</code>, <code>n</code>。</li>
+<li><strong>参数映射规则</strong>：
+<ul>
+<li>原 <code>Width</code> 用于表示 M 的高度或 P 的高度 → 替换为
+<code>m</code>。</li>
+<li>原 <code>Width</code> 用于表示 M 的宽度或 N 的高度 → 替换为
+<code>k</code>。</li>
+<li>原 <code>Width</code> 用于表示 N 的宽度或 P 的宽度 → 替换为
+<code>n</code>。</li>
+</ul></li>
+</ul></li>
+<li>示例代码：</li>
+</ul></li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-meta">#<span class="hljs-keyword">define</span> TILE_WIDTH 16</span><br><br><span class="hljs-function">__global__ <span class="hljs-type">void</span> <span class="hljs-title">MatrixMultiplyKernel</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">float</span>* M, <span class="hljs-type">const</span> <span class="hljs-type">float</span>* N, <span class="hljs-type">float</span>* P,</span></span><br><span class="hljs-params"><span class="hljs-function">				<span class="hljs-type">int</span> m, <span class="hljs-type">int</span> n, <span class="hljs-type">int</span> k)</span> </span>&#123;<br>	<span class="hljs-type">int</span> tx = threadIdx.x;<br>	<span class="hljs-type">int</span> ty = threadIdx.y;<br>	<span class="hljs-type">int</span> bx = blockIdx.x;<br>	<span class="hljs-type">int</span> by = blockIdx.y;<br>	<br>	<span class="hljs-type">int</span> col = bx * TILE_WIDTH + tx;<br>	<span class="hljs-type">int</span> row = by * TILE_WIDTH + ty;<br>	<br>	__shared__ <span class="hljs-type">float</span> m_shared[TILE_WIDTH][TILE_WIDTH];<br>	__shared__ <span class="hljs-type">float</span> n_shared[TILE_WIDTH][TILE_WIDTH];<br>	<br>	<span class="hljs-type">float</span> sum = <span class="hljs-number">0.0f</span>;<br>	<br>	<span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> ph = <span class="hljs-number">0</span>; ph &lt; (k + TILE_WIDTH - <span class="hljs-number">1</span>)/TILE_WIDTH; ph++) &#123;<br>		<span class="hljs-comment">// Load M</span><br>		<span class="hljs-keyword">if</span> (row &lt; m &amp;&amp; (ph * TILE_WIDTH + tx) &lt; k) &#123;<br>			m_shared[ty][tx] = M[row * k + ph * TILE_WIDTH + tx];<br>		&#125; <span class="hljs-keyword">else</span> &#123;<br>			m_shared[ty][tx] = <span class="hljs-number">0.0f</span>;<br>		&#125;<br>		<br>		<span class="hljs-comment">// Load N</span><br>		<span class="hljs-keyword">if</span> (col &lt; n &amp;&amp; (ph * TILE_WIDTH + ty) &lt; k) &#123;<br>			n_shared[ty][tx] = N[(ph * TILE_WIDTH + ty) * n + col];<br>		&#125; <span class="hljs-keyword">else</span> &#123;<br>			n_shared[ty][tx] = <span class="hljs-number">0.0f</span>;<br>		&#125;<br>		<br>		__syncthreads();<br>		<br>		<span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; TILE_WIDTH; ++i) &#123;<br>			sum += m_shared[ty][i] * n_shared[i][tx];<br>		&#125;<br>		<br>		__syncthreads();<br>	&#125;<br>	<br>	<span class="hljs-keyword">if</span> (row &lt; m &amp;&amp; col &lt; n) &#123;<br>		P[row * n + col] = sum;<br>	&#125;<br>&#125;<br><br><br><span class="hljs-comment">// launch kernel</span><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123;<br>	<span class="hljs-type">int</span> m = <span class="hljs-number">2398</span>;<br>	<span class="hljs-type">int</span> n = <span class="hljs-number">1298</span>;<br>	<span class="hljs-type">int</span> k = <span class="hljs-number">132</span>;<br>	<br>	<span class="hljs-function">dim3 <span class="hljs-title">blockDim</span><span class="hljs-params">(TILE_WIDTH, TILE_WIDTH)</span></span>;<br>	<span class="hljs-function">dim3 <span class="hljs-title">gridDim</span><span class="hljs-params">((n + TILE_WIDTH - <span class="hljs-number">1</span>)/TILE_WIDTH, (m + TILE_WIDTH - <span class="hljs-number">1</span>)/TILE_WIDTH)</span></span>;<br>	MatrixMultiplyKernel&lt;&lt;&lt;gridDim, blockDim&gt;&gt;&gt;(...);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h2 id="impact-of-memory-usage-on-occupancy">Impact of memory usage on
+occupancy</h2>
+<h3 id="核心问题">核心问题</h3>
+<ul>
+<li>共享内存（shared memory）和寄存器一样，会限制 SM
+上能驻留的线程数（占用率）。</li>
+<li>每个线程使用的资源越多，SM 能同时驻留的线程数越少。</li>
+</ul>
+<h3 id="占用率计算以-a100-为例">占用率计算（以 A100 为例）</h3>
+<ul>
+<li><p>A100 SM 可配置最多 <strong>164 KB shared
+memory</strong>，最多支持 <strong>2048 threads/SM</strong>。</p></li>
+<li><p>要满占用率，每线程平均 shared memory 使用量不得超过： <span
+class="math display">\[
+\frac{164 \text{ KB}}{2048 \text{ threads}} = 82 \text{ B/thread}
+\]</span></p></li>
+</ul>
+<h3 id="不同-kernel-的-shared-memory-使用对比">不同 kernel 的 shared
+memory 使用对比</h3>
+<table>
+
+<thead>
+<tr class="header">
+<th>Kernel</th>
+<th>每 block shared memory</th>
+<th>线程数/block</th>
+<th>平均 B/thread</th>
+<th>是否限制占用率</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Tiled matrix multiplication</td>
+<td><span class="math inline">\(2 \times \text{TILE\_WIDTH}^2 \times
+4\)</span> B</td>
+<td><span class="math inline">\(\text{TILE\_WIDTH}^2\)</span></td>
+<td>8 B/thread</td>
+<td>否</td>
+</tr>
+<tr class="even">
+<td>示例 kernel</td>
+<td>32 KB</td>
+<td>256</td>
+<td>132 B/thread</td>
+<td>是</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p><strong>Tiled matrix multiplication</strong>：</p>
+<ul>
+<li>每 block 使用 <span class="math inline">\(2 \times
+\text{TILE\_WIDTH}^2 \times 4\)</span> B shared memory。</li>
+<li>平均每线程 8 B → 远低于 82 B 上限 → <strong>occupancy 不受 shared
+memory 限制</strong>。</li>
+</ul></li>
+<li><p><strong>示例 kernel（32 KB / 256 threads）</strong>：</p>
+<ul>
+<li><p>每线程 132 B → 超过 82 B 上限。</p></li>
+<li><p>SM 最多驻留： <span class="math display">\[
+\frac{164 \text{ KB}}{132 \text{ B/thread}} \approx 1272 \text{ threads}
+\]</span></p></li>
+<li><p>占用率： <span class="math display">\[
+\frac{1272}{2048} \approx 62\%
+\]</span></p></li>
+</ul></li>
+</ul>
+<h3 id="设备差异与动态调整">设备差异与动态调整</h3>
+<ul>
+<li>不同设备、不同代的 SM 共享内存大小不同。</li>
+<li>理想情况下，kernel 应能根据硬件可用 shared memory
+<strong>动态调整</strong>使用量。</li>
+<li>可通过 <code>cudaGetDeviceProperties</code> 查询：
+<ul>
+<li><code>devProp.sharedMemPerBlock</code>：每个 SM 可用的 shared memory
+量。</li>
+</ul></li>
+<li>程序员可根据查询结果决定每个 block 使用多少 shared memory。</li>
+</ul>
+<h3 id="静态-vs.-动态-shared-memory">静态 vs. 动态 shared memory</h3>
+<p><strong>静态声明：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs c">__shared__ <span class="hljs-type">float</span> Mds[TILE_WIDTH][TILE_WIDTH];<br>__shared__ <span class="hljs-type">float</span> Nds[TILE_WIDTH][TILE_WIDTH];<br></code></pre></td></tr></table></figure>
+<ul>
+<li>大小在编译期固定。</li>
+<li>修改 <code>TILE_WIDTH</code> 需重新编译。</li>
+<li>无法在运行时调整 shared memory 用量。</li>
+</ul>
+<p><strong>动态声明：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-keyword">extern</span> __shared__ <span class="hljs-type">char</span> Mds_Nds[];<br><span class="hljs-type">float</span> *Mds = (<span class="hljs-type">float</span> *) Mds_Nds;<br><span class="hljs-type">float</span> *Nds = (<span class="hljs-type">float</span> *) Mds_Nds + Mds_sz;<br></code></pre></td></tr></table></figure>
+<ul>
+<li>使用 <code>extern __shared__</code>，数组大小在声明时省略。</li>
+<li>Mds 和 Nds 合并为一个一维动态数组。</li>
+<li>需手动定义 Mds 和 Nds 的起始位置。</li>
+<li>访问时用线性化索引，如 <code>Mds[ty * TILE_WIDTH + tx]</code>。</li>
+</ul>
+<p><strong>动态配置 kernel launch：</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">size_t</span> size = calculate_appropriate_SM_usage(devProp.sharedMemPerBlock, ...);<br><br>matrixMulKernel&lt;&lt;&lt;dimGrid, dimBlock, size&gt;&gt;&gt;(Md, Nd, Pd, Width, size/<span class="hljs-number">2</span>, size/<span class="hljs-number">2</span>);<br></code></pre></td></tr></table></figure>
+<ul>
+<li>第三个配置参数 <code>size</code> 指定动态 shared memory
+的总字节数。</li>
+<li>kernel 额外接收两个参数：Mds 和 Nds 各自的字节大小（此处为
+<code>size/2</code>）。</li>
+<li>例：<span class="math inline">\(16 \times 16\)</span> tile，size =
+<span class="math inline">\(2 \times 16 \times 16 \times 4 =
+2048\)</span> B，每个 section 1024 B。</li>
+</ul>
+<p><strong>kernel 关键变化</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-meta">#<span class="hljs-keyword">define</span> TILE_WIDTH 16</span><br><br>__global__ <span class="hljs-type">void</span> <span class="hljs-title function_">matrixMulKernel</span><span class="hljs-params">(<span class="hljs-type">float</span>* M, <span class="hljs-type">float</span>* N, <span class="hljs-type">float</span>* P, <span class="hljs-type">int</span> Width,</span><br><span class="hljs-params">                                <span class="hljs-type">unsigned</span> Mds_sz, <span class="hljs-type">unsigned</span> Nds_sz)</span> &#123;<br>    <span class="hljs-keyword">extern</span> __shared__ <span class="hljs-type">char</span> <span class="hljs-type">float</span> Mds_Nds[];<br>    <span class="hljs-type">float</span> *Mds = (<span class="hljs-type">float</span> *) Mds_Nds;<br>    <span class="hljs-type">float</span> *Nds = (<span class="hljs-type">float</span> *) Mds_Nds + Mds_sz;<br>    <span class="hljs-comment">// ... 其余逻辑不变，但用线性化索引访问 Mds/Nds</span><br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="关键结论">关键结论</h3>
+<ul>
+<li>shared memory 使用量是占用率的重要限制因素之一，与寄存器并列。</li>
+<li>每线程平均 shared memory 超过 SM 容量 /
+最大线程数时，占用率下降。</li>
+<li>通过 <code>extern __shared__</code> + 动态 launch 参数，kernel
+可在运行时适应不同设备的 shared memory 容量。</li>
+<li>动态 shared memory 需手动管理内存布局（Mds/Nds
+分区）和线性化索引。</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><strong>内存速度是现代处理器性能的关键瓶颈</strong>
+<ul>
+<li>要充分利用 CUDA 设备的执行吞吐，kernel 必须追求高的 <strong>compute
+to global memory access ratio</strong>（算术强度）。</li>
+<li>比率低 → kernel 是
+<strong>memory-bound</strong>，执行速度受限于操作数从内存中获取的速率。</li>
+</ul></li>
+<li><strong>CUDA 高速内存层级</strong>
+<ul>
+<li>寄存器、共享内存、常量内存：容量小，但访问速度远高于 global
+memory。</li>
+<li>有效使用这些内存需要<strong>重新设计算法</strong>。</li>
+</ul></li>
+<li><strong>Tiling 策略</strong>
+<ul>
+<li>以矩阵乘法为例，通过 tiling 增强数据访问局部性，有效利用 shared
+memory。</li>
+<li>使用 <strong>barrier synchronization</strong>
+强制多个线程在每个阶段共同关注输入数据的子集，使子集数据放入高速内存，从而获得更高访问速度。</li>
+<li>Tiling
+几乎对所有并行计算系统都有效，因为需要数据局部性来利用高速内存（如多核
+CPU 的 on-chip cache）。</li>
+</ul></li>
+<li><strong>资源限制与 occupancy</strong>
+<ul>
+<li>特殊内存容量有限且依赖具体实现。</li>
+<li>一旦超出容量，会限制每个 SM
+上可同时执行的线程数，影响计算吞吐和<strong>延迟容忍</strong>能力。</li>
+<li>推理硬件限制是并行编程的关键能力。</li>
+</ul></li>
+<li><strong>本章内容回顾</strong>
+<ul>
+<li>引入 <strong>locality</strong>、<strong>tiling</strong>、不同 CUDA
+内存类型。</li>
+<li>实现了 tiled matrix multiplication kernel（shared memory）。</li>
+<li>讨论了边界条件检查以支持任意数据维度。</li>
+<li>简要介绍了<strong>动态共享内存分配</strong>，使 kernel
+可根据硬件能力调整每个 block 使用的 shared memory 大小。</li>
+<li>未讨论寄存器在 tiling
+中的使用，将在本书第二部分讨论并行算法模式时介绍。</li>
+</ul></li>
+<li><strong>核心 takeaway</strong>
+<ul>
+<li>高性能并行程序必须表现出<strong>数据访问局部性</strong>，以有效利用高速内存。</li>
+<li><strong>Tiling</strong> 是实现局部性的通用且有效的手段。</li>
+<li>必须时刻关注<strong>硬件资源限制</strong>及其对
+<strong>occupancy</strong> 的影响。</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/CUDA/">#CUDA</a>
+      
+        <a href="/tags/PMPP/">#PMPP</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>PMPP Chapter 05: Memory architecture and data locality</div>
+      <div>https://arcsin2.cloud/posts/2026/09/881023638/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年9月19日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/09/2846274018/" title="PMPP Chapter 06: Performance considerations">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">PMPP Chapter 06: Performance considerations</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/09/2233186881/" title="PMPP Chapter 04: Compute architecture and scheduling">
+                        <span class="hidden-mobile">PMPP Chapter 04: Compute architecture and scheduling</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,939 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本文介绍向量近似最近邻（Approximate Nearest Neighbor，ANN）的一种经典算法：NSW（Navigable Small World，NSW），原文： Approximate nearest neighbor algorithm based on navigable small world graphs 。 摘要 NSW 是一种用于度量空间的近似 K 近邻算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2023/12/3247746660/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本文介绍向量近似最近邻（Approximate Nearest Neighbor，ANN）的一种经典算法：NSW（Navigable Small World，NSW），原文： Approximate nearest neighbor algorithm based on navigable small world graphs 。 摘要 NSW 是一种用于度量空间的近似 K 近邻算法">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2023/12/3247746660/image-20231229161552498.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2023/12/3247746660/image-20231229163003622.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2023/12/3247746660/image-20231229164309519.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2023/12/3247746660/image-20231229164334787.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2023/12/3247746660/image-20231229171153499.png">
+<meta property="article:published_time" content="2023-12-29T06:46:21.000Z">
+<meta property="article:modified_time" content="2026-09-12T14:07:20.353Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="近似最近邻">
+<meta property="article:tag" content="ANN">
+<meta property="article:tag" content="向量相似度检索">
+<meta property="article:tag" content="K近邻">
+<meta property="article:tag" content="索引">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2023/12/3247746660/image-20231229161552498.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-12-29 14:46" pubdate>
+          2023年12月29日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          8 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>本文介绍向量近似最近邻（Approximate Nearest
+Neighbor，ANN）的一种经典算法：NSW（Navigable Small World，NSW），原文：
+<a
+target="_blank" rel="noopener" href="https://www.researchgate.net/profile/Yu-Malkov/publication/259126397_Approximate_nearest_neighbor_algorithm_based_on_navigable_small_world_graphs/links/63733c302f4bca7fd06030b8/Approximate-nearest-neighbor-algorithm-based-on-navigable-small-world-graphs.pdf">Approximate
+nearest neighbor algorithm based on navigable small world graphs</a>
+。</p>
+<p><strong>摘要</strong></p>
+<p>NSW 是一种用于度量空间的近似 K
+近邻算法。该算法基于图，每个向量构成顶点，向量之间的连接构成边。使用一种贪心算法的变体来进行
+K 近邻查询操作；插入算法基于查询操作并连接边。插入和查询操作时间复杂度为
+<span
+class="math inline">\({\log}^{2}(n)\)</span>。查询和插入操作可并行执行，且该索引数据结构可分布式。无需调整索引结构即可改变
+K 近邻查询正确性的概率。</p>
+<h2 id="核心思想">1. 核心思想</h2>
+<p>索引结构是一个可导航小世界图 <span class="math inline">\(G = (V,
+E)\)</span> ，向量集合 <span class="math inline">\(X\)</span>
+中的每个元素一一映射到顶点集合 <span class="math inline">\(V\)</span>
+。边集 <span class="math inline">\(E\)</span> 由索引构造算法决定。</p>
+<p>相关名词含义：</p>
+<ul>
+<li>朋友（friends）：共享某条边的顶点集</li>
+<li>顶点 <span class="math inline">\(v_i\)</span> 的朋友列表：与顶点
+<span class="math inline">\(v_i\)</span> 共享一条边的顶点列表</li>
+</ul>
+<p>图中的边有两个目的：</p>
+<ul>
+<li>部分边是短程连接，用来作为 Delaunay
+图的近似，以使用贪心搜索算法；</li>
+<li>其余边是长程连接，用于实现对数级别复杂度的贪婪搜索。长程连负责构建图的可导航小世界属性。</li>
+</ul>
+<p>数据结构示意图如下：</p>
+<center>
+<img src="/posts/2023/12/3247746660/image-20231229161552498.png" srcset="/img/loading.gif" lazyload class="" title="数据结构示意图">
+</center>
+<p>其中，蓝色圆表示图中顶点（数据集向量），绿色圆表示查询向量，黑色边是
+Delaunay 图的近似（短程连接），红色边是长程连接。箭头表示从进入点（entry
+point）的一个贪心搜索过程。</p>
+<p>数据结构由顶点的逐个插入形成。对于每个新加入的元素，从结构中找到其最接近的邻居集合（Delaunay
+图的近似）。这个集合与插入元素相互连接。随着越来越多的元素被插入到结构中，之前作为短程连接的连接现在变成了长程连接，从而形成了一个可导航小世界图。</p>
+<h2 id="查询算法">2. 查询算法</h2>
+<h3 id="基本贪心查询算法">2.1 基本贪心查询算法</h3>
+<p>该小节的算法用于近似最近邻查询，即只返回 1
+个查询结果。算法伪代码如下：</p>
+<center>
+<img src="/posts/2023/12/3247746660/image-20231229163003622.png" srcset="/img/loading.gif" lazyload class="" title="基本贪心查询算法">
+</center>
+<p>算法接收两个参数：</p>
+<ul>
+<li><span class="math inline">\(q\)</span> ：表示查询向量</li>
+<li><span class="math inline">\(v_{entry\_point}\)</span>
+：表示查询起始顶点，且 <span class="math inline">\(v_{entry\_point} \in
+V\)</span> ，即 <span class="math inline">\(v_{entry\_point}\)</span>
+是顶点集合 <span class="math inline">\(V\)</span> 的一个元素。</li>
+</ul>
+<p>执行流程如下：</p>
+<p>从入口点开始，算法计算查询 <span class="math inline">\(q\)</span>
+到当前顶点的好友列表中每个顶点的距离，然后选择距离最小的顶点。如果查询与所选顶点之间的距离小于查询与当前元素之间的距离，那么算法会移动到所选顶点，它成为新的当前顶点。当算法达到一个局部最小值时停止，即：其好友列表中没有比该顶点更接近查询
+<span class="math inline">\(q\)</span> 的顶点。</p>
+<p>注意，该算法并不保证返回最近邻结果，而是返回近似最近邻。</p>
+<h3 id="k-近邻查询">2.2 K 近邻查询</h3>
+<p>近似 K 近邻查询算法伪代码如下：</p>
+<center>
+<img src="/posts/2023/12/3247746660/image-20231229164309519.png" srcset="/img/loading.gif" lazyload class="" title="近似 K 近邻查询算法">
+<img src="/posts/2023/12/3247746660/image-20231229164334787.png" srcset="/img/loading.gif" lazyload class="" title="近似 K 近邻查询算法">
+</center>
+<p>算法参数含义：</p>
+<ul>
+<li><span class="math inline">\(q\)</span> ：表示查询向量</li>
+<li><span class="math inline">\(k\)</span> ：即 k 近邻</li>
+<li><span class="math inline">\(m\)</span>：重复进行 <span
+class="math inline">\(m\)</span> 循环体</li>
+</ul>
+<p>伪代码中一些变量含义解释如下：</p>
+<ul>
+<li>创建一个<code>TreeSet</code>对象<code>tempRes</code>，用于存储临时结果。</li>
+<li>创建一个<code>TreeSet</code>对象<code>candidates</code>，用于存储当前考虑的候选顶点。</li>
+<li>创建一个<code>TreeSet</code>对象<code>visitedSet</code>，用于记录已访问过的顶点，以避免重复访问。</li>
+<li>创建一个列表<code>result</code>，用于存储最终的 k 个最近邻居。</li>
+</ul>
+<p>算法主体中，外层循环即进行 <span class="math inline">\(m\)</span>
+次查询，以提高查询精度；内层循环对集合 <code>candidates</code>
+进行动态插入及遍历，直到满足 break 条件或遍历完 <code>candidates</code>
+结束内层循环。</p>
+<h2 id="插入算法">3. 插入算法</h2>
+<p>插入算法伪代码如下：</p>
+<center>
+<img src="/posts/2023/12/3247746660/image-20231229171153499.png" srcset="/img/loading.gif" lazyload class="" title="插入算法">
+</center>
+<p>参数含义：</p>
+<ul>
+<li><span class="math inline">\(new\_object\)</span> ：插入元素</li>
+<li><span class="math inline">\(f\)</span> ：表示进行 k 近邻查询时的参数
+k</li>
+<li><span class="math inline">\(w\)</span>：表示调用
+<code>k-NNSearch</code> 算法时的参数 <span
+class="math inline">\(m\)</span></li>
+</ul>
+<p>该算法首先调用 <code>k-NNSearch</code> 返回近似 k
+近邻结果，然后将插入元素与近似最近邻结果互相连接边。从伪代码中也可以看出索引结构是无向图。</p>
+<h3 id="参数选择">3.1 参数选择</h3>
+<p>参数 <span class="math inline">\(w\)</span>
+决定了在构建算法中确定最近邻居的准确性（召回率）。作者建议设置足够大的
+<span class="math inline">\(w\)</span> ，以让召回率接近
+1（如：0.95~0.99）。小的召回率会增加错误连接的比例，这只会提高算法的复杂性，而实验表明，插入时召回率超过
+0.99 对搜索质量没有可测量的影响。测试还显示，对于最佳召回率，<span
+class="math inline">\(w\)</span>
+随着数据集大小的变化缓慢（对数）变化，因此，如果我们已经知道一个好的召回率的近似值
+<span class="math inline">\(w0\)</span>，我们可以首先使用大得多的 <span
+class="math inline">\(m\)</span>（例如，<span class="math inline">\(m =
+2\times w0 + 10\)</span>），假设 <span class="math inline">\(m\)</span>
+足够大，使得搜索结果真正是最近的 k 个邻居，然后增加 <span
+class="math inline">\(w\)</span>，并重复测试，直到达到一个高召回率（如：0.95~0.99）。操作的复杂度与数据集大小成对数关系，因此它不影响整体构建复杂度。</p>
+<p>参数 <span class="math inline">\(f\)</span>
+决定了在插入新元素时，与新元素连接的最近邻居的数量。测试结果显示，对于维度在
+1~20 的欧式空间数据，<span class="math inline">\(f\)</span>
+的值应该大约是维度 <span class="math inline">\(d\)</span> 的 3
+倍，这样可以保持内存消耗与维度线性增长，同时保持较高的搜索召回率。小的
+<span class="math inline">\(f\)</span>
+能够减少单次搜索的复杂度，但是牺牲了召回质量。</p>
+<h2 id="总结与问题">4. 总结与问题</h2>
+<p>以上就是对 NSW
+关键的查询、插入算法的介绍。实验部分请参考原论文。在原论文中，作者还提出了可改进的方向，以降低复杂度和/或提高准确性：</p>
+<ul>
+<li><strong>更复杂的节点朋友选择算法</strong>：选择最近的邻居作为朋友并不是近似
+Delaunay
+图的最佳方法，因为这种方法只考虑了新元素与候选节点之间的距离，而忽略了候选节点之间的距离。</li>
+<li><strong>更复杂的可导航小世界创建算法</strong></li>
+<li><strong>更有效地管理多个搜索</strong></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+    <span>></span>
+    
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/%E8%AF%BB%E8%AE%BA%E6%96%87/" class="category-chain-item">读论文</a>
+  
+  
+
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E8%BF%91%E4%BC%BC%E6%9C%80%E8%BF%91%E9%82%BB/">#近似最近邻</a>
+      
+        <a href="/tags/ANN/">#ANN</a>
+      
+        <a href="/tags/%E5%90%91%E9%87%8F%E7%9B%B8%E4%BC%BC%E5%BA%A6%E6%A3%80%E7%B4%A2/">#向量相似度检索</a>
+      
+        <a href="/tags/K%E8%BF%91%E9%82%BB/">#K近邻</a>
+      
+        <a href="/tags/%E7%B4%A2%E5%BC%95/">#索引</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>DB 论文阅读：Approximate nearest neighbor algorithm based on navigable small world graphs</div>
+      <div>https://arcsin2.cloud/posts/2023/12/3247746660/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年12月29日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2024/01/4168374181/" title="DB 论文阅读：Hierarchical Navigable Small World">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">DB 论文阅读：Hierarchical Navigable Small World</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2023/12/3038995612/" title="DB 论文阅读：A Relational Model of Data for Large Shared Data Banks">
+                        <span class="hidden-mobile">DB 论文阅读：A Relational Model of Data for Large Shared Data Banks</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

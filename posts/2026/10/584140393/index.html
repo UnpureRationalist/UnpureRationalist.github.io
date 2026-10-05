@@ -1,0 +1,1044 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="0. Recap  Learning parameters of an NN needs gradient calculation Computation Graph  to perform computation: topological traversal along the DAG  Auto Differentiation  building backward compu">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems 06: Transformer">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/584140393/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="0. Recap  Learning parameters of an NN needs gradient calculation Computation Graph  to perform computation: topological traversal along the DAG  Auto Differentiation  building backward compu">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202019045.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202047732.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202112075.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202126804.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202144252.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202154462.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202216121.png">
+<meta property="article:published_time" content="2026-10-05T12:08:44.000Z">
+<meta property="article:modified_time" content="2026-10-05T12:58:43.027Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="Transformer">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/584140393/image-20261005202019045.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems 06: Transformer - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems 06: Transformer"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-05 20:08" pubdate>
+          2026年10月5日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          15 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems 06: Transformer</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="recap">0. Recap</h2>
+<ul>
+<li>Learning parameters of an NN needs gradient calculation</li>
+<li>Computation Graph
+<ul>
+<li>to perform computation: topological traversal along the DAG</li>
+</ul></li>
+<li>Auto Differentiation
+<ul>
+<li>building backward computation graph for gradient calculation</li>
+</ul></li>
+<li>Put together: Deep Learning Framework
+<ul>
+<li>Define program i.e., symbolic computation graph w/
+placeholders/variable/operation nodes</li>
+<li>Executes (optimized) computation graph on a set of available
+devices</li>
+</ul></li>
+</ul>
+<h2 id="encoder-decoder-architecture">1. Encoder-decoder
+Architecture</h2>
+<p>以翻译任务为例，encoder-decoder
+范式的序列转换模型核心是条件概率建模与自回归生成：</p>
+<img src="/posts/2026/10/584140393/image-20261005202019045.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005202019045">
+<p><br></p>
+<ul>
+<li>Conditional text generation: directly learning a function mapping
+from source sequence to target sequence：</li>
+</ul>
+<p><span class="math display">\[
+p_\theta(y|x) = \prod_t p(y_t | x, y_{1:t-1}; \theta)
+\]</span></p>
+<ul>
+<li>Previous encoder/decoder: LSTM or GRU
+<ul>
+<li><img src="/posts/2026/10/584140393/image-20261005202047732.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005202047732"></li>
+<li>RNN 循环生成</li>
+<li>存在的问题：RNN 的循环结构限制了并行计算。</li>
+<li>Motivation：使用支持并行计算（并行 encoding，不依赖 RNN 逐个 token
+循环计算隐藏表示）的模型结构
+<ul>
+<li>Full context and parallel: use Attention in both encoder and
+decoder</li>
+<li>no recurrent ==&gt; concurrent encoding</li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="transformer-model">2. Transformer Model</h2>
+<img src="/posts/2026/10/584140393/image-20261005202112075.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005202112075">
+<p><br></p>
+<p>整体流程：</p>
+<ul>
+<li>输入 tokens 进入（encoder） Embedding Layer，加上 positional
+embedding，得到 tokens 向量表示；</li>
+<li>进入 encoder Layer（MHA + FFN）进行 forward 计算，得到输入 tokens
+的隐藏表示；</li>
+<li>decoder 侧，开始输入 <code>bos</code> 特殊 token，得到
+embeddings</li>
+<li>将 encoder 输出以及 decoder 侧 embeddings 输入 decoder MHA + FFN
+层进行 forward 计算，经过 Softmax 预测下一个 token 概率；</li>
+<li>将 decoder 输出 token 拼接，进行自回归生成，直到生成
+<code>eos</code> 特殊 token 或者达到最大输出长度。</li>
+</ul>
+<h3 id="embedding">Embedding</h3>
+<ul>
+<li>Token Embedding:
+<ul>
+<li>Shared (tied) input and output embedding from lookup table</li>
+</ul></li>
+<li>Positional Embedding:
+<ul>
+<li>to distinguish words in different position, Map position labels to
+embedding, dimension is same as Tok Emb, for t-th pos, i-th dim:</li>
+</ul></li>
+</ul>
+<p><span class="math display">\[
+\begin{aligned}
+PE_{t, 2i} &amp;= \sin\left(\frac{t}{1000^{2i/d}}\right) \\
+PE_{t, 2i+1} &amp;= \cos\left(\frac{t}{1000^{2i/d}}\right)
+\end{aligned}
+\]</span></p>
+<p><strong>位置编码可视化：</strong></p>
+<img src="/posts/2026/10/584140393/image-20261005202126804.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005202126804">
+<h3 id="multihead-attention-decoder-self-attention">Multihead Attention,
+Decoder Self-Attention</h3>
+<ul>
+<li>Instead of one vector for each token</li>
+<li>break into multiple heads</li>
+<li>each head perform attention</li>
+</ul>
+<p><span class="math display">\[
+\text{head}_i=\text{Attention}(QW_i^Q,KW_i^K,VW_i^V)
+\]</span> <span class="math display">\[
+\text{MultiHead}(Q,K,V)=\text{Concat}(\text{head}_1,\dots,\text{head}_h)W^O
+\]</span></p>
+<p><strong>Decoder Masked Attention</strong></p>
+<ul>
+<li>Maskout right side before softmax (-inf)</li>
+</ul>
+<img src="/posts/2026/10/584140393/image-20261005202144252.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005202144252">
+<h3 id="ffn">FFN</h3>
+<p><span class="math display">\[
+\text{FFN}\left(x\right) = \max\left( 0, xW_1 + b_1 \right)W_2 + b_2
+\]</span></p>
+<p><strong>Put Together</strong></p>
+<img src="/posts/2026/10/584140393/image-20261005202154462.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005202154462">
+<h3 id="layernorm">LayerNorm</h3>
+<ul>
+<li>Residual Connection</li>
+<li>LayerNorm: Make it zero mean and unit variance within layer</li>
+<li>Post-norm：下面图左侧，Transformer paper 原始方法。
+<ul>
+<li>缺点：在深层网络中（如 24 层、48 层甚至更深），由于每一层都要经过
+LayerNorm，梯度在反向传播时容易受到归一化操作的影响，导致<strong>梯度消失或训练不稳定</strong>。</li>
+</ul></li>
+<li>Pre-norm：下面图右侧，现代大语言模型（如 GPT-2、GPT-3、LLaMA
+等）普遍采用的改进架构。</li>
+</ul>
+<img src="/posts/2026/10/584140393/image-20261005202216121.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005202216121">
+<p><br></p>
+<p>此外，还有 Sandwich-norm，在 FFN/Attention 前后都加入 norm。三种 norm
+位置方式对比：</p>
+<table>
+
+<thead>
+<tr class="header">
+<th style="text-align: left;">架构</th>
+<th style="text-align: left;">公式</th>
+<th style="text-align: left;">残差连接位置</th>
+<th style="text-align: left;">特点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Post-norm</strong> (原论文)</td>
+<td style="text-align: left;"><span class="math inline">\(\text{LN}(x +
+\text{Sublayer}(x))\)</span></td>
+<td style="text-align: left;">跨过子层，但穿过 LayerNorm</td>
+<td style="text-align: left;">表达能力强，但深层梯度易消失，依赖
+Warmup</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Pre-norm</strong> (现代主流)</td>
+<td style="text-align: left;"><span class="math inline">\(x +
+\text{Sublayer}(\text{LN}(x))\)</span></td>
+<td style="text-align: left;">完全直通，不穿过任何 LayerNorm</td>
+<td style="text-align: left;">训练极稳，易堆叠极深，但方差易累积</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Sandwich-norm</strong></td>
+<td style="text-align: left;"><span class="math inline">\(x +
+\text{LN}(\text{Sublayer}(\text{LN}(x)))\)</span></td>
+<td style="text-align: left;">完全直通，不穿过任何 LayerNorm</td>
+<td style="text-align: left;">兼顾稳定性与表达能力，但计算开销稍大</td>
+</tr>
+</tbody>
+</table>
+<h2 id="training-techniques-and-performance-of-transformer">3. Training
+Techniques and Performance of Transformer</h2>
+<h3 id="training-objective-loss">Training Objective &amp; Loss</h3>
+<p>以翻译任务为例，训练目标是最大化目标序列的条件概率：</p>
+<p><span class="math display">\[
+P(Y|X) = \prod_t P(y_t | y_{&lt;t}, x)
+\]</span></p>
+<p>训练损失采用交叉熵损失（Cross-Entropy Loss）：</p>
+<p><span class="math display">\[
+l = -\sum_n \sum_t \log f_\theta(x_n, y_{n,1}, \dots, y_{n,t-1})
+\]</span></p>
+<p><strong>Teacher-forcing during training</strong>：训练时采用
+Teacher-forcing，即 “pretend to know groundtruth for
+prefix”。无论模型前一步预测结果如何，当前步都直接使用真实的 prefix 作为
+decoder 输入，以稳定训练并加速收敛。</p>
+<p><em>注：训练时输入 decoder 的 target 序列会进行 shifted right，并配合
+Masked Attention 避免看到未来信息。</em></p>
+<h3 id="training-techniques-regularization">Training Techniques
+(Regularization)</h3>
+<p><strong>Dropout</strong> - 应用于每个子层的输出（在残差连接之前）以及
+embedding 和 positional embedding 的和。 - 概率 <span
+class="math inline">\(p=0.1 \sim 0.3\)</span>。</p>
+<p><strong>Label Smoothing</strong> - 假设 <span class="math inline">\(y
+\in \mathbb{R}^n\)</span> 是 one-hot 编码：<span
+class="math inline">\(y_i = 1\)</span> if belongs to class <span
+class="math inline">\(i\)</span>，else <span
+class="math inline">\(0\)</span>。 - 直接用 softmax 逼近 0/1
+值很困难（容易导致模型过于自信和过拟合）。 -
+引入平滑后的目标分布，通常取 <span class="math inline">\(\epsilon =
+0.1\)</span>：</p>
+<p><span class="math display">\[
+y_i = \begin{cases}
+1 - \epsilon &amp; \text{if belongs to class } i \\
+\frac{\epsilon}{n - 1} &amp; \text{otherwise}
+\end{cases}
+\]</span></p>
+<h3 id="training-setup-hardware-batching">Training Setup (Hardware &amp;
+Batching)</h3>
+<p><strong>Batch</strong> - 按近似句子长度分组（group by approximate
+sentence length）。 - 仍然需要 shuffling 避免同质化批次。</p>
+<p><strong>Hardware</strong> - 一台机器 8 GPUs (in 2017 paper)。 - Base
+model: 100k steps (12 hours)。 - Large model: 300k steps (3.5
+days)。</p>
+<h3 id="optimizer-adam-with-warmup">Optimizer (Adam with Warmup)</h3>
+<p>使用 Adam 优化器，并在训练初期采用 warmup 策略（increase learning
+rate during warmup, then decrease）：</p>
+<p><span class="math display">\[
+\eta = \frac{1}{\sqrt{d}} \min\left( \frac{1}{\sqrt{t}},
+\frac{t}{\sqrt{t_0^3}} \right)
+\]</span></p>
+<p>其中 <span class="math inline">\(d\)</span> 是 model dimension，<span
+class="math inline">\(t\)</span> 是当前 step，<span
+class="math inline">\(t_0\)</span> 是 warmup steps。</p>
+<h3 id="adam-optimizer-formulas">Adam Optimizer Formulas</h3>
+<p>Adam 优化器的具体计算过程如下：</p>
+<p><span class="math display">\[
+\begin{aligned}
+m_{t+1} &amp;= \beta_1 m_t + (1 - \beta_1) \nabla \ell(x_t) \\
+v_{t+1} &amp;= \beta_2 v_t + (1 - \beta_2) (\nabla \ell(x_t))^2 \\
+\hat{m}_{t+1} &amp;= \frac{m_{t+1}}{1 - \beta_1^{t+1}} \\
+\hat{v}_{t+1} &amp;= \frac{v_{t+1}}{1 - \beta_2^{t+1}} \\
+x_{t+1} &amp;= x_t - \frac{\eta}{\sqrt{\hat{v}_{t+1}} + \epsilon}
+\hat{m}_{t+1}
+\end{aligned}
+\]</span></p>
+<p><em>注：原论文中 Adam 超参数为 <span class="math inline">\(\beta_1 =
+0.9, \beta_2 = 0.98, \epsilon = 10^{-9}\)</span>，warmup steps <span
+class="math inline">\(t_0 = 4000\)</span>。</em></p>
+<h2 id="code-walkthrough">4. Code walkthrough</h2>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://nlp.seas.harvard.edu/annotated-transformer/">The
+Annotated Transformer</a></li>
+</ul>
+<h2 id="summary">5. Summary</h2>
+<ul>
+<li>Sequence-to-sequence encoder-decoder framework for conditional
+generation, including Machine Translation</li>
+<li>Key components in Transformer (why each?)
+<ul>
+<li>Positional Embedding (to distinguish tokens at different pos)</li>
+<li>Multihead attention：进行 token 间 hidden states
+融合操作（<strong>上下文信息交互</strong>）</li>
+<li>Residual connection</li>
+<li>layer norm</li>
+<li>FFN：进行 token 内 hidden state 变换（<strong>单个 token
+特征加工与模式表达</strong>）</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/Transformer/">#Transformer</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems 06: Transformer</div>
+      <div>https://arcsin2.cloud/posts/2026/10/584140393/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/957201169/" title="LLM Systems 07: Pre-trained LLMs">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems 07: Pre-trained LLMs</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1257763040/" title="LLM Systems 05: Deep Learning Framework and Auto Differentiation">
+                        <span class="hidden-mobile">LLM Systems 05: Deep Learning Framework and Auto Differentiation</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,1492 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本次 homework 需要编写的代码量实际上非常少（100 行左右），完成作业的关键是理解 minitorch 设计和已有代码。因此，本文主要介绍 minitorch 代码结构，解释其 Tensor、Parameter、Operator、Module、History 等关键设计和实现。 课程官方对 minitorch 有个 Jupyter Notebook 做了详细介绍可参考。本文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems Assignment 2: Minitorch Framework">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/2104219689/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本次 homework 需要编写的代码量实际上非常少（100 行左右），完成作业的关键是理解 minitorch 设计和已有代码。因此，本文主要介绍 minitorch 代码结构，解释其 Tensor、Parameter、Operator、Module、History 等关键设计和实现。 课程官方对 minitorch 有个 Jupyter Notebook 做了详细介绍可参考。本文">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2104219689/image-20261005205319046.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2104219689/image-20261005205337837.png">
+<meta property="article:published_time" content="2026-10-05T12:50:31.000Z">
+<meta property="article:modified_time" content="2026-10-05T12:55:22.647Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="minitorch">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/2104219689/image-20261005205319046.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems Assignment 2: Minitorch Framework - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems Assignment 2: Minitorch Framework"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-05 20:50" pubdate>
+          2026年10月5日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          43k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          144 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems Assignment 2: Minitorch Framework</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>本次 homework 需要编写的代码量实际上非常少（100
+行左右），完成作业的关键是理解 minitorch
+设计和已有代码。因此，本文主要介绍 minitorch 代码结构，解释其
+Tensor、Parameter、Operator、Module、History 等关键设计和实现。</p>
+<p>课程官方对 minitorch 有个 <a
+target="_blank" rel="noopener" href="https://github.com/llmsystem/llmsys_code_examples/blob/main/minitorch_notebook/minitorch_architecture.ipynb">Jupyter
+Notebook</a> 做了详细介绍可参考。本文内容基于 homework 2 代码框架和上述
+Jupyter Notebook 内容。</p>
+</blockquote>
+<h2 id="architecture">1. Architecture</h2>
+<img src="/posts/2026/10/2104219689/image-20261005205319046.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005205319046">
+<p><br></p>
+<p>minitorch 整体组织是一个明显的分层结构：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs stylus">┌────────────────────────────────────────────────────┐<br>│ project/run_sentiment<span class="hljs-selector-class">.py</span>   应用层：训练循环、数据编码    │<br>├────────────────────────────────────────────────────┤<br>│ module<span class="hljs-selector-class">.py</span> / optim<span class="hljs-selector-class">.py</span> / nn<span class="hljs-selector-class">.py</span>  NN 层：Module 树、      │<br>│                              Parameter、SGD/Adam     │<br>├────────────────────────────────────────────────────┤<br>│ tensor<span class="hljs-selector-class">.py</span> / tensor_functions<span class="hljs-selector-class">.py</span>  计算图层：Tensor、    │<br>│                                 History、Function    │<br>├────────────────────────────────────────────────────┤<br>│ tensor_ops<span class="hljs-selector-class">.py</span>  后端层：map/zip/reduce 三类高阶算子组合   │<br>│                SimpleOps（纯 Python）或               │<br>│                CudaKernelOps（HW1 的 CUDA kernel）    │<br>├────────────────────────────────────────────────────┤<br>│ tensor_data<span class="hljs-selector-class">.py</span> / operators<span class="hljs-selector-class">.py</span>  数据层：存储、shape、  │<br>│                                strides、标量函数       │<br>└────────────────────────────────────────────────────┘<br></code></pre></td></tr></table></figure>
+<p>关键模块包括：</p>
+<ul>
+<li>Tensor
+<ul>
+<li>tensor 数据存储</li>
+<li>计算图表示</li>
+</ul></li>
+<li>Function
+<ul>
+<li>Operator</li>
+<li>forward/backward 计算过程实现</li>
+</ul></li>
+<li>Module
+<ul>
+<li>Parameter</li>
+<li>参数初始化</li>
+<li>Module 可组合构成神经网络结构</li>
+</ul></li>
+<li>Optimizer
+<ul>
+<li>与 Module 的参数交互</li>
+</ul></li>
+</ul>
+<p>模块与代码文件对应关系说明如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-comment"># 输出省略了部分文件</span><br>$ git ls-files | tree --fromfile<br>.<br>|-- minitorch<br>|   |-- autodiff.py  <span class="hljs-comment"># 自动求导相关代码，homework 2_1 todo 位置</span><br>|   |-- cuda_kernel_ops.py  <span class="hljs-comment"># CUDA backend op Python 接口，本次 homework 忽略</span><br>|   |-- datasets.py  <span class="hljs-comment"># mock 数据集（二维点到 label）生成，本次 homework 忽略</span><br>|   |-- module.py  <span class="hljs-comment"># Module &amp; Parameter 实现</span><br>|   |-- nn.py  <span class="hljs-comment"># dropout 等简单&amp;常用神经网络模块实现</span><br>|   |-- operators.py  <span class="hljs-comment"># Python 实现的 element-wise add/mult 等 op</span><br>|   |-- optim.py  <span class="hljs-comment"># 优化器实现，提供了 SGD 和 Adam</span><br>|   |-- tensor.py  <span class="hljs-comment"># Tensor 实现，计算基本单位和计算图的组成单元</span><br>|   |-- tensor_data.py  <span class="hljs-comment"># Tensor 存储层实现，shape + strides + 连续存储表示法</span><br>|   |-- tensor_functions.py  <span class="hljs-comment"># Function 基类（前向建图机制，apply）与常用 op 的 fwd/bwd 配对实现；常用 Tensor 工厂函数实现（zeros/ones/rand 等）</span><br>|   |-- tensor_ops.py  <span class="hljs-comment"># 基于 operators.py 封装为 TensorOps 与 TensorBackend，Tensor 持有 TensorBackend 作为成员供 Function 调用</span><br>|   `-- testing.py<br>|-- project<br>|   `-- run_sentiment.py  <span class="hljs-comment"># homework 2_2 2-3 位置，实现网络结构与训练 main loop</span><br>|-- src<br>|   `-- combine.cu  <span class="hljs-comment"># CUDA kernel 实现，本 homework 忽略</span><br>`-- tests<br>    |-- strategies.py<br>    |-- tensor_strategies.py  <span class="hljs-comment"># 测试</span><br>    |-- test_neural_network.py<br>    `-- test_tensor_autodiff.py<br></code></pre></td></tr></table></figure>
+<h2 id="data-storage-and-operators">2. Data Storage and Operators</h2>
+<p>首先看下 <code>class Tensor</code> 如何与其他模块关联起来，包括：</p>
+<ul>
+<li>数据存储 <code>class TensorData</code></li>
+<li>计算后端 <code>class TensorBackend</code>
+<ul>
+<li>依赖 <code>class TensorOps</code> 来对不同的 operators
+执行实际计算</li>
+<li><code>class Function</code> 及其实现类抽象并实现了基础运算</li>
+</ul></li>
+</ul>
+<img src="/posts/2026/10/2104219689/image-20261005205337837.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005205337837">
+<p><br></p>
+<p>上图以中间的 <code>class Tensor</code>
+为核心，整体分为以下几个部分：</p>
+<ul>
+<li>左上角：自动求导相关方法，包括：反向传播、链式法则等。</li>
+<li>左下角：Tensor 支持的相关运算，基于 <code>class Function</code>
+实现计算图构建和每个 op 的 bwd 实现。</li>
+<li>右侧 <code>backend</code>：<code>class TensorBackend</code>
+类型，基于 <code>TensorOps</code> 支持 map、zip、reduce、matrix multiply
+四大类运算。</li>
+<li>右侧 <code>_tensor</code>：Tensor
+底层存储，<code>class TensorData</code> 实现。</li>
+</ul>
+<p>接下来，开始自底向上看下 <code>TensorStorage</code>
+、<code>TensorOps</code> 与 <code>TensorBackend</code> 代码。</p>
+<h3 id="tensordata">2.1 TensorData</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">from</span> __future__ <span class="hljs-keyword">import</span> annotations<br><br><span class="hljs-keyword">import</span> random<br><span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> Iterable, <span class="hljs-type">Optional</span>, <span class="hljs-type">Sequence</span>, <span class="hljs-type">Tuple</span>, <span class="hljs-type">Union</span><br><br><span class="hljs-keyword">import</span> numba<br><span class="hljs-keyword">from</span> numba <span class="hljs-keyword">import</span> cuda<br><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np<br><span class="hljs-keyword">import</span> numpy.typing <span class="hljs-keyword">as</span> npt<br><span class="hljs-keyword">from</span> numpy <span class="hljs-keyword">import</span> array, float64<br><span class="hljs-keyword">from</span> typing_extensions <span class="hljs-keyword">import</span> TypeAlias<br><br><span class="hljs-keyword">from</span> .operators <span class="hljs-keyword">import</span> prod<br><br>MAX_DIMS = <span class="hljs-number">32</span><br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">IndexingError</span>(<span class="hljs-title class_ inherited__">RuntimeError</span>):<br>    <span class="hljs-string">&quot;Exception raised for indexing errors.&quot;</span><br>    <span class="hljs-keyword">pass</span><br><br>datatype = np.float32<br><br><span class="hljs-comment"># type alias</span><br><span class="hljs-comment"># 使用 numpy NDArray 作为 tensor 底层存储</span><br>Storage: TypeAlias = npt.NDArray[datatype]<br>OutIndex: TypeAlias = npt.NDArray[np.int32]<br>Index: TypeAlias = npt.NDArray[np.int32]<br>Shape: TypeAlias = npt.NDArray[np.int32]<br>Strides: TypeAlias = npt.NDArray[np.int32]<br><br><span class="hljs-comment"># 这里 type alias 分为两套：</span><br><span class="hljs-comment"># - 面向用户的 Python 层 tuple/list 等</span><br><span class="hljs-comment"># - TensorData 内部的使用 np.array 连续存储的版本</span><br>UserIndex: TypeAlias = <span class="hljs-type">Sequence</span>[<span class="hljs-built_in">int</span>]<br>UserShape: TypeAlias = <span class="hljs-type">Sequence</span>[<span class="hljs-built_in">int</span>]<br>UserStrides: TypeAlias = <span class="hljs-type">Sequence</span>[<span class="hljs-built_in">int</span>]<br><br><span class="hljs-comment"># 一些辅助函数，逻辑和 homework 1 内 GPU device 实现一致，这里只贴签名</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">index_to_position</span>(<span class="hljs-params">index: Index, strides: Strides</span>) -&gt; <span class="hljs-built_in">int</span>:<br>	<span class="hljs-keyword">pass</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">to_index</span>(<span class="hljs-params">ordinal: <span class="hljs-built_in">int</span>, shape: Shape, out_index: OutIndex</span>) -&gt; <span class="hljs-literal">None</span>:<br>	<span class="hljs-keyword">pass</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">broadcast_index</span>(<span class="hljs-params"></span><br><span class="hljs-params"></span><br><span class="hljs-params">big_index: Index, big_shape: Shape, shape: Shape, out_index: OutIndex</span><br><span class="hljs-params"></span><br><span class="hljs-params"></span>) -&gt; <span class="hljs-literal">None</span>:<br>	<span class="hljs-keyword">pass</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">shape_broadcast</span>(<span class="hljs-params">shape1: UserShape, shape2: UserShape</span>) -&gt; UserShape:<br>	<span class="hljs-keyword">pass</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">strides_from_shape</span>(<span class="hljs-params">shape: UserShape</span>) -&gt; UserStrides:<br>	<span class="hljs-keyword">pass</span><br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TensorData</span>:<br>    _storage: Storage<br>    _strides: Strides<br>    _shape: Shape<br>    strides: UserStrides<br>    shape: UserShape<br>    dims: <span class="hljs-built_in">int</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params"></span><br><span class="hljs-params">        self,</span><br><span class="hljs-params">        storage: <span class="hljs-type">Union</span>[<span class="hljs-type">Sequence</span>[<span class="hljs-built_in">float</span>], Storage],</span><br><span class="hljs-params">        shape: UserShape,</span><br><span class="hljs-params">        strides: <span class="hljs-type">Optional</span>[UserStrides] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">    </span>):<br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">isinstance</span>(storage, np.ndarray):<br>	        <span class="hljs-comment"># 直接传入 np.array，仅进行类型转换</span><br>            self._storage = storage.astype(datatype)<br>        <span class="hljs-keyword">else</span>:<br>	        <span class="hljs-comment"># 传入 list，构造为 np.array 并进行类型转换</span><br>            self._storage = array(storage, dtype=datatype)<br><br>        <span class="hljs-keyword">if</span> strides <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>	        <span class="hljs-comment"># 默认 row-major layout</span><br>            strides = strides_from_shape(shape)<br><br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">isinstance</span>(strides, <span class="hljs-built_in">tuple</span>), <span class="hljs-string">&quot;Strides must be tuple&quot;</span><br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">isinstance</span>(shape, <span class="hljs-built_in">tuple</span>), <span class="hljs-string">&quot;Shape must be tuple&quot;</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(strides) != <span class="hljs-built_in">len</span>(shape):<br>            <span class="hljs-keyword">raise</span> IndexingError(<span class="hljs-string">f&quot;Len of strides <span class="hljs-subst">&#123;strides&#125;</span> must match <span class="hljs-subst">&#123;shape&#125;</span>.&quot;</span>)<br>        <span class="hljs-comment"># 构造传入的 shape/strides 全部转换为 np.array</span><br>        self._strides = array(strides)<br>        self._shape = array(shape)<br>        <span class="hljs-comment"># user 版本 list/tuple 也保存一份</span><br>        self.strides = strides<br>        self.dims = <span class="hljs-built_in">len</span>(strides)<br>        self.size = <span class="hljs-built_in">int</span>(prod(shape))<br>        self.shape = shape<br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">len</span>(self._storage) == self.size<br><br>	<span class="hljs-keyword">def</span> <span class="hljs-title function_">tuple</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-type">Tuple</span>[Storage, Shape, Strides]:<br>        <span class="hljs-keyword">return</span> (self._storage, self._shape, self._strides)	<br><br>	<span class="hljs-comment"># 省略部分方法，核心是理解 shape &amp; strides &amp; contiguous_storage Tensor 表示法</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">permute</span>(<span class="hljs-params">self, *order: <span class="hljs-built_in">int</span></span>) -&gt; TensorData:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Permute the dimensions of the tensor.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Args:</span><br><span class="hljs-string">            *order: a permutation of the dimensions</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            New `TensorData` with the same storage and a new dimension order.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">list</span>(<span class="hljs-built_in">sorted</span>(order)) == <span class="hljs-built_in">list</span>(<br>            <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(self.shape))<br>        ), <span class="hljs-string">f&quot;Must give a position to each dimension. Shape: <span class="hljs-subst">&#123;self.shape&#125;</span> Order: <span class="hljs-subst">&#123;order&#125;</span>&quot;</span><br><br>		<span class="hljs-comment"># 以 permute 方法为例，说明 shape &amp; strides 表示法优点：</span><br>		<span class="hljs-comment"># 进行 permute 操作时无任何 storage 层拷贝，只需要根据传入参数 order 重新排列 shape &amp; strides 即可</span><br>        <span class="hljs-keyword">return</span> TensorData(<br>            self._storage,<br>            <span class="hljs-built_in">tuple</span>([self.shape[o] <span class="hljs-keyword">for</span> o <span class="hljs-keyword">in</span> order]),<br>            <span class="hljs-built_in">tuple</span>([self._strides[o] <span class="hljs-keyword">for</span> o <span class="hljs-keyword">in</span> order]),<br>        )<br></code></pre></td></tr></table></figure>
+<p>这里先提前看下 <code>class Tensor</code> 中与 <code>TensorData</code>
+有关的部分：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Tensor</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Tensor is a generalization of Scalar in that it is a Variable that</span><br><span class="hljs-string">    handles multidimensional arrays.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    backend: TensorBackend<br>    history: <span class="hljs-type">Optional</span>[History]<br>    grad: <span class="hljs-type">Optional</span>[Tensor]<br>    <span class="hljs-comment"># Tensor 底层存储委托给 TensorData </span><br>    _tensor: TensorData<br>    unique_id: <span class="hljs-built_in">int</span><br>    name: <span class="hljs-built_in">str</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params"></span><br><span class="hljs-params">        self,</span><br><span class="hljs-params">        v: TensorData,</span><br><span class="hljs-params">        back: <span class="hljs-type">Optional</span>[History] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">        name: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">        backend: <span class="hljs-type">Optional</span>[TensorBackend] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">    </span>):<br>        <span class="hljs-keyword">global</span> _tensor_count<br>        _tensor_count += <span class="hljs-number">1</span><br>        self.unique_id = _tensor_count<br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">isinstance</span>(v, TensorData)<br>        <span class="hljs-keyword">assert</span> backend <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        self._tensor = v<br>        self.history = back<br>        self.backend = backend<br>        self.grad = <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">if</span> name <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            self.name = name<br>        <span class="hljs-keyword">else</span>:<br>            self.name = <span class="hljs-built_in">str</span>(self.unique_id)<br><br>        self.f = backend<br><br>	<span class="hljs-comment"># Tensor 的一些接口直接映射到 TensorData 的接口</span><br>    <span class="hljs-comment"># Properties</span><br><span class="hljs-meta">    @property</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">shape</span>(<span class="hljs-params">self</span>) -&gt; UserShape:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">             shape of the tensor</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">return</span> self._tensor.shape<br><br><span class="hljs-meta">    @property</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">size</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">int</span>:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">             int : size of the tensor</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">return</span> self._tensor.size<br><br><span class="hljs-meta">    @property</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">dims</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">int</span>:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">             int : dimensionality of the tensor</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">return</span> self._tensor.dims<br><br>	<span class="hljs-comment"># 后面介绍 TensoOps 会用到</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">tuple</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-type">Tuple</span>[Storage, Shape, Strides]:<br>        <span class="hljs-keyword">return</span> self._tensor.<span class="hljs-built_in">tuple</span>()<br><br>	<span class="hljs-comment"># 工厂方法</span><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">make</span>(<span class="hljs-params"></span><br><span class="hljs-params">        storage: <span class="hljs-type">Union</span>[Storage, <span class="hljs-type">List</span>[<span class="hljs-built_in">float</span>]],</span><br><span class="hljs-params">        shape: UserShape,</span><br><span class="hljs-params">        strides: <span class="hljs-type">Optional</span>[UserStrides] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">        backend: <span class="hljs-type">Optional</span>[TensorBackend] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">    </span>) -&gt; Tensor:<br>        <span class="hljs-string">&quot;Create a new tensor from data&quot;</span><br>        <span class="hljs-keyword">return</span> Tensor(TensorData(storage, shape, strides), backend=backend)<br></code></pre></td></tr></table></figure>
+<h3 id="tensorops-operators">2.2 TensorOps &amp; Operators</h3>
+<p>首先看简单的
+<code>operators.py</code>，其内部主要是一些简单的一元或二元函数实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">Collection of the core mathematical operators used throughout the code base.</span><br><span class="hljs-string">&quot;&quot;&quot;</span><br><br><span class="hljs-keyword">import</span> math<br><span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> <span class="hljs-type">Callable</span>, Iterable<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">pow</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span>, y: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>: <br>    <span class="hljs-keyword">return</span> x ** y<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">tanh</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>: <br>    <span class="hljs-keyword">return</span> math.tanh(x)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">mul</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span>, y: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">&quot;$f(x, y) = x * y$&quot;</span><br>    <span class="hljs-keyword">return</span> x * y<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">id</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">&quot;$f(x) = x$&quot;</span><br>    <span class="hljs-keyword">return</span> x<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">add</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span>, y: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">&quot;$f(x, y) = x + y$&quot;</span><br>    <span class="hljs-keyword">return</span> x + y<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">neg</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">&quot;$f(x) = -x$&quot;</span><br>    <span class="hljs-keyword">return</span> -x<br><br><span class="hljs-comment"># 省略部分</span><br><br><span class="hljs-comment"># 列出部分和反向传播相关的（但是只是 element-wise 函数实现，供上层调用）</span><br>EPS = <span class="hljs-number">1e-6</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">log</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">&quot;$f(x) = log(x)$&quot;</span><br>    <span class="hljs-keyword">return</span> math.log(x + EPS)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">exp</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">&quot;$f(x) = e^&#123;x&#125;$&quot;</span><br>    <span class="hljs-keyword">return</span> math.exp(x)<br><br><br><span class="hljs-comment"># 这里即利用了链式法则：复合函数导数为 d 乘以 log 函数（自然对数）的导数</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">log_back</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span>, d: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">r&quot;If $f = log$ as above, compute $d \times f&#x27;(x)$&quot;</span><br>    <span class="hljs-keyword">return</span> d / (x + EPS)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">inv</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">&quot;$f(x) = 1/x$&quot;</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">1.0</span> / x<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">inv_back</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span>, d: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">r&quot;If $f(x) = 1/x$ compute $d \times f&#x27;(x)$&quot;</span><br>    <span class="hljs-keyword">return</span> -(<span class="hljs-number">1.0</span> / x**<span class="hljs-number">2</span>) * d<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">relu_back</span>(<span class="hljs-params">x: <span class="hljs-built_in">float</span>, d: <span class="hljs-built_in">float</span></span>) -&gt; <span class="hljs-built_in">float</span>:<br>    <span class="hljs-string">r&quot;If $f = relu$ compute $d \times f&#x27;(x)$&quot;</span><br>    <span class="hljs-keyword">return</span> d <span class="hljs-keyword">if</span> x &gt; <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-number">0.0</span><br></code></pre></td></tr></table></figure>
+<p>基于上述简单的 operator 实现，上层进一步封装为 <code>TensorOps</code>
+与 <code>TensorBackend</code>。</p>
+<p>首先看 <code>TensorOps</code>，其实际上只是一个简单的接口：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MapProto</span>(<span class="hljs-title class_ inherited__">Protocol</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">self, x: Tensor, out: <span class="hljs-type">Optional</span>[Tensor] = ..., /</span>) -&gt; Tensor:<br>        ...<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TensorOps</span>:<br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">map</span>(<span class="hljs-params">fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>]</span>) -&gt; MapProto:<br>        <span class="hljs-keyword">pass</span><br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">zip</span>(<span class="hljs-params">fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>]</span>) -&gt; <span class="hljs-type">Callable</span>[[Tensor, Tensor], Tensor]:<br>        <span class="hljs-keyword">pass</span><br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">reduce</span>(<span class="hljs-params"></span><br><span class="hljs-params">        fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>], start: <span class="hljs-built_in">float</span> = <span class="hljs-number">0.0</span></span><br><span class="hljs-params">    </span>) -&gt; <span class="hljs-type">Callable</span>[[Tensor, <span class="hljs-built_in">int</span>], Tensor]:<br>        <span class="hljs-keyword">pass</span><br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">matrix_multiply</span>(<span class="hljs-params">a: Tensor, b: Tensor</span>) -&gt; Tensor:<br>        <span class="hljs-keyword">raise</span> NotImplementedError(<span class="hljs-string">&quot;Not implemented in this assignment&quot;</span>)<br></code></pre></td></tr></table></figure>
+<p>包括 4 个方法：</p>
+<ul>
+<li><code>map</code>：输入为一元函数，输出为一个可调用对象，输入输出都是一个
+Tensor。</li>
+<li><code>zip</code>：输入为二元函数，输出为一个可调用对象，接受两个
+Tensor 参数返回一个 Tensor 参数。</li>
+<li><code>reduce</code>：输入为二元函数，输出为一个可调用对象，接受一个
+Tenso 和一个 int 参数，返回 Tenso 参数。</li>
+<li><code>matrix_multiply</code>：矩阵乘法。</li>
+</ul>
+<p>然后来看 <code>SimpleOps</code> 的实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">SimpleOps</span>(<span class="hljs-title class_ inherited__">TensorOps</span>):<br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">map</span>(<span class="hljs-params">fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>]</span>) -&gt; MapProto:<br>	    <span class="hljs-comment"># 调用下面的 `tensor_map(fn)`</span><br>        f = tensor_map(fn)<br><br>        <span class="hljs-keyword">def</span> <span class="hljs-title function_">ret</span>(<span class="hljs-params">a: Tensor, out: <span class="hljs-type">Optional</span>[Tensor] = <span class="hljs-literal">None</span></span>) -&gt; Tensor:<br>            <span class="hljs-keyword">if</span> out <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>                out = a.zeros(a.shape)<br>            <span class="hljs-comment"># 前面介绍过的 tuple() 方法，返回 Tensor 的 storage/shape/strides</span><br>            f(*out.<span class="hljs-built_in">tuple</span>(), *a.<span class="hljs-built_in">tuple</span>())<br>            <span class="hljs-keyword">return</span> out<br><br>        <span class="hljs-keyword">return</span> ret<br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">zip</span>(<span class="hljs-params"></span><br><span class="hljs-params">        fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>]</span><br><span class="hljs-params">    </span>) -&gt; <span class="hljs-type">Callable</span>[[<span class="hljs-string">&quot;Tensor&quot;</span>, <span class="hljs-string">&quot;Tensor&quot;</span>], <span class="hljs-string">&quot;Tensor&quot;</span>]:<br>        <span class="hljs-comment"># 略</span><br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">reduce</span>(<span class="hljs-params"></span><br><span class="hljs-params">        fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>], start: <span class="hljs-built_in">float</span> = <span class="hljs-number">0.0</span></span><br><span class="hljs-params">    </span>) -&gt; <span class="hljs-type">Callable</span>[[<span class="hljs-string">&quot;Tensor&quot;</span>, <span class="hljs-built_in">int</span>], <span class="hljs-string">&quot;Tensor&quot;</span>]:<br>        <span class="hljs-comment"># 略</span><br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">matrix_multiply</span>(<span class="hljs-params">a: <span class="hljs-string">&quot;Tensor&quot;</span>, b: <span class="hljs-string">&quot;Tensor&quot;</span></span>) -&gt; <span class="hljs-string">&quot;Tensor&quot;</span>:<br>        <span class="hljs-comment"># 略</span><br><br>    is_cuda = <span class="hljs-literal">False</span><br><br><br><span class="hljs-comment"># 该函数核心功能：将 element-wise fn 封装为一个接受 Tensor 的 Storage/Shape/Strides 作为参数的可调用对象</span><br><span class="hljs-comment"># 值得一提的是，这里的可调用对象参数要求是 np.array，而不是 Python 原生类型</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">tensor_map</span>(<span class="hljs-params"></span><br><span class="hljs-params">    fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>]</span><br><span class="hljs-params"></span>) -&gt; <span class="hljs-type">Callable</span>[[Storage, Shape, Strides, Storage, Shape, Strides], <span class="hljs-literal">None</span>]:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Low-level implementation of tensor map between</span><br><span class="hljs-string">    tensors with *possibly different strides*.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Simple version:</span><br><span class="hljs-string"></span><br><span class="hljs-string">    * Fill in the `out` array by applying `fn` to each</span><br><span class="hljs-string">      value of `in_storage` assuming `out_shape` and `in_shape`</span><br><span class="hljs-string">      are the same size.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Broadcasted version:</span><br><span class="hljs-string"></span><br><span class="hljs-string">    * Fill in the `out` array by applying `fn` to each</span><br><span class="hljs-string">      value of `in_storage` assuming `out_shape` and `in_shape`</span><br><span class="hljs-string">      broadcast. (`in_shape` must be smaller than `out_shape`).</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Args:</span><br><span class="hljs-string">        fn: function from float-to-float to apply</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Returns:</span><br><span class="hljs-string">        Tensor map function.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_map</span>(<span class="hljs-params"></span><br><span class="hljs-params">        out: Storage,</span><br><span class="hljs-params">        out_shape: Shape,</span><br><span class="hljs-params">        out_strides: Strides,</span><br><span class="hljs-params">        in_storage: Storage,</span><br><span class="hljs-params">        in_shape: Shape,</span><br><span class="hljs-params">        in_strides: Strides,</span><br><span class="hljs-params">    </span>) -&gt; <span class="hljs-literal">None</span>:<br>        out_index: Index = np.zeros(MAX_DIMS, np.int16)<br>        in_index: Index = np.zeros(MAX_DIMS, np.int16)<br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(out)):<br>	        <span class="hljs-comment"># 处理 index 映射广播等</span><br>            to_index(i, out_shape, out_index)<br>            broadcast_index(out_index, out_shape, in_shape, in_index)<br>            o = index_to_position(out_index, out_strides)<br>            j = index_to_position(in_index, in_strides)<br>            <span class="hljs-comment"># 调用传入的 fn 函数</span><br>            out[o] = fn(in_storage[j])<br><br>    <span class="hljs-keyword">return</span> _<span class="hljs-built_in">map</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">tensor_zip</span>(<span class="hljs-params"></span><br><span class="hljs-params">    fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>]</span><br><span class="hljs-params"></span>) -&gt; <span class="hljs-type">Callable</span>[<br>    [Storage, Shape, Strides, Storage, Shape, Strides, Storage, Shape, Strides], <span class="hljs-literal">None</span><br>]:<br>	<span class="hljs-keyword">pass</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">tensor_reduce</span>(<span class="hljs-params"></span><br><span class="hljs-params">    fn: <span class="hljs-type">Callable</span>[[<span class="hljs-built_in">float</span>, <span class="hljs-built_in">float</span>], <span class="hljs-built_in">float</span>]</span><br><span class="hljs-params"></span>) -&gt; <span class="hljs-type">Callable</span>[[Storage, Shape, Strides, Storage, Shape, Strides, <span class="hljs-built_in">int</span>], <span class="hljs-literal">None</span>]:<br>	<span class="hljs-keyword">pass</span><br></code></pre></td></tr></table></figure>
+<p>原始代码的注释实际上已经非常清晰，这里为了篇幅删掉了大部分，仅保留最简单的
+<code>map</code> 实现相关注释。实际上，为了实现
+<code>TensorOps</code>，minitorch
+从三个层次进行了自底向上的组织与实现：</p>
+<ul>
+<li>最底层（最简单）的 element-wise function 实现，在
+<code>operators.py</code> 中实现。</li>
+<li>中间层的 <code>tensor_map/zip/reduce</code> 接受参数是一个
+element-wise func，返回一个 storage/shape/strides
+作为输入参数的可调用对象，进行 Tensor 级别的全部元素的处理。</li>
+<li><code>SimpleOps</code> 提供接口接受 element-wise func
+作为输入参数，返回将 Tensor 作为输入参数的可调用对象，内部获取 Tensor 的
+storage/shape/strides 元组，调用中间层的接口。</li>
+<li>三层最核心的区别：
+<ul>
+<li>最底层：普通标量作为参数，返回标量。</li>
+<li>中间层：storage/shape/strides 作为参数，同时处理可能的广播。</li>
+<li>最上层：Tensor 进行参数，可能预先进行返回值 Tensor 构造。</li>
+</ul></li>
+</ul>
+<p>真正暴露到其他模块，供 <code>class Tensor</code> 使用的接口实际上是
+<code>class TensorBackend</code>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">TensorBackend</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, ops: <span class="hljs-type">Type</span>[TensorOps]</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Dynamically construct a tensor backend based on a `tensor_ops` object</span><br><span class="hljs-string">        that implements map, zip, and reduce higher-order functions.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Args:</span><br><span class="hljs-string">            ops : tensor operations object see `tensor_ops.py`</span><br><span class="hljs-string"></span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns :</span><br><span class="hljs-string">            A collection of tensor functions</span><br><span class="hljs-string"></span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br><br>        <span class="hljs-comment"># Maps</span><br>        self.neg_map = ops.<span class="hljs-built_in">map</span>(operators.neg)<br>        self.sigmoid_map = ops.<span class="hljs-built_in">map</span>(operators.sigmoid)<br>        self.relu_map = ops.<span class="hljs-built_in">map</span>(operators.relu)<br>        self.log_map = ops.<span class="hljs-built_in">map</span>(operators.log)<br>        self.exp_map = ops.<span class="hljs-built_in">map</span>(operators.exp)<br>        self.id_map = ops.<span class="hljs-built_in">map</span>(operators.<span class="hljs-built_in">id</span>)<br>        self.inv_map = ops.<span class="hljs-built_in">map</span>(operators.inv)<br>        self.tanh_map = ops.<span class="hljs-built_in">map</span>(operators.tanh)<br><br>        <span class="hljs-comment"># Zips</span><br>        self.add_zip = ops.<span class="hljs-built_in">zip</span>(operators.add)<br>        self.mul_zip = ops.<span class="hljs-built_in">zip</span>(operators.mul)<br>        self.lt_zip = ops.<span class="hljs-built_in">zip</span>(operators.lt)<br>        self.eq_zip = ops.<span class="hljs-built_in">zip</span>(operators.eq)<br>        self.is_close_zip = ops.<span class="hljs-built_in">zip</span>(operators.is_close)<br>        self.relu_back_zip = ops.<span class="hljs-built_in">zip</span>(operators.relu_back)<br>        self.log_back_zip = ops.<span class="hljs-built_in">zip</span>(operators.log_back)<br>        self.inv_back_zip = ops.<span class="hljs-built_in">zip</span>(operators.inv_back)<br>        self.pow_scalar_zip = ops.<span class="hljs-built_in">zip</span>(operators.<span class="hljs-built_in">pow</span>)<br><br>        <span class="hljs-comment"># Reduce</span><br>        self.add_reduce = ops.reduce(operators.add, <span class="hljs-number">0.0</span>)<br>        self.mul_reduce = ops.reduce(operators.mul, <span class="hljs-number">1.0</span>)<br>        self.matrix_multiply = ops.matrix_multiply<br>        self.cuda = ops.cuda<br></code></pre></td></tr></table></figure>
+<p>在理解了前面的代码后，这个 <code>TensorBackend</code>
+实现就显得尤为简单了：调用 <code>TensorOps</code> 提供的接口，传入
+<code>operators.py</code> 内的 func，注册 Tensor 级别的运算接口。</p>
+<h3 id="connect-to-cuda-kernels">2.3 Connect to CUDA Kernels</h3>
+<p>CUDA 相关支持的代码在：</p>
+<ul>
+<li><code>minitorch/cuda_kernel_ops.py</code></li>
+<li><code>src/combine.cu</code></li>
+</ul>
+<p>这两个文件的关系为：</p>
+<ul>
+<li><code>.cu</code> 文件提供了
+Tensor（storage/shape/strides）作为输入参数的接口，内部调用实现的 CUDA
+kernel，从而实现在 GPU 上完成相关 operator。该源文件使用 nvcc 编译成
+<code>.so</code> 文件，供 Python 层调用相关接口。</li>
+<li><code>.py</code> 文件使用 <code>pycuda</code> 库打开
+<code>.so</code> 文件，传入 Tensor 的 storage/shape/strides
+作为输入参数（注意，这里传入的参数必须是 <code>TensorData</code> 内
+<code>np.array</code> 版本的，因为底层 C++ 接口要求连续存储）调用
+<code>.cu</code> 文件实现的接口。</li>
+</ul>
+<h2 id="automatic-differentiation">3. Automatic Differentiation</h2>
+<p>理解自动求导如何实现，关键在两点：</p>
+<ul>
+<li>forward 时如何构建计算图？
+<ul>
+<li>如何区分 Tensor 是否需要梯度？是否是可学习的
+<code>Parameter</code>？</li>
+<li>如何记录中间 Tensor
+的来源（Function），以在反向传播时计算梯度？</li>
+</ul></li>
+<li>backward 时如何从 loss 开始进行反向传播？
+<ul>
+<li>链式法则如何实现？</li>
+<li>反向传播顺序（homework 中的拓扑排序）如何保证？</li>
+</ul></li>
+</ul>
+<h3 id="element-wise-multiply-forward-调用路径">3.1 Element-wise
+Multiply Forward 调用路径</h3>
+<p>再次看 Tensor 的相关代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Tensor</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Tensor is a generalization of Scalar in that it is a Variable that</span><br><span class="hljs-string">    handles multidimensional arrays.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    backend: TensorBackend<br>    history: <span class="hljs-type">Optional</span>[History]<br>    grad: <span class="hljs-type">Optional</span>[Tensor]<br>    _tensor: TensorData<br>    unique_id: <span class="hljs-built_in">int</span><br>    name: <span class="hljs-built_in">str</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params"></span><br><span class="hljs-params">        self,</span><br><span class="hljs-params">        v: TensorData,</span><br><span class="hljs-params">        back: <span class="hljs-type">Optional</span>[History] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">        name: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">        backend: <span class="hljs-type">Optional</span>[TensorBackend] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">    </span>):<br>        <span class="hljs-keyword">global</span> _tensor_count<br>        _tensor_count += <span class="hljs-number">1</span><br>        self.unique_id = _tensor_count<br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">isinstance</span>(v, TensorData)<br>        <span class="hljs-keyword">assert</span> backend <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        self._tensor = v<br>        self.history = back<br>        self.backend = backend<br>        self.grad = <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">if</span> name <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            self.name = name<br>        <span class="hljs-keyword">else</span>:<br>            self.name = <span class="hljs-built_in">str</span>(self.unique_id)<br><br>        self.f = backend<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">requires_grad_</span>(<span class="hljs-params">self, x: <span class="hljs-built_in">bool</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">if</span> x:<br>            self.history = History()<br>        <span class="hljs-keyword">else</span>:<br>            self.history = <span class="hljs-literal">None</span><br><br>	<span class="hljs-comment"># 省略很多方法，先仅考虑这里的 element-wise multiply</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__mul__</span>(<span class="hljs-params">self, b: TensorLike</span>) -&gt; Tensor:<br>        <span class="hljs-keyword">return</span> Mul.apply(self, self._ensure_tensor(b))<br><br><br>	<span class="hljs-comment"># 清空 Tensor 的 history，保留 TensorData 引用，生成一个 is_constant() 的节点</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">detach</span>(<span class="hljs-params">self</span>) -&gt; Tensor:<br>        <span class="hljs-keyword">return</span> Tensor(self._tensor, backend=self.backend)<br><br>    <span class="hljs-comment"># Variable elements for backprop</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">accumulate_derivative</span>(<span class="hljs-params">self, x: <span class="hljs-type">Any</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Add `val` to the the derivative accumulated on this variable.</span><br><span class="hljs-string">        Should only be called during autodifferentiation on leaf variables.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Args:</span><br><span class="hljs-string">            x : value to be accumulated</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-comment"># 叶子节点梯度累加</span><br>        <span class="hljs-keyword">assert</span> self.is_leaf(), <span class="hljs-string">&quot;Only leaf variables can have derivatives.&quot;</span><br>        <span class="hljs-keyword">if</span> self.grad <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>            self.grad = Tensor.make(<br>                [<span class="hljs-number">0</span>] * <span class="hljs-built_in">int</span>(operators.prod(self.shape)), self.shape, backend=self.backend<br>            )<br>        self.grad += x<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">is_leaf</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">bool</span>:<br>        <span class="hljs-string">&quot;True if this variable created by the user (no `last_fn`)&quot;</span><br>        <span class="hljs-keyword">return</span> self.history <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">and</span> self.history.last_fn <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">is_constant</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">bool</span>:<br>        <span class="hljs-keyword">return</span> self.history <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span><br><br><span class="hljs-meta">    @property</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">parents</span>(<span class="hljs-params">self</span>) -&gt; Iterable[Variable]:<br>        <span class="hljs-keyword">assert</span> self.history <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">return</span> self.history.inputs<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">chain_rule</span>(<span class="hljs-params">self, d_output: <span class="hljs-type">Any</span></span>) -&gt; Iterable[<span class="hljs-type">Tuple</span>[Variable, <span class="hljs-type">Any</span>]]:<br>        h = self.history<br>        <span class="hljs-keyword">assert</span> h <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">assert</span> h.last_fn <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">assert</span> h.ctx <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br><br>        x = h.last_fn._backward(h.ctx, d_output)<br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">len</span>(x) == <span class="hljs-built_in">len</span>(h.inputs), <span class="hljs-string">f&quot;Bug in function <span class="hljs-subst">&#123;h.last_fn&#125;</span>&quot;</span><br>        <span class="hljs-keyword">return</span> [<br>            (inp, inp.expand(self._ensure_tensor(d_in)))<br>            <span class="hljs-keyword">for</span> inp, d_in <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(h.inputs, x)<br>        ]<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">self, grad_output: <span class="hljs-type">Optional</span>[Tensor] = <span class="hljs-literal">None</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">if</span> grad_output <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>            <span class="hljs-keyword">assert</span> self.shape == (<span class="hljs-number">1</span>,), <span class="hljs-string">&quot;Must provide grad_output if non-scalar&quot;</span><br>            grad_output = Tensor.make([<span class="hljs-number">1.0</span>], (<span class="hljs-number">1</span>,), backend=self.backend)<br>        backpropagate(self, grad_output)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">zero_grad_</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-literal">None</span>:  <span class="hljs-comment"># pragma: no cover</span><br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Reset the derivative on this variable.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        self.grad = <span class="hljs-literal">None</span><br></code></pre></td></tr></table></figure>
+<p>对于两个 Tensor 的 <code>a * b</code> 操作，将调用上述
+<code>__mul__</code> 方法，相关代码如下：</p>
+<p><code>minitorch/tensor_functions.py</code></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-meta">@dataclass</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">History</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    `History` stores the history of `Function` operations that was</span><br><span class="hljs-string">    used to construct the current Variable.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    last_fn: <span class="hljs-type">Optional</span>[<span class="hljs-type">Type</span>[Function]] = <span class="hljs-literal">None</span><br>    ctx: <span class="hljs-type">Optional</span>[Context] = <span class="hljs-literal">None</span><br>    inputs: <span class="hljs-type">Sequence</span>[Tensor] = ()<br><br><br><span class="hljs-meta">@dataclass</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Context</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Context class is used by `Function` to store information during the forward pass.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    no_grad: <span class="hljs-built_in">bool</span> = <span class="hljs-literal">False</span><br>    saved_values: <span class="hljs-type">Tuple</span>[<span class="hljs-type">Any</span>, ...] = ()<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">save_for_backward</span>(<span class="hljs-params">self, *values: <span class="hljs-type">Any</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-string">&quot;Store the given `values` if they need to be used during backpropagation.&quot;</span><br>        <span class="hljs-keyword">if</span> self.no_grad:<br>            <span class="hljs-keyword">return</span><br>        self.saved_values = values<br><br><span class="hljs-meta">    @property</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">saved_tensors</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-type">Tuple</span>[<span class="hljs-type">Any</span>, ...]:<br>        <span class="hljs-keyword">return</span> self.saved_values<br><br><span class="hljs-comment"># Constructors</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Function</span>:<br><span class="hljs-meta">    @classmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_backward</span>(<span class="hljs-params">cls, ctx: Context, grad_out: Tensor</span>) -&gt; <span class="hljs-type">Tuple</span>[Tensor, ...]:<br>        <span class="hljs-keyword">return</span> wrap_tuple(cls.backward(ctx, grad_out))  <span class="hljs-comment"># type: ignore</span><br><br><span class="hljs-meta">    @classmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_forward</span>(<span class="hljs-params">cls, ctx: Context, *inps: Tensor</span>) -&gt; Tensor:<br>        <span class="hljs-keyword">return</span> cls.forward(ctx, *inps)  <span class="hljs-comment"># type: ignore</span><br><br><span class="hljs-meta">    @classmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">apply</span>(<span class="hljs-params">cls, *vals: Tensor</span>) -&gt; Tensor:<br>        raw_vals = []<br>        need_grad = <span class="hljs-literal">False</span><br>        <span class="hljs-keyword">for</span> v <span class="hljs-keyword">in</span> vals:<br>            <span class="hljs-keyword">if</span> v.requires_grad():<br>                need_grad = <span class="hljs-literal">True</span><br>            raw_vals.append(v.detach())<br><br>        <span class="hljs-comment"># Create the context.</span><br>        ctx = Context(<span class="hljs-keyword">not</span> need_grad)<br><br>        <span class="hljs-comment"># Call forward with the variables.</span><br>        c = cls._forward(ctx, *raw_vals)<br>        <span class="hljs-comment"># assert isinstance(c, Tensor), &quot;Expected return type Tensor got %s&quot; % (</span><br>        <span class="hljs-comment">#     type(c)</span><br>        <span class="hljs-comment"># )</span><br><br>        <span class="hljs-comment"># Create a new variable from the result with a new history.</span><br>        back = <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">if</span> need_grad:<br>            back = minitorch.History(cls, ctx, vals)<br>        <span class="hljs-keyword">return</span> minitorch.Tensor(c._tensor, back, backend=c.backend)<br><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Mul</span>(<span class="hljs-title class_ inherited__">Function</span>):<br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx: Context, a: Tensor, b: Tensor</span>) -&gt; Tensor:<br>        ctx.save_for_backward(a, b)<br>        <span class="hljs-keyword">return</span> a.f.mul_zip(a, b)<br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx: Context, grad_output: Tensor</span>) -&gt; <span class="hljs-type">Tuple</span>[Tensor, Tensor]:<br>        a, b = ctx.saved_values<br>        <span class="hljs-keyword">return</span> (<br>            grad_output.f.mul_zip(b, grad_output),<br>            grad_output.f.mul_zip(a, grad_output),<br>        )<br></code></pre></td></tr></table></figure>
+<p>首先看 <code>class Mul(Function)</code> 的 <code>forward</code> 与
+<code>backward</code> 方法：</p>
+<ul>
+<li><code>forward</code>：保存输入 Tensor a/b 供 backward
+时使用，然后使用 <code>TensorBackend</code> 内注册的 op
+进行计算，返回结果 Tensor（此时的 Tensor
+仅完成了纯数学上的计算，还没有进行计算图相关操作）。</li>
+<li><code>backward</code>：提取保存的输入 Tensor a/b，调用相应 op
+进行链式法则梯度计算。</li>
+</ul>
+<p>然后看接口 <code>class Function</code> 的 <code>apply</code>
+方法，其调用了实现类的 <code>forward</code> 方法并构建计算图。</p>
+<ul>
+<li>遍历输入 Tensor，如果其中一个需要梯度，那么结果 Tensor
+也需要计算梯度。同时调用 <code>detach()</code> 方法，获取输入 Tensor
+的一个 constant 视图。</li>
+<li>构造 <code>Context</code> 对象，传入是否需要梯度参数。</li>
+<li>调用实现类 <code>forward</code> 方法，完成前向计算。</li>
+<li>如果需要计算梯度，构造 <code>History</code> 对象（否则为
+None），保存 Function class、context 以及输入 Tensor 列表，供 backward
+时使用。<code>class History</code> 包括三个成员：
+<ul>
+<li><code>last_fn</code>：计算结果 Tensor 由哪个 Function
+计算出来，用于链式法则计算梯度。</li>
+<li><code>ctx</code>：保存计算梯度需要用到的 Tensor，通常需要保存输入
+Tensor 以及部分中间计算结果，供 backward 时使用以让 backward
+实现更加简洁。<code>ctx</code> 内保存到 Tensor 是 <code>detach</code>
+之后的<strong>纯数值引用</strong>，无计算图相关成员。</li>
+<li><code>inputs</code>：保存计算得到该 Tensor 的所有输入
+Tensor。这里保存的 Tensor 是带有 <code>history</code>
+成员的<strong>携带计算图历史的原始输入 Tensor</strong>，不同于
+<code>ctx</code> 中 <code>detach</code> 后的
+Tensor。<code>class Tensor</code> 的 <code>parents()</code> 方法即返回
+<code>self.history.inputs</code>，<code>autodiff.py</code> 内待实现的的
+<code>topological_sort</code> 函数最终调用的就是 Tensor
+的相关方法。</li>
+<li><code>ctx</code> 与 <code>inputs</code> 保存的 Tensor
+分别服务于两个目的：
+<ul>
+<li>纯数值计算</li>
+<li>计算图构建</li>
+</ul></li>
+<li>下文称这个特性为 <code>ctx</code> 双通道</li>
+</ul></li>
+<li>根据数值计算结果 Tensor 和 <code>History</code> 对象，返回最终的结果
+Tensor，进行可能的计算图构建。</li>
+</ul>
+<p>至此，我们已经梳理了 forward
+过程中计算图是如何构建的。现在，用代码和简单图示再展示上述过程，以帮助理解：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">import</span> minitorch<br><br>backend = minitorch.TensorBackend(minitorch.SimpleOps)<br><br><span class="hljs-comment"># ── 1. 构造参数与输入 ──────────────────────────────────────────────</span><br><span class="hljs-comment"># w 是可学习参数：requires_grad_(True) 挂一个空 History&#123;&#125;，</span><br><span class="hljs-comment"># 使其成为 is_leaf() 为 True 的&quot;叶子节点&quot;（梯度的最终目的地）</span><br>w = minitorch.tensor([<span class="hljs-number">2.0</span>], backend=backend)<br>w.requires_grad_(<span class="hljs-literal">True</span>)<br><br><span class="hljs-comment"># x 是输入数据：不挂 History，是 is_constant() 的常量节点</span><br>x = minitorch.tensor([<span class="hljs-number">3.0</span>], backend=backend)<br>y_true = minitorch.tensor([<span class="hljs-number">10.0</span>], backend=backend)<br><br><span class="hljs-comment"># ── 2. 前向计算：每一步运算都触发 Function.apply 建图 ──────────────</span><br>z    = w * x          <span class="hljs-comment"># → Mul.apply(w, x)：数值 6.0，挂 History(Mul, ctx, (w, x))</span><br>diff = z - y_true     <span class="hljs-comment"># → Add.apply(z, -y_true)：数值 -4.0，挂 History(Add, ...)</span><br>loss = diff * diff    <span class="hljs-comment"># → Mul.apply(diff, diff)：数值 16.0，注意 diff 被引用两次！</span><br><br><span class="hljs-comment"># ── 3. 反向传播 ────────────────────────────────────────────────────</span><br>loss.backward()       <span class="hljs-comment"># → backpropagate(loss, 1.0)</span><br><br><span class="hljs-built_in">print</span>(w.grad)         <span class="hljs-comment"># 2 * diff * x = 2 * (-4) * 3 = -24.0 ✓ 可手算验证</span><br></code></pre></td></tr></table></figure>
+<p>先只考虑上述代码 forward 过程，<code>loss</code> 计算完成后，Tensor
+的相关成员引用关系如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><code class="hljs text">┌─────────────────────────────────────────────────────────────────┐<br>│ loss: Tensor                                                    │<br>│   history = History(                                            │<br>│     last_fn = Mul          ← &quot;我是被谁算出来的&quot;                   │<br>│     ctx     = Context(      ← detach 影子通道（纯数值）            │<br>│         no_grad = False                                         │<br>│         saved_values = (diff_detached, diff_detached)           │<br>│     )                       影子 history=None，链在此截断 ✂       │<br>│     inputs = (diff, diff)   ← 原始节点通道（梯度调度用）           │<br>│   )                                                             │<br>│   grad = None                                                   │<br>└─────────────────────────────────────────────────────────────────┘<br>           │ history.inputs（即 parents 属性返回的东西）<br>           ▼<br>┌─────────────────────────────────────────────────────────────────┐<br>│ diff: Tensor                                                    │<br>│   history = History(                                            │<br>│     last_fn = Add                                               │<br>│     ctx.saved_values = (z_detached, y_true_detached)            │<br>│     inputs = (z, y_true)                                        │<br>│   )                                                             │<br>│   grad = None（中间节点，梯度路过不停留）                           │<br>└─────────────────────────────────────────────────────────────────┘<br>           │                                          │<br>           ▼                                          ▼<br>┌──────────────────────────┐          ┌──────────────────────────┐<br>│ z: Tensor                │          │ y_true: 常量              │<br>│   history = History(     │          │   history = None          │<br>│     last_fn = Mul        │          │   is_constant() == True   │<br>│     ctx.saved = (wd, xd) │          │   backward 时被跳过        │<br>│     inputs = (w, x)      │          │                           │<br>│   )                      │          │                           │<br>└──────────────────────────┘          └──────────────────────────┘<br>           │<br>           ├──────────────┬─────────────────────────┐<br>           ▼              ▼                         ▼<br>┌────────────────────┐          ┌────────────────────────┐<br>│ w: 叶子节点         │          │ x: 常量输入             │<br>│   history = Hist(  │          │   history = None        │<br>│     last_fn=None)  │          │   is_constant()==True   │<br>│   is_leaf()=True   │          │                         │<br>│   grad = -24.0 ◄───┼──────────┼── backward 的终点        │<br>│     （梯度落账处）   │          │   （无 grad 槽位）       │<br>└────────────────────┘          └────────────────────────┘<br></code></pre></td></tr></table></figure>
+<p>摘出上述 Tensor 引用关系，仅看计算图如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs text">w(leaf)      x(const)      y_true(const)<br>   │            │                │<br>   └── Mul ─────┘                │      ← z.history: last_fn=Mul<br>         │                       │<br>         z                       │<br>         │                       │<br>         └── Add ────────────────┘      ← diff.history: last_fn=Add<br>               │<br>              diff ──┐<br>                     │ (diff 出现两次)<br>              └── Mul ┘             ← loss.history: last_fn=Mul<br>                   │<br>                  loss  ← backward(grad=1.0) 从这里出发，逆着箭头走<br></code></pre></td></tr></table></figure>
+<p>上图实际上也提到了 backward 过程，后文会详细介绍。不过实际上，理解了
+forward 建图过程，backward 实现也就比较容易理解了。</p>
+<h3 id="其他-function-实现总结">3.2 其他 Function 实现总结</h3>
+<p><code>tensor_functions.py</code> 中共有 18 个 <code>Function</code>
+子类。它们共享 3.1 节剖析过的同一套骨架（<code>apply</code> 建图 +
+<code>ctx</code> 双通道），差异只在两处：<strong>forward
+算什么</strong>、<strong>backward
+存什么/算什么导数</strong>。本节按"backward
+需要什么信息、如何表达导数"对全部 Function 做分类总结。</p>
+<h4 id="分类总览">分类总览</h4>
+<table>
+
+<thead>
+<tr class="header">
+<th>类别</th>
+<th>Function</th>
+<th>导数表达形式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A. 可导为输出表达式的标量映射</td>
+<td>Neg, Add, Mul, Inv, PowerScalar, Exp, Tanh, Sigmoid</td>
+<td>用 forward 的<strong>输出</strong>（或输入的简单组合）直接表达
+f'(x)</td>
+</tr>
+<tr class="even">
+<td>B. 依赖输入符号的分支函数</td>
+<td>ReLU, Log</td>
+<td>导数是<strong>分段函数</strong>，需保留<strong>输入</strong>并走
+<code>_back</code> 内核</td>
+</tr>
+<tr class="odd">
+<td>C. 归约与折叠</td>
+<td>Sum, All, Max(nn.py)</td>
+<td>广播回填 / 掩码回填</td>
+</tr>
+<tr class="even">
+<td>D. 不可导的谓词运算</td>
+<td>LT, EQ, IsClose</td>
+<td>梯度恒为零（阶梯函数）</td>
+</tr>
+<tr class="odd">
+<td>E. 结构变换（不碰数值）</td>
+<td>View, Permute, Copy</td>
+<td>重排梯度形状 / 恒等</td>
+</tr>
+<tr class="even">
+<td>F. 多维收缩</td>
+<td>MatMul</td>
+<td>矩阵求导：dL/dA = G·Bᵀ, dL/dB = Aᵀ·G</td>
+</tr>
+</tbody>
+</table>
+<h4 id="a-类导数可用输出表达式表达的标量映射">A
+类：导数可用输出表达式表达的标量映射</h4>
+<p>这一类的共同特征：f'(x) 能写成 x 或 f(x) 的解析式，ctx
+只需存一份值。</p>
+<p><strong>Neg / Add —— 零记忆优化（不存任何东西）</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Neg</span>(<span class="hljs-title class_ inherited__">Function</span>):<br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, t1</span>):<br>        <span class="hljs-keyword">return</span> t1.f.neg_map(t1)          <span class="hljs-comment"># 不 save！因为 d(-x)/dx = -1</span><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, grad_output</span>):<br>        <span class="hljs-keyword">return</span> grad_output.f.neg_map(grad_output)  <span class="hljs-comment"># 只需对上游梯度取负</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Add</span>(<span class="hljs-title class_ inherited__">Function</span>):<br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, grad_output</span>):<br>        <span class="hljs-keyword">return</span> grad_output, grad_output  <span class="hljs-comment"># 加法对两个输入的导数都是 1</span><br></code></pre></td></tr></table></figure>
+<p>导数是常量（-1 / +1）的运算完全不需要
+ctx——上游梯度经过一个仿射变换即可。<code>Add.backward</code>
+返回两个梯度对应两个输入，inputs 顺序与 backward
+返回顺序一一对应（<code>assert len(x) == len(h.inputs)</code>）。</p>
+<p><strong>Mul / PowerScalar：存输入，导数是输入的组合</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Mul</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, a, b</span>):  ctx.save_for_backward(a, b); ...<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        a, b = ctx.saved_values<br>        <span class="hljs-keyword">return</span> (<br>            grad_output.f.mul_zip(b, grad_output),<br>            grad_output.f.mul_zip(a, grad_output),<br>        )                          <span class="hljs-comment"># 乘法法则：∂(ab)/∂a = b</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">PowerScalar</span>(<span class="hljs-title class_ inherited__">Function</span>):       <span class="hljs-comment"># a ** scalar（scalar 是形状(1,)的常量）</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        a, scalar = ctx.saved_values<br>        <span class="hljs-keyword">return</span> (g * (scalar * a ** (scalar - <span class="hljs-number">1</span>)), <span class="hljs-number">0.0</span>)<br>        <span class="hljs-comment">#   ∂(a^s)/∂a = s·a^(s-1)；scalar 是常量 → 其&quot;梯度&quot;返回 0.0 占位，</span><br>        <span class="hljs-comment">#   保持返回元组长度 == inputs 长度（backward 的对齐契约）</span><br></code></pre></td></tr></table></figure>
+<p>注意 <code>PowerScalar.backward</code> 返回
+<code>(grad_a, 0.0)</code> 中的
+0.0：常量输入的"梯度"是占位符，<strong>个数必须对齐</strong>，值由
+<code>Tensor.expand</code> 分发时被 <code>is_constant</code>
+判断丢弃。</p>
+<p><strong>Exp / Sigmoid /
+Tanh：存输出，导数是输出的函数（数值稳定性的体现）</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Sigmoid</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, t1</span>):<br>        out = t1.f.sigmoid_map(t1)<br>        ctx.save_for_backward(out)          <span class="hljs-comment"># ← 存输出 σ(x)，不存 x！</span><br>        <span class="hljs-keyword">return</span> out<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        sigma = ctx.saved_values[<span class="hljs-number">0</span>]<br>        <span class="hljs-keyword">return</span> sigma * (-sigma + <span class="hljs-number">1.0</span>) * g   <span class="hljs-comment"># σ&#x27;(x) = σ(x)(1-σ(x))</span><br></code></pre></td></tr></table></figure>
+<p><code>σ'(x) = σ(x)·(1-σ(x))</code>
+这个恒等式是"存输出"策略的数学基础——<strong>输出能反推导数</strong>时，存输出和存输入等价，但存输出可以复用
+forward 已经算好的值。Tanh
+同理（<code>tanh'(x) = 1 - tanh²(x)</code>，代码里
+<code>-(out**2) + 1</code>）。Exp 存输出则因为 <code>e^x</code>
+的导数就是它自己，直接省一次 exp 计算。<strong>这是每个 Function
+作者的优化决策点：导数有几种等价表达，选计算/存储最省的那种。</strong></p>
+<h4 id="b-类导数是分段函数存输入走-_back-内核">B
+类：导数是分段函数——存输入，走 <code>_back</code> 内核</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">ReLU</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, t1</span>):<br>        ctx.save_for_backward(t1)            <span class="hljs-comment"># ← 必须存输入！</span><br>        <span class="hljs-keyword">return</span> t1.f.relu_map(t1)<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        (a,) = ctx.saved_values<br>        <span class="hljs-keyword">return</span> grad_output.f.relu_back_zip(a, g)   <span class="hljs-comment"># 分支逻辑下沉到标量内核</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Log</span>(<span class="hljs-title class_ inherited__">Function</span>):                          <span class="hljs-comment"># 同构：存输入 → log_back_zip</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        (a,) = ctx.saved_values<br>        <span class="hljs-keyword">return</span> g.f.log_back_zip(a, g)<br></code></pre></td></tr></table></figure>
+<p>ReLU 的导数 <code>x&gt;0 ? 1 : 0</code>、Log 的导数
+<code>1/(x+EPS)</code> 都<strong>无法</strong>用输出表达（ReLU 的输出 0
+对应两种输入状态：负数和恰好为
+0），所以必须存<strong>输入</strong>并依赖 <code>operators.py</code>
+里的分支标量函数
+<code>relu_back(x, d) = d if x &gt; 0 else 0.0</code>。这一类与
+operators.py 的 <code>_back</code>
+系列函数一一对应——<strong>分段导数的分支逻辑被隔离在标量内核里，张量层只见统一的
+zip 调用</strong>。</p>
+<table>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>存什么</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Neg / Add</td>
+<td>什么都不存</td>
+<td>导数是常量</td>
+</tr>
+<tr class="even">
+<td>Mul / PowerScalar</td>
+<td>输入</td>
+<td>导数是输入的组合</td>
+</tr>
+<tr class="odd">
+<td>Exp / Sigmoid / Tanh</td>
+<td><strong>输出</strong></td>
+<td>导数可用输出表达（恒等式）</td>
+</tr>
+<tr class="even">
+<td>ReLU / Log / Inv</td>
+<td><strong>输入</strong></td>
+<td>导数是分段函数 / 无法由输出反推</td>
+</tr>
+</tbody>
+</table>
+<h4 id="c-类归约的梯度广播或掩码回填">C
+类：归约的梯度——"广播"或"掩码"回填</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Sum</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, a, dim</span>):<br>        ctx.save_for_backward(a.shape, dim)   <span class="hljs-comment"># ← 只存形状和维度，不存数据！</span><br>        <span class="hljs-keyword">return</span> a.f.add_reduce(a, <span class="hljs-built_in">int</span>(dim.item()))<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, grad_output</span>):<br>        a_shape, dim = ctx.saved_values<br>        <span class="hljs-keyword">return</span> grad_output, <span class="hljs-number">0.0</span>               <span class="hljs-comment"># 广播规则兜底形状还原</span><br></code></pre></td></tr></table></figure>
+<p>Sum 的 backward 看似"原样返回"，实际依赖 <strong>Tensor.expand
+的广播回填</strong>：forward 把 shape <code>(b, n)</code> 沿 dim 压成
+<code>(b, 1)</code>，backward 拿到的梯度也是
+<code>(b, 1)</code>，分发回输入 <code>(b, n)</code>
+时沿被压维度广播复制——"求和的梯度 =
+每个被加项各得一份"，这正是求和的导数定义。<strong>归约的导数 = 广播，是
+minitorch 里最优雅的对偶</strong>。</p>
+<p><code>nn.py</code> 里的 <code>Max</code>
+则是另一种回填——<strong>掩码式</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Max</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, <span class="hljs-built_in">input</span>, dim</span>):<br>        out = max_reduce(<span class="hljs-built_in">input</span>, <span class="hljs-built_in">int</span>(dim.item()))<br>        ctx.save_for_backward(<span class="hljs-built_in">input</span>, out)     <span class="hljs-comment"># 输入和输出都要</span><br>        <span class="hljs-keyword">return</span> out<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        <span class="hljs-built_in">input</span>, out = ctx.saved_values<br>        <span class="hljs-keyword">return</span> (out == <span class="hljs-built_in">input</span>) * g, <span class="hljs-number">0.0</span>        <span class="hljs-comment"># argmax 的 one-hot mask × 上游梯度</span><br></code></pre></td></tr></table></figure>
+<p>max
+的导数不是处处可导的，取其次梯度：<strong>梯度只流向最大值位置</strong>（<code>(out == input)</code>
+产生 one-hot mask，0/1 mask 乘上游梯度即实现）。对照 Sum（人人有份）和
+Max（胜者通吃），是"归约如何反传梯度"的两种极端答案。</p>
+<h4 id="d-类谓词运算梯度恒为零">D 类：谓词运算——梯度恒为零</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">LT</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, a, b</span>):<br>        ctx.save_for_backward(a.shape, b.shape)   <span class="hljs-comment"># 只存 shape！</span><br>        <span class="hljs-keyword">return</span> a.f.lt_zip(a, b)<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        a_shape, b_shape = ctx.saved_values<br>        <span class="hljs-keyword">return</span> zeros(a_shape), zeros(b_shape)     <span class="hljs-comment"># 阶梯函数，梯度处处为 0</span><br></code></pre></td></tr></table></figure>
+<p><code>lt/eq/is_close</code>
+是比较运算，数学上是阶梯函数，几乎处处导数为 0——backward
+返回正确形状的全零梯度即可。<strong>存 shape
+而不存数据</strong>是这类函数的共同优化：backward
+只需要知道"梯度该长成什么形状"，不需要任何数值。它们存在的意义是让
+dropout mask、argmax one-hot
+等运算可以进入计算图（前向有值、反向透明），并让
+<code>==</code>、<code>&lt;</code> 等运算符重载可用。</p>
+<h4 id="e-类结构变换数值不动只动-shapestrides">E
+类：结构变换——数值不动，只动 shape/strides</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">View</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, a, shape</span>):<br>        ctx.save_for_backward(a.shape)      <span class="hljs-comment"># 存原形状</span><br>        <span class="hljs-keyword">assert</span> a._tensor.is_contiguous()    <span class="hljs-comment"># view 的前提：连续存储</span><br>        shape2 = [<span class="hljs-built_in">int</span>(shape[i]) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(shape.size)]<br>        <span class="hljs-keyword">return</span> minitorch.Tensor.make(a._tensor._storage, <span class="hljs-built_in">tuple</span>(shape2), ...)<br>        <span class="hljs-comment">#                                    ↑ 共享 storage，零拷贝！</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        (original,) = ctx.saved_values<br>        <span class="hljs-keyword">return</span> (minitorch.Tensor.make(g._tensor._storage, original, ...), <span class="hljs-number">0.0</span>)<br>        <span class="hljs-comment"># backward = 用原形状重新解释同一块 storage</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Permute</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, a, order</span>):<br>        ctx.save_for_backward(order)<br>        <span class="hljs-keyword">return</span> a._new(a._tensor.permute(...))    <span class="hljs-comment"># 只重排 shape/strides</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, g</span>):<br>        order2 = 逆排列(order)                    <span class="hljs-comment"># 逆变换自己</span><br>        <span class="hljs-keyword">return</span> g._new(g._tensor.permute(*order2)), <span class="hljs-number">0.0</span><br></code></pre></td></tr></table></figure>
+<p>这一类 Function 的 forward/backward
+都是<strong>零数据拷贝</strong>的：View 用原形状重新解释
+storage，Permute 的 backward 就是"用自己的逆变换"。它们体现了
+shape/strides
+表示法的核心红利——<strong>形状变换可以只是元数据的重排</strong>。Copy（<code>contiguous()</code>）是本类中唯一可能真正拷贝数据的（当输入非连续时），其
+backward 是恒等映射。</p>
+<h4 id="f-类matmul真正的矩阵求导">F 类：MatMul——真正的矩阵求导</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">MatMul</span>(<span class="hljs-title class_ inherited__">Function</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, t1, t2</span>):<br>        ctx.save_for_backward(t1, t2)<br>        <span class="hljs-keyword">return</span> t1.f.matrix_multiply(t1, t2)<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, grad_output</span>):<br>        t1, t2 = ctx.saved_values<br>        <span class="hljs-keyword">def</span> <span class="hljs-title function_">transpose</span>(<span class="hljs-params">a</span>):<br>            order = <span class="hljs-built_in">list</span>(<span class="hljs-built_in">range</span>(a.dims))<br>            order[-<span class="hljs-number">2</span>], order[-<span class="hljs-number">1</span>] = order[-<span class="hljs-number">1</span>], order[-<span class="hljs-number">2</span>]   <span class="hljs-comment"># 交换最后两维</span><br>            <span class="hljs-keyword">return</span> a._new(a._tensor.permute(*order))      <span class="hljs-comment"># 零拷贝转置！</span><br>        <span class="hljs-keyword">return</span> (<br>            grad_output.f.matrix_multiply(grad_output, transpose(t2)),<br>            grad_output.f.matrix_multiply(transpose(t1), grad_output),<br>        )<br></code></pre></td></tr></table></figure>
+<p>线性代数结论 <code>L = AB, dL/dA = G·Bᵀ, dL/dB = Aᵀ·G</code>（G
+是上游梯度）的直接实现。注意 <code>transpose</code> 是用
+<code>permute</code> 实现的<strong>零拷贝转置</strong>（只交换
+shape/strides 两个元素）——E 类的结构变换在这里成为 F
+类导数计算的原语，两层设计互相成就。</p>
+<h4 id="横向对比一张表看-ctx-存什么">横向对比：一张表看 ctx 存什么</h4>
+<p>把全部 Function 按"backward
+需要什么"排成一张决策表，这张表其实就是写一个新 Function
+时的思考清单：</p>
+<table>
+
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>ctx 保存的内容</th>
+<th>backward 的导数来源</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Neg / Add / Copy</td>
+<td>无（或恒等）</td>
+<td>导数是常量/恒等</td>
+</tr>
+<tr class="even">
+<td>Mul / PowerScalar</td>
+<td>输入</td>
+<td>输入的组合（乘法法则）</td>
+</tr>
+<tr class="odd">
+<td>Exp / Sigmoid / Tanh</td>
+<td><strong>输出</strong></td>
+<td>输出的恒等式（σ(1-σ)、1-tanh²、e^x）</td>
+</tr>
+<tr class="even">
+<td>ReLU / Log / Inv</td>
+<td>输入</td>
+<td>分段/非线性函数，走 <code>_back</code> 内核</td>
+</tr>
+<tr class="odd">
+<td>Sum</td>
+<td>输入的 shape + dim</td>
+<td>广播回填（不需要数据）</td>
+</tr>
+<tr class="even">
+<td>Max</td>
+<td>输入 + 输出</td>
+<td>one-hot 掩码（需要比较两者）</td>
+</tr>
+<tr class="odd">
+<td>LT / EQ</td>
+<td>输入的 shape</td>
+<td>全零（阶梯函数）</td>
+</tr>
+<tr class="even">
+<td>View / Permute</td>
+<td>原始 shape / 逆序</td>
+<td>形状重排（不需要数据）</td>
+</tr>
+<tr class="odd">
+<td>MatMul</td>
+<td>两个输入</td>
+<td>G·Bᵀ / Aᵀ·G（需要数据做矩阵乘）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>规律</strong>：ctx 存什么完全由"f'(x)
+的最省表达形式需要什么"决定——能省则省（Neg
+不存）、能存输出不存输入（输出是 forward 副产品）、能存 shape
+不存数据（结构变换）。所有 Function 的 backward 都在"读 ctx → 算局部导数
+→ 返回与 inputs 等长的梯度元组"这个模板里工作，差异只在数学本身。</p>
+<h3 id="backward-调用路径">3.3 backward 调用路径</h3>
+<p>在基于 minitorch
+实现神经网络与训练流程时，最后往往需要计算得到一个标量 loss
+Tensor，然后调用其 <code>backward()</code> 方法，对应
+<code>class Tensor</code> 的如下代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Tensor</span>:<br><br>	<span class="hljs-comment"># 构造 Parameter 时调用，构造没有 last_fn 的 History 对象表明是叶子节点</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">requires_grad_</span>(<span class="hljs-params">self, x: <span class="hljs-built_in">bool</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">if</span> x:<br>            self.history = History()<br>        <span class="hljs-keyword">else</span>:<br>            self.history = <span class="hljs-literal">None</span><br><br>	<span class="hljs-comment"># 链式法则实现</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">chain_rule</span>(<span class="hljs-params">self, d_output: <span class="hljs-type">Any</span></span>) -&gt; Iterable[<span class="hljs-type">Tuple</span>[Variable, <span class="hljs-type">Any</span>]]:<br>        h = self.history<br>        <span class="hljs-keyword">assert</span> h <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">assert</span> h.last_fn <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">assert</span> h.ctx <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br><br>        x = h.last_fn._backward(h.ctx, d_output)<br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">len</span>(x) == <span class="hljs-built_in">len</span>(h.inputs), <span class="hljs-string">f&quot;Bug in function <span class="hljs-subst">&#123;h.last_fn&#125;</span>&quot;</span><br>        <span class="hljs-keyword">return</span> [<br>            (inp, inp.expand(self._ensure_tensor(d_in)))<br>            <span class="hljs-keyword">for</span> inp, d_in <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(h.inputs, x)<br>        ]<br><br>	<span class="hljs-comment"># 运行反向传播求梯度，累加到叶子节点（Parameter）</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">self, grad_output: <span class="hljs-type">Optional</span>[Tensor] = <span class="hljs-literal">None</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">if</span> grad_output <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>            <span class="hljs-keyword">assert</span> self.shape == (<span class="hljs-number">1</span>,), <span class="hljs-string">&quot;Must provide grad_output if non-scalar&quot;</span><br>            grad_output = Tensor.make([<span class="hljs-number">1.0</span>], (<span class="hljs-number">1</span>,), backend=self.backend)<br>        backpropagate(self, grad_output)<br></code></pre></td></tr></table></figure>
+<p>其调用了 <code>autodiff.py</code> 内我们需要实现的
+<code>backpropagate</code> 函数：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Variable</span>(<span class="hljs-title class_ inherited__">Protocol</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">accumulate_derivative</span>(<span class="hljs-params">self, x: <span class="hljs-type">Any</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Accumulates the derivative (gradient) for this Variable.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Args:</span><br><span class="hljs-string">            x (Any): The gradient value to be accumulated.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">pass</span><br><br><span class="hljs-meta">    @property</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">unique_id</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">int</span>:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            int: The unique identifier of this Variable.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">pass</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">is_leaf</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">bool</span>:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Returns whether this Variable is a leaf node in the computation graph.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            bool: True if this Variable is a leaf node, False otherwise.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">pass</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">is_constant</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">bool</span>:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Returns whether this Variable represents a constant value.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            bool: True if this Variable is constant, False otherwise.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">pass</span><br><br><span class="hljs-meta">    @property</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">parents</span>(<span class="hljs-params">self</span>) -&gt; Iterable[<span class="hljs-string">&quot;Variable&quot;</span>]:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Returns the parent Variables of this Variable in the computation graph.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            Iterable[Variable]: The parent Variables of this Variable.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">pass</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">chain_rule</span>(<span class="hljs-params">self, d_output: <span class="hljs-type">Any</span></span>) -&gt; Iterable[<span class="hljs-type">Tuple</span>[<span class="hljs-string">&quot;Variable&quot;</span>, <span class="hljs-type">Any</span>]]:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Implements the chain rule to compute the gradient contributions of this Variable.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Args:</span><br><span class="hljs-string">            d_output (Any): The gradient of the output with respect to the Variable.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            Iterable[Tuple[Variable, Any]]: An iterable of tuples, where each tuple</span><br><span class="hljs-string">                contains a parent Variable and the corresponding gradient contribution.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">pass</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">topological_sort</span>(<span class="hljs-params">variable: Variable</span>) -&gt; Iterable[Variable]:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Computes the topological order of the computation graph.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Args:</span><br><span class="hljs-string">        variable: The right-most variable</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Returns:</span><br><span class="hljs-string">        Non-constant Variables in topological order starting from the right.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Hints:</span><br><span class="hljs-string">        1. Ensure that you visit the computation graph in a post-order depth-first search.</span><br><span class="hljs-string">        2. When the children nodes of the current node are visited, add the current node</span><br><span class="hljs-string">            at the front of the result order list.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-comment"># BEGIN HW2_1</span><br>    <span class="hljs-comment"># TODO</span><br><br>    <span class="hljs-comment"># END HW2_1</span><br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">backpropagate</span>(<span class="hljs-params">variable: Variable, deriv: <span class="hljs-type">Any</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Runs backpropagation on the computation graph in order to</span><br><span class="hljs-string">    compute derivatives for the leaf nodes.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Args:</span><br><span class="hljs-string">        variable: The right-most variable</span><br><span class="hljs-string">        deriv  : Its derivative that we want to propagate backward to the leaves.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    No return. Should write its results to the derivative values of each leaf through `accumulate_derivative`.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Hints:</span><br><span class="hljs-string">        1. Traverse nodes in topological order</span><br><span class="hljs-string">        2. If the node is a leaf, the derivative should be accumulated</span><br><span class="hljs-string">        3. Otherwise, the derivative should be propagated via chain rule</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-comment"># BEGIN HW2_1</span><br>    <span class="hljs-comment"># TODO</span><br><br>    <span class="hljs-comment"># END HW2_1</span><br></code></pre></td></tr></table></figure>
+<p>可以看到：</p>
+<ul>
+<li><code>class Variable(Protocol)</code> 定义了
+<code>autodiff.py</code> 模块需要用到的几个方法。可以结合
+<code>class Tensor</code> 的实现理解，这里简单说明下：
+<ul>
+<li><code>is_constant()</code>：表示节点是否是常量。</li>
+<li><code>is_leaf()</code>：表示节点是否是
+<code>Parameter</code>。Tensor
+内部实现判断逻辑为：<code>self.history is not None and self.history.last_fn is None</code>。构造
+<code>Parameter</code> 对象时，内部会调用 Tensor 的
+<code>requires_grad_</code>
+方法：<code>self.history = History() if require_grad else None</code>，让一个
+Tensor
+变成叶子节点。注意，这里的叶子节点概念不同于数据结构中树/图的叶子节点（DAG
+表示中的叶子节点），而是既要是 DAG
+中的叶子节点，又要是可学习参数才可以（训练输入数据和标签 x/y 在 DAG
+角度也是叶子节点，但是 Tensor 角度而言其是 <code>is_constant()</code>
+而不是 <code>is_leaf()</code>）。</li>
+<li><code>accumulate_derivative</code>：用于叶子节点梯度累加。</li>
+<li><code>parents</code>：获取当前 Tensor 的输入 Tensor。</li>
+<li><code>chain_rule</code>：</li>
+</ul></li>
+<li><code>topological_sort</code> 接受 forward 形成的 DAG 的最后一个
+Tensor 作为参数，以深度优先搜索方式遍历 DAG（同时需要过滤掉
+<code>is_constant()</code> 的不需要求梯度的节点），形成一个拓扑序的
+Tensor 列表。需要注意的是，最后返回 Tensor 列表时需要
+<code>reverse</code> 下，因为 <code>backpropagate</code>
+内部进行反向传播梯度计算时，要从 DAG 的最后一个节点（即绝大多少情况下的
+<code>loss</code> 节点）反向进行。</li>
+<li><code>backpropagate</code> 接受 DAG 最后一个节点（<code>loss</code>
+节点）和上游传递下来的梯度（从只有一个元素的 <code>loss</code> Tensor
+调用 <code>backward()</code> 时，传入
+<code>Tensor.make([1.0], (1,), backend=self.backend)</code> ，即梯度
+1.0）。其内部实现流程大概如下：
+<ul>
+<li>调用 <code>topological_sort</code> 函数获取从后向前的 Tensor
+列表</li>
+<li>定义一个 dict，保存输入 Tensor id 到输入 grad 的映射关系</li>
+<li>遍历列表中的每一个节点
+<ul>
+<li>如果该节点为叶子节点，进行梯度累加</li>
+<li>否则（即对于计算图的中间节点），调用节点的 <code>chain_rule</code>
+方法进行链式梯度向父节点传播，保存 <code>chain_rule</code> 返回的非
+<code>is_constant()</code> 节点的 Tensor id -&gt; grad 映射到 dict
+供后续使用。</li>
+</ul></li>
+</ul></li>
+<li>值得一提的是，<code>backpropagate</code>
+的实现对叶子节点（<code>Parameter</code>）与 DAG
+的中间节点采用了两套截然不同的处理逻辑：
+<ul>
+<li>对叶子节点，进行梯度累加。</li>
+<li>对中间节点，使用适当数据结构临时保存其 grad。</li>
+<li><code>backpropagate</code> 调用完成后，中间节点的梯度值不复存在（被
+gc 回收掉）；而叶子节点的梯度被累加到 <code>class Tensor</code> 的
+<code>self.grad</code> 成员上。</li>
+<li>有两个主要原因导致了这种实现方式：
+<ul>
+<li>从 <strong>目的</strong> 来看，DAG 计算图是实现 autodiff
+的一种方式，计算图构建和中间节点的梯度，只是计算图这种实现方式必不可少的中间步骤，而最终的目的只是对可学习参数
+<code>Parameter</code> 求梯度，因此只有 <code>is_leaf()</code> 的
+<code>Parameter</code>
+节点需要进行梯度累加，而中间节点的梯度只是为了得到
+<code>Parameter</code>
+梯度必须得到的中间计算结果。因此，<code>backpropagate</code>
+方法内临时保存中间节点的梯度，以能够计算得到 <code>Parameter</code>
+的梯度。反向传播完成后，<code>loss</code> Tensor
+连带着其引用的计算图全部析构，只有预先定义的神经网络（带有很多
+<code>Parameter</code>）的梯度保留，供优化器进行梯度下降。</li>
+<li>这种实现方式，还天然允许了 <strong>梯度累积</strong>：多次
+minibatch，每次 minibatch forward 完成后对 <code>loss</code> 调用
+<code>backward</code> 累加梯度到 <code>Parameter</code>；多个 minibatch
+结束后调用一次优化器的 <code>step()</code> 与 <code>zero_grad()</code>
+方法，在内存有限的情况下实现大 batch 训练效果。</li>
+</ul></li>
+</ul></li>
+</ul>
+<p>介绍完上述内容后，关于 <code>backward()</code> 的执行全貌，我们还差
+Tensor 的 <code>chain_rule</code> 方法是如何实现的。这里再贴下代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Tensor</span>:<br><br>	<span class="hljs-comment"># 反向传播时当 input tensor 与 grad tensor shape 不一致时处理广播的辅助函数</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">expand</span>(<span class="hljs-params">self, other: Tensor</span>) -&gt; Tensor:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Method used to allow for backprop over broadcasting.</span><br><span class="hljs-string">        This method is called when the output of `backward`</span><br><span class="hljs-string">        is a different size than the input of `forward`.</span><br><span class="hljs-string"></span><br><span class="hljs-string"></span><br><span class="hljs-string">        Parameters:</span><br><span class="hljs-string">            other : backward tensor (must broadcast with self)</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            Expanded version of `other` with the right derivatives</span><br><span class="hljs-string"></span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br><br>        <span class="hljs-comment"># Case 1: Both the same shape.</span><br>        <span class="hljs-keyword">if</span> self.shape == other.shape:<br>            <span class="hljs-keyword">return</span> other<br><br>        <span class="hljs-comment"># Case 2: Backward is a smaller than self. Broadcast up.</span><br>        true_shape = TensorData.shape_broadcast(self.shape, other.shape)<br>        buf = self.zeros(true_shape)<br>        self.backend.id_map(other, buf)<br>        <span class="hljs-keyword">if</span> self.shape == true_shape:<br>            <span class="hljs-keyword">return</span> buf<br><br>        <span class="hljs-comment"># Case 3: Still different, reduce extra dims.</span><br>        out = buf<br>        orig_shape = [<span class="hljs-number">1</span>] * (<span class="hljs-built_in">len</span>(out.shape) - <span class="hljs-built_in">len</span>(self.shape)) + <span class="hljs-built_in">list</span>(self.shape)<br>        <span class="hljs-keyword">for</span> dim, shape <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(out.shape):<br>            <span class="hljs-keyword">if</span> orig_shape[dim] == <span class="hljs-number">1</span> <span class="hljs-keyword">and</span> shape != <span class="hljs-number">1</span>:<br>                out = self.backend.add_reduce(out, dim)<br>        <span class="hljs-keyword">assert</span> out.size == self.size, <span class="hljs-string">f&quot;<span class="hljs-subst">&#123;out.shape&#125;</span> <span class="hljs-subst">&#123;self.shape&#125;</span>&quot;</span><br>        <span class="hljs-comment"># START CODE CHANGE (2021)</span><br>        <span class="hljs-keyword">return</span> Tensor.make(out._tensor._storage, self.shape, backend=self.backend)<br>        <span class="hljs-comment"># END CODE CHANGE (2021)</span><br><br>	<span class="hljs-comment"># 输入参数： bwd 反向传播时上游传递下来的梯度</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">chain_rule</span>(<span class="hljs-params">self, d_output: <span class="hljs-type">Any</span></span>) -&gt; Iterable[<span class="hljs-type">Tuple</span>[Variable, <span class="hljs-type">Any</span>]]:<br>        <span class="hljs-comment"># 获取计算图记录的 history，回答几个问题：</span><br>        <span class="hljs-comment"># 1) 当前 Tensor 来自什么 Function？</span><br>        <span class="hljs-comment"># 2) 当前 Tensor 的输入是什么？</span><br>        <span class="hljs-comment"># 3) 为了计算 bwd，fwd 时 Context 保存了什么？</span><br>        h = self.history<br>        <span class="hljs-keyword">assert</span> h <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">assert</span> h.last_fn <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">assert</span> h.ctx <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span><br><br>		<span class="hljs-comment"># 进行梯度计算</span><br>        x = h.last_fn._backward(h.ctx, d_output)<br>        <span class="hljs-keyword">assert</span> <span class="hljs-built_in">len</span>(x) == <span class="hljs-built_in">len</span>(h.inputs), <span class="hljs-string">f&quot;Bug in function <span class="hljs-subst">&#123;h.last_fn&#125;</span>&quot;</span><br>        <span class="hljs-comment"># 处理广播 shape 变换</span><br>        <span class="hljs-comment"># 返回一个 list，其中每个元素是一个 tuple</span><br>        <span class="hljs-comment"># tuple 第一个元素为输入 Tensor(parent)；第二个元素为梯度</span><br>        <span class="hljs-keyword">return</span> [<br>            (inp, inp.expand(self._ensure_tensor(d_in)))<br>            <span class="hljs-keyword">for</span> inp, d_in <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(h.inputs, x)<br>        ]<br><br></code></pre></td></tr></table></figure>
+<p>关于 <code>chain_rule</code> 与 <code>expand</code>，这里举个例子说明
+<strong>广播运算的 backward 全程</strong>：</p>
+<p>前向计算 <code>y = z + b</code>，其中 <code>z</code> 形状
+<code>(3, 1)</code>、<code>b</code> 形状 <code>(1,)</code>（模拟
+bias）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs python">z = minitorch.tensor([[<span class="hljs-number">1.0</span>], [<span class="hljs-number">2.0</span>], [<span class="hljs-number">3.0</span>]])   <span class="hljs-comment"># shape (3, 1)</span><br>b = minitorch.tensor([<span class="hljs-number">5.0</span>])                   <span class="hljs-comment"># shape (1,) ← 广播的&quot;小&quot;输入</span><br>z.requires_grad_(<span class="hljs-literal">True</span>)<br>b.requires_grad_(<span class="hljs-literal">True</span>)<br><br>y = z + b              <span class="hljs-comment"># 广播相加 → shape (3,1)，数值 [[6],[7],[8]]</span><br>loss = (y * y).<span class="hljs-built_in">sum</span>()   <span class="hljs-comment"># L = Σ(y²)</span><br>loss.backward()<br><br><span class="hljs-comment"># [</span><br><span class="hljs-comment">#        [12.000000]</span><br><span class="hljs-comment">#        [14.000000]</span><br><span class="hljs-comment">#        [16.000000]]</span><br><span class="hljs-built_in">print</span>(z.grad)<br><br><span class="hljs-comment"># [42.000000]</span><br><span class="hljs-built_in">print</span>(b.grad)<br></code></pre></td></tr></table></figure>
+<p>前向时 <code>Add</code> 的 zip 内核把 <code>b</code> 从
+<code>(1,)</code> 广播到 <code>(3,1)</code>；backward 时 <code>b</code>
+的梯度<strong>必须折叠回去</strong>（"forward 广播的维度，backward
+求和"）。逐步拆解 <code>chain_rule</code> 在 <code>y</code>
+节点上的工作：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># chain_rule(y, d_output=[[12],[14],[16]])  执行过程：</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment"># ① 调 last_fn._backward 拿局部导数</span><br>x = Add.backward(ctx, d_output)   <span class="hljs-comment"># Add 的导数恒为 1</span><br><span class="hljs-comment">#   → 返回 (d_output, d_output)，每个输入各得一份同样的梯度</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment"># ② zip(h.inputs, x) 配对</span><br><span class="hljs-comment">#   inputs = (z, b)，x = (g, g)</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment"># ③ 对每个配对调 inp.expand(d_in)：</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment">#   z.expand(g)：z.shape (3,1) == g.shape (3,1)</span><br><span class="hljs-comment">#     → expand 的 Case 1，原样返回。</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment">#   b.expand(g)：b.shape (1,) ≠ g.shape (3,1)</span><br><span class="hljs-comment">#     → 进入 Case 3（源码公式 orig_shape = [1]*(len(out.shape) - len(self.shape))</span><br><span class="hljs-comment">#       + list(self.shape)，此处 out 即 g 广播后的形状 (3,1)，self 即 b）：</span><br><span class="hljs-comment">#       orig_shape = [1] * (len(g.shape) - len(b.shape)) + list(b.shape)</span><br><span class="hljs-comment">#                  = [1] * (2 - 1) + [1] = [1, 1]</span><br><span class="hljs-comment">#                  # 左补 [1] 把 (1,) 对齐到与 g 相同的维数 2，得到&quot;广播前的原形状&quot;</span><br><span class="hljs-comment">#       遍历 g.shape=(3,1) 的每个维度：</span><br><span class="hljs-comment">#         dim=0: orig_shape[0]==1 且 g.shape[0]==3 → add_reduce 沿 dim 0 求和</span><br><span class="hljs-comment">#                [[12],[14],[16]] → [[42]]</span><br><span class="hljs-comment">#         dim=1: orig_shape[1]==1 但 g.shape[1]==1（已折成 1）→ 跳过</span><br><span class="hljs-comment">#       最后 Tensor.make(storage, (1,)) 收尾。</span><br><span class="hljs-comment">#</span><br><span class="hljs-comment"># ④ 返回分发清单 [(z, [[12],[14],[16]]), (b, [[42]])]</span><br><span class="hljs-comment">#    backpropagate 据此把 [[42]] 累加到 b.grad。</span><br></code></pre></td></tr></table></figure>
+<p>验证数值：<code>L = (z+b)²</code>
+之和，<code>∂L/∂b = Σ 2·(z+b) = 12+14+16 = 42</code> （实测
+<code>b.grad = [42.]</code>，<code>reduce</code> 保留维度后经
+<code>Tensor.make(storage, (1,))</code> 收尾为
+<code>(1,)</code>）。<strong><code>expand</code> 的 Case 3 正是"forward
+广播的维度，backward
+沿其求和"这一对偶规则的代码化身</strong>——被广播的小张量，它的每个广播副本都贡献一份梯度，总梯度是各份之和。</p>
+<p>值得注意的分工边界：<code>_backward</code>（如
+<code>Add.backward</code>）只负责<strong>局部数学</strong>（加法的导数恒为
+1，对两个输入返回同一份梯度），它对广播一无所知；<strong>所有广播引起的形状修复全部集中在
+<code>expand</code></strong>。这个设计的收益是：Function 作者写 backward
+时永远假设"梯度形状 ==
+输出形状"，返回"与输入等长"的梯度元组即可，形状归一化交给
+<code>chain_rule</code> 里统一的一行
+<code>inp.expand(...)</code>——数学与形状逻辑完全解耦。</p>
+<h2 id="parameter-module-and-optimizer">4. Parameter, Module and
+Optimizer</h2>
+<h3 id="parameter">4.1 Parameter</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Parameter</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    A Parameter is a special container stored in a `Module`.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    It is designed to hold a `Variable`, but we allow it to hold</span><br><span class="hljs-string">    any value for testing.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, x: <span class="hljs-type">Any</span>, name: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">str</span>] = <span class="hljs-literal">None</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        self.value = x<br>        self.name = name<br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">hasattr</span>(x, <span class="hljs-string">&quot;requires_grad_&quot;</span>):<br>            self.value.requires_grad_(<span class="hljs-literal">True</span>)<br>            <span class="hljs-keyword">if</span> self.name:<br>                self.value.name = self.name<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">update</span>(<span class="hljs-params">self, x: <span class="hljs-type">Any</span></span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-string">&quot;Update the parameter value.&quot;</span><br>        self.value = x<br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">hasattr</span>(x, <span class="hljs-string">&quot;requires_grad_&quot;</span>):<br>            self.value.requires_grad_(<span class="hljs-literal">True</span>)<br>            <span class="hljs-keyword">if</span> self.name:<br>                self.value.name = self.name<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__repr__</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">str</span>:<br>        <span class="hljs-keyword">return</span> <span class="hljs-built_in">repr</span>(self.value)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__str__</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">str</span>:<br>        <span class="hljs-keyword">return</span> <span class="hljs-built_in">str</span>(self.value)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>Parameter</code> 是 <code>class Tensor</code>
+的封装，构造时调用 <code>requires_grad_(True)</code> 以设置对应 Tensor
+为可学习参数。</li>
+</ul>
+<p><code>run_sentiment.py</code> 内部的 <code>RParam</code> 方法用于构造
+<code>Parameter</code> 并进行参数初始化：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">RParam</span>(<span class="hljs-params">*shape</span>):<br>    r = <span class="hljs-number">0.1</span> * (minitorch.rand(shape, backend=BACKEND) - <span class="hljs-number">0.5</span>)<br>    <span class="hljs-keyword">return</span> minitorch.Parameter(r)<br></code></pre></td></tr></table></figure>
+<h3 id="module">4.2 Module</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Module</span>:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Modules form a tree that store parameters and other</span><br><span class="hljs-string">    submodules. They make up the basis of neural network stacks.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Attributes:</span><br><span class="hljs-string">        _modules : Storage of the child modules</span><br><span class="hljs-string">        _parameters : Storage of the module&#x27;s parameters</span><br><span class="hljs-string">        training : Whether the module is in training mode or evaluation mode</span><br><span class="hljs-string"></span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    _modules: <span class="hljs-type">Dict</span>[<span class="hljs-built_in">str</span>, Module]<br>    _parameters: <span class="hljs-type">Dict</span>[<span class="hljs-built_in">str</span>, Parameter]<br>    training: <span class="hljs-built_in">bool</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-literal">None</span>:<br>	    <span class="hljs-comment"># 初始化 dict</span><br>        self._modules = &#123;&#125;<br>        self._parameters = &#123;&#125;<br>        self.training = <span class="hljs-literal">True</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">modules</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-type">Sequence</span>[Module]:<br>        <span class="hljs-string">&quot;Return the direct child modules of this module.&quot;</span><br>        m: <span class="hljs-type">Dict</span>[<span class="hljs-built_in">str</span>, Module] = self.__dict__[<span class="hljs-string">&quot;_modules&quot;</span>]<br>        <span class="hljs-keyword">return</span> <span class="hljs-built_in">list</span>(m.values())<br><br>	<span class="hljs-comment"># 设置训练/推理模式，需要对子模块递归设置</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">train</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-string">&quot;Set the mode of this module and all descendent modules to `train`.&quot;</span><br>        <span class="hljs-comment"># ASSIGN0.4</span><br>        <span class="hljs-keyword">for</span> m <span class="hljs-keyword">in</span> self.modules():<br>            m.train()<br>        self.training = <span class="hljs-literal">True</span><br>        <span class="hljs-comment"># END ASSIGN0.4</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">eval</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-string">&quot;Set the mode of this module and all descendent modules to `eval`.&quot;</span><br>        <span class="hljs-keyword">for</span> m <span class="hljs-keyword">in</span> self.modules():<br>            m.<span class="hljs-built_in">eval</span>()<br>        self.training = <span class="hljs-literal">False</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">named_parameters</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-type">Sequence</span>[<span class="hljs-type">Tuple</span>[<span class="hljs-built_in">str</span>, Parameter]]:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Collect all the parameters of this module and its descendents.</span><br><span class="hljs-string"></span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            The name and `Parameter` of each ancestor parameter.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br><br>        <span class="hljs-comment"># Collect our parameters and give them a name.</span><br>        parameters = &#123;&#125;<br>        <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">in</span> self._parameters.items():<br>            parameters[k] = v<br><br>		<span class="hljs-comment"># 递归访问子 Module 获取子模块参数</span><br>        <span class="hljs-comment"># Recurse down to children submodules</span><br>        <span class="hljs-keyword">for</span> mod_name, m <span class="hljs-keyword">in</span> self._modules.items():<br>            <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">in</span> m.named_parameters():<br>                parameters[<span class="hljs-string">f&quot;<span class="hljs-subst">&#123;mod_name&#125;</span>.<span class="hljs-subst">&#123;k&#125;</span>&quot;</span>] = v<br>        <span class="hljs-keyword">return</span> <span class="hljs-built_in">list</span>(parameters.items())<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">parameters</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-type">Sequence</span>[Parameter]:<br>        <span class="hljs-string">&quot;Enumerate over all the parameters of this module and its descendents.&quot;</span><br>        <span class="hljs-keyword">return</span> [j <span class="hljs-keyword">for</span> _, j <span class="hljs-keyword">in</span> self.named_parameters()]<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">add_parameter</span>(<span class="hljs-params">self, k: <span class="hljs-built_in">str</span>, v: <span class="hljs-type">Any</span></span>) -&gt; Parameter:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        Manually add a parameter. Useful helper for scalar parameters.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Args:</span><br><span class="hljs-string">            k: Local name of the parameter.</span><br><span class="hljs-string">            v: Value for the parameter.</span><br><span class="hljs-string"></span><br><span class="hljs-string">        Returns:</span><br><span class="hljs-string">            Newly created parameter.</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        val = Parameter(v, k)<br>        self.__dict__[<span class="hljs-string">&quot;_parameters&quot;</span>][k] = val<br>        <span class="hljs-keyword">return</span> val<br><br>	<span class="hljs-comment"># Python class 拦截方法，当继承 Module 的子类在构造函数写类似：</span><br>	<span class="hljs-comment"># self.xxx = Parameter / xxxModule 时，Module 基类可以把可学习的</span><br>	<span class="hljs-comment"># Parameter/Module 注册到内部 dict。对于其他类型属性，走：</span><br>	<span class="hljs-comment"># super().__setattr__(key, val) 成为简单的可访问成员。</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__setattr__</span>(<span class="hljs-params">self, key: <span class="hljs-built_in">str</span>, val: Parameter</span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">isinstance</span>(val, Parameter):<br>	        <span class="hljs-comment"># 直接操作 self.__dict__[&quot;_parameters&quot;]</span><br>	        <span class="hljs-comment"># 不然会无限递归（__setattr__ 里再 self._parameters = ... 又触发自己）</span><br>            self.__dict__[<span class="hljs-string">&quot;_parameters&quot;</span>][key] = val<br>        <span class="hljs-keyword">elif</span> <span class="hljs-built_in">isinstance</span>(val, Module):<br>            self.__dict__[<span class="hljs-string">&quot;_modules&quot;</span>][key] = val<br>        <span class="hljs-keyword">else</span>:<br>            <span class="hljs-built_in">super</span>().__setattr__(key, val)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__getattr__</span>(<span class="hljs-params">self, key: <span class="hljs-built_in">str</span></span>) -&gt; <span class="hljs-type">Any</span>:<br>        <span class="hljs-keyword">if</span> key <span class="hljs-keyword">in</span> self.__dict__[<span class="hljs-string">&quot;_parameters&quot;</span>]:<br>            <span class="hljs-keyword">return</span> self.__dict__[<span class="hljs-string">&quot;_parameters&quot;</span>][key]<br><br>        <span class="hljs-keyword">if</span> key <span class="hljs-keyword">in</span> self.__dict__[<span class="hljs-string">&quot;_modules&quot;</span>]:<br>            <span class="hljs-keyword">return</span> self.__dict__[<span class="hljs-string">&quot;_modules&quot;</span>][key]<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__call__</span>(<span class="hljs-params">self, *args: <span class="hljs-type">Any</span>, **kwargs: <span class="hljs-type">Any</span></span>) -&gt; <span class="hljs-type">Any</span>:<br>        <span class="hljs-keyword">return</span> self.forward(*args, **kwargs)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__repr__</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-built_in">str</span>:<br>        <span class="hljs-keyword">pass</span><br></code></pre></td></tr></table></figure>
+<p>要点总结：</p>
+<p><strong>1. 核心机制：赋值即注册，类型分流</strong></p>
+<p><code>__setattr__</code>
+按<strong>值的类型</strong>（而非属性名）把赋值分到三个去处——<code>Parameter</code>
+进 <code>_parameters</code>、<code>Module</code> 子类实例进
+<code>_modules</code>、其他类型走 <code>super().__setattr__()</code>
+成为普通属性。因此子类（如
+<code>Linear</code>/<code>Network</code>）不需要任何手工登记代码，<code>self.weights = RParam(...)</code>
+一行就完成注册。配套的 <code>__getattr__</code> 在正常属性查找 miss 后按
+<code>_parameters</code> → <code>_modules</code>
+顺序补偿查找，保证读写对称。</p>
+<p><strong>2. 两个细节</strong></p>
+<ul>
+<li>注册写入必须<strong>直接操作
+<code>self.__dict__["_parameters"]</code></strong>，不能写
+<code>self._parameters[k] = val</code>——后者本身是一次属性赋值，会再触发
+<code>__setattr__</code> 造成无限递归。</li>
+<li><code>__getattr__</code>
+只在<strong>正常查找失败后</strong>才被调用（Python 属性协议：实例
+<code>__dict__</code> → 类属性 → <code>__getattr__</code> 兜底）。被
+<code>__setattr__</code>
+拦进注册表的属性不在实例字典里，正好走这条补偿路径。</li>
+</ul>
+<p><strong>3. <code>Parameter</code> 构造即建图叶子</strong></p>
+<p><code>Parameter.__init__</code> 副作用调用
+<code>value.requires_grad_(True)</code>——即挂一个<strong>空</strong>
+<code>History()</code>（<code>last_fn=None</code>），使该 Tensor
+<code>is_leaf()==True</code>（梯度终点）、<code>is_constant()==False</code>（参与求导）。<strong>"参数自动进入计算图"的机制落点就在这一行</strong>，用户完全无感。<code>Parameter.update()</code>
+对新值重复同样的操作，因为优化器的
+<code>p.update(p.value - lr*grad)</code> 是<strong>整值替换</strong>（新
+Tensor 是干净节点，需重新标记为叶子），而非原地修改。</p>
+<p><strong>4. <code>named_parameters()</code>：DFS 收集 +
+路径命名</strong></p>
+<p>先收本层 <code>_parameters</code>，再深度优先递归子模块、用
+<code>f"&#123;mod_name&#125;.&#123;k&#125;"</code> 拼接路径前缀，产出形如
+<code>("linear1.weights", W1)</code> 的 (完整路径, Parameter) 列表——与
+PyTorch <code>state_dict</code> 的键风格一致。<code>parameters()</code>
+丢弃名字只留值，是优化器的直接接口（<code>Adam(self.model.parameters(), lr)</code>）。注意
+<code>modules()</code>
+<strong>只返回直接子模块</strong>（不递归），递归遍历由
+<code>train()</code>/<code>eval()</code> 手工完成。</p>
+<p><strong>5.
+<code>train()</code>/<code>eval()</code>：模式标志沿树广播</strong></p>
+<p>递归设置整棵树的 <code>training</code> 标志。在 HW2 中的唯一消费点是
+dropout 的 <code>ignore</code>
+参数：<code>nn.dropout(h2, prob, not self.training)</code>——eval
+模式跳过随机丢弃。这也是"模型模式"与"算子行为"解耦的体现：Module
+层只维护状态，具体哪个算子消费这个状态由算子自己决定。</p>
+<p><strong>6. 与 PyTorch 的对应关系（教学实现的简化处）</strong></p>
+<table>
+
+<thead>
+<tr class="header">
+<th>本实现</th>
+<th>PyTorch</th>
+<th>差异</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>__setattr__</code> 类型分流注册</td>
+<td>同款机制</td>
+<td>相同</td>
+</tr>
+<tr class="even">
+<td><code>__getattr__</code> miss 时返回 <code>None</code></td>
+<td>miss 时 raise <code>AttributeError</code></td>
+<td>minitorch 拼错属性名<strong>不会报错</strong>，静默得 None</td>
+</tr>
+<tr class="odd">
+<td><code>Parameter.update()</code> 整值替换</td>
+<td>原地 <code>data.copy_()</code>/<code>add_()</code></td>
+<td>minitorch 每次替换产生新 Tensor 节点，旧图作废</td>
+</tr>
+<tr class="even">
+<td><code>modules()</code> 非递归</td>
+<td>递归全树</td>
+<td>minitorch 简化，全树遍历靠 train/eval 手工递归</td>
+</tr>
+<tr class="odd">
+<td><code>__repr__</code> 树形打印</td>
+<td>同款格式</td>
+<td>minitorch 只打印子模块骨架，不列参数</td>
+</tr>
+</tbody>
+</table>
+<p><strong>7. 一次训练循环走完 Module 全部机制</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python">model = Network()                    <span class="hljs-comment"># __setattr__：linear1/2 → _modules</span><br><span class="hljs-comment">#   Linear.__init__: self.weights = RParam(...) → _parameters</span><br><span class="hljs-comment">#   RParam → Parameter(r) → requires_grad_(True) → 图叶子</span><br>optim = minitorch.Adam(model.parameters(), lr)   <span class="hljs-comment"># named_parameters DFS 收集</span><br>out = model(x)                       <span class="hljs-comment"># __call__ → forward；内部 self.linear1 走 __getattr__</span><br>loss.backward()                      <span class="hljs-comment"># 梯度沿计算图落到 Parameter.value.grad</span><br>optim.step()                         <span class="hljs-comment"># p.update(p.value - lr*grad)：整值替换 + 重挂叶子标记</span><br></code></pre></td></tr></table></figure>
+<h3 id="optimizer">4.3 Optimizer</h3>
+<p>接口：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">Optimizer</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, parameters: <span class="hljs-type">Sequence</span>[Parameter]</span>):<br>        self.parameters = parameters<br></code></pre></td></tr></table></figure>
+<p>SGD 实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">SGD</span>(<span class="hljs-title class_ inherited__">Optimizer</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, parameters: <span class="hljs-type">Sequence</span>[Parameter], lr: <span class="hljs-built_in">float</span> = <span class="hljs-number">1.0</span></span>):<br>        <span class="hljs-built_in">super</span>().__init__(parameters)<br>        self.lr = lr<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">zero_grad</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> self.parameters:<br>            <span class="hljs-keyword">if</span> p.value <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>                <span class="hljs-keyword">continue</span><br>            <span class="hljs-keyword">if</span> <span class="hljs-built_in">hasattr</span>(p.value, <span class="hljs-string">&quot;derivative&quot;</span>):<br>                <span class="hljs-keyword">if</span> p.value.derivative <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>                    p.value.derivative = <span class="hljs-literal">None</span><br>            <span class="hljs-keyword">if</span> <span class="hljs-built_in">hasattr</span>(p.value, <span class="hljs-string">&quot;grad&quot;</span>):<br>                <span class="hljs-keyword">if</span> p.value.grad <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>                    p.value.grad = <span class="hljs-literal">None</span><br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">step</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">for</span> p <span class="hljs-keyword">in</span> self.parameters:<br>            <span class="hljs-keyword">if</span> p.value <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>                <span class="hljs-keyword">continue</span><br>            <span class="hljs-keyword">if</span> <span class="hljs-built_in">hasattr</span>(p.value, <span class="hljs-string">&quot;grad&quot;</span>):<br>                <span class="hljs-keyword">if</span> p.value.grad <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>	                <span class="hljs-comment"># 梯度下降更新 Parameter</span><br>                    p.update(p.value - self.lr * p.value.grad)<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_print</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">for</span> param <span class="hljs-keyword">in</span> self.parameters:<br>            <span class="hljs-keyword">if</span> param.value <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>                <span class="hljs-keyword">continue</span><br>            <span class="hljs-built_in">print</span>(param.value.shape)<br>            <span class="hljs-built_in">print</span>(param.value.grad)<br></code></pre></td></tr></table></figure>
+<p>有了前述内容铺垫，Optimizer 相关代码就显得很简单了。其与
+<code>Module</code> 模块通过 <code>Module.parameters()</code>
+方法关联，获取模型的可学习参数。<code>step()</code>
+方法根据不同的参数更新规则，进行参数更新。</p>
+<h2 id="conclusion">5. Conclusion</h2>
+<ul>
+<li>Tensor
+<ul>
+<li>TensorData: shape &amp; strides</li>
+</ul></li>
+<li>Automatic Differentiation
+<ul>
+<li>Computation Graph: History &amp; Context</li>
+<li>Function</li>
+<li>chain rule(implementation of <code>backpropagate</code>)</li>
+</ul></li>
+<li>Module
+<ul>
+<li>Parameter</li>
+<li>Module</li>
+</ul></li>
+<li>Optimizer
+<ul>
+<li><code>step</code></li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/minitorch/">#minitorch</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems Assignment 2: Minitorch Framework</div>
+      <div>https://arcsin2.cloud/posts/2026/10/2104219689/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/287615401/" title="LLM Systems Assignment 3: Transformer Architecture">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems Assignment 3: Transformer Architecture</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1425595528/" title="LLaMA: Open and Efficient Foundation Language Models">
+                        <span class="hidden-mobile">LLaMA: Open and Efficient Foundation Language Models</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

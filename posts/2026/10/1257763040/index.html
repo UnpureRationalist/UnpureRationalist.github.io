@@ -1,0 +1,1514 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="0. Recap  Tiling for efficient matrix computation  Use shared memory to reduce global memory access Roofline Model &amp; Computational Intensity  Coalesced memory access  Understanding the ch">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems 05: Deep Learning Framework and Auto Differentiation">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/1257763040/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="0. Recap  Tiling for efficient matrix computation  Use shared memory to reduce global memory access Roofline Model &amp; Computational Intensity  Coalesced memory access  Understanding the ch">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1257763040/image-20261005201511463.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1257763040/image-20261005201649149.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1257763040/image-20261005201702570.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1257763040/image-20261005201725173.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1257763040/image-20261005201737858.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1257763040/image-20261005201755481.png">
+<meta property="article:published_time" content="2026-10-05T12:08:17.000Z">
+<meta property="article:modified_time" content="2026-10-05T13:01:25.801Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/1257763040/image-20261005201511463.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems 05: Deep Learning Framework and Auto Differentiation - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems 05: Deep Learning Framework and Auto Differentiation"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-05 20:08" pubdate>
+          2026年10月5日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          15k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          50 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems 05: Deep Learning Framework and Auto Differentiation</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="recap">0. Recap</h2>
+<ul>
+<li>Tiling for efficient matrix computation
+<ul>
+<li>Use shared memory to reduce global memory access</li>
+<li>Roofline Model &amp; Computational Intensity</li>
+</ul></li>
+<li>Coalesced memory access
+<ul>
+<li>Understanding the channel &amp; bank architecture of DRAM</li>
+<li>Rearrange the thread or data to access global memory in coalesced
+manner</li>
+<li>Utilize shared memory to make global memory access coalesced if
+necessary</li>
+<li>Avoid bank conflict of shared memory access
+<ul>
+<li>padding</li>
+<li>swizzle</li>
+</ul></li>
+</ul></li>
+<li>Sparse matrix representation and multiplication</li>
+<li>cuBLAS</li>
+</ul>
+<h2 id="learning-algorithm-for-neural-network">1. Learning algorithm for
+Neural Network</h2>
+<h3 id="the-learning-problem">The Learning Problem</h3>
+<p>使用机器学习解决问题时，首先需要定义一个网络结构，这对应机器学习中<strong>假设空间</strong>（Hypothesis
+Space / Model）的概念。如一个简单的 FFN（Feedforward Neural
+Network）结构如下：</p>
+<img src="/posts/2026/10/1257763040/image-20261005201511463.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005201511463">
+<p>为了让上述网络结构能够解决特定问题，需要对网络进行训练（调整网络的可学习参数以使其能够解决某个问题）。这是一个学习问题，关键要素包括：</p>
+<ul>
+<li>训练集：给定训练集输入（data）-输出（label）对：<span
+class="math inline">\(D=\{ \left( x_{n}, y_{n} \right)
+\}_{n=1}^{N}\)</span>
+<ul>
+<li><span class="math inline">\(x_{n}\)</span> 与 <span
+class="math inline">\(y_{n}\)</span> 都可能是向量。</li>
+</ul></li>
+<li>目标：找到模型参数，使模型对每个训练输入产生最准确的输出（或接近的近似）。</li>
+<li>网络架构已给定，学习的是参数。</li>
+</ul>
+<h3 id="training-loss-for-classification">Training Loss for
+Classification</h3>
+<ul>
+<li>交叉熵（Cross entropy）损失：</li>
+</ul>
+<p><span class="math display">\[
+L(θ)=\frac{1}{N} \sum_{n=1}^{N}{-\log{f(x_{n})_{y_{n}}}}
+\]</span> - where - <span class="math inline">\(x_n\)</span>：第 <span
+class="math inline">\(n\)</span> 个样本的输入特征 - <span
+class="math inline">\(y_n\)</span>：第 <span
+class="math inline">\(n\)</span> 个样本的真实类别标签（整数索引，如
+0/1/2/…） - <span class="math inline">\(f(x_n)\)</span>：模型对输入
+<span class="math inline">\(x_n\)</span> 的预测输出向量（通常为 logits
+或经过 softmax 的概率） - <span
+class="math inline">\(f(x_n)_{y_n}\)</span>：预测向量中，真实类别 <span
+class="math inline">\(y_n\)</span>
+对应的那个分量，即模型预测为真实类别的概率（或得分） -
+直观理解：模型预测真实类别的概率 <span
+class="math inline">\(f(x_n)_{y_n}\)</span> 越接近 1，<span
+class="math inline">\(-\log\)</span> 越接近 0，损失越小；越接近
+0，损失越大（惩罚越重）。</p>
+<ul>
+<li><strong>PyTorch <code>CrossEntropyLoss</code> 的行为</strong>：
+<ul>
+<li><p>接收<strong>未归一化的 logits</strong>（不是概率），内部等价于
+<code>log_softmax</code> + <code>nll_loss</code>。</p></li>
+<li><p>即： <span class="math display">\[
+  \text{CrossEntropyLoss}(z, y) = -\log \left( \frac{\exp(z_y)}{\sum_j
+\exp(z_j)} \right)
+  \]</span> ​ 其中 <span class="math inline">\(z\)</span> 是
+logits，<span class="math inline">\(y\)</span> 是真实类别索引。</p></li>
+<li><p>它<strong>不是</strong>先算 softmax 再取
+log，而是将两步融合，在数值上更稳定（避免 <span
+class="math inline">\(\log(0)\)</span> 或指数溢出）。</p></li>
+</ul></li>
+</ul>
+<p>PyTorch 示例代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python">loss = nn.CrossEntropyLoss()<br><br>output = loss(input_logits, target_labels)<br><br>grads = output.backward()<br></code></pre></td></tr></table></figure>
+<p>本讲要回答的问题：</p>
+<ul>
+<li>how is backward implemented?</li>
+<li>how does it work on any network?</li>
+</ul>
+<h3 id="optimization-method-of-neural-networks">Optimization method of
+neural networks</h3>
+<p><strong>Generic Iterative Learning Algorithm</strong></p>
+<ul>
+<li><strong>问题定义</strong>：考虑一个通用的函数最小化问题。
+<ul>
+<li>未知变量：<span class="math inline">\(x\)</span></li>
+<li>目标函数：<span class="math inline">\(f: \mathbb{R}^d \to
+\mathbb{R}\)</span></li>
+<li>优化目标： <span class="math display">\[
+\min_x f(x)
+\]</span></li>
+</ul></li>
+<li><strong>迭代更新算法</strong>：
+<ul>
+<li>通过迭代的方式，逐步更新 <span class="math inline">\(x\)</span>：
+<span class="math display">\[
+  x_{t+1} \leftarrow x_t + \Delta
+  \]</span></li>
+<li>目标是使得更新后的函数值显著下降： <span class="math display">\[
+  f(x_{t+1}) \ll f(x_t)
+  \]</span></li>
+<li><strong>核心问题</strong>：如何找到最优的更新量 <span
+class="math inline">\(\Delta\)</span>？</li>
+</ul></li>
+</ul>
+<p><strong>Gradient Descent</strong></p>
+<ul>
+<li><strong>一阶泰勒展开</strong>：对函数在 <span
+class="math inline">\(x_t\)</span> 处进行一阶近似： <span
+class="math display">\[
+f(x_t + \Delta x) \approx f(x_t) + \Delta x^T \nabla f|_{x_t}
+\]</span></li>
+<li><strong>寻找下降方向</strong>：
+<ul>
+<li>为了让 <span class="math inline">\(f(x_t + \Delta x)\)</span>
+尽可能变小，需要使 <span class="math inline">\(\Delta x^T \nabla
+f|_{x_t}\)</span> 最小。</li>
+<li>根据向量内积的性质，<span class="math inline">\(\Delta x\)</span>
+应当取梯度的<strong>反方向</strong>： <span class="math display">\[
+  \Delta x = -\nabla f|_{x_t}
+  \]</span></li>
+</ul></li>
+<li><strong>参数更新规则</strong>： <span class="math display">\[
+x_{t+1} = x_t - \eta \nabla f|_{x_t}
+\]</span></li>
+<li><strong>超参数</strong>：<span class="math inline">\(\eta\)</span>
+是学习率（learning rate），用于控制每次更新的步长。</li>
+</ul>
+<p><strong>(Stochastic) Gradient Descent</strong></p>
+<ul>
+<li><strong>前置设置</strong>：设定学习率： <code>eta</code>。</li>
+<li><strong>初始化</strong>：设置初始参数 <span
+class="math inline">\(\theta \leftarrow \theta_0\)</span>。</li>
+<li><strong>训练循环</strong>：
+<ul>
+<li>外层循环：<code>for epoch = 1 to maxEpoch or until converg</code></li>
+<li>批次循环：<code>for each batch in the data</code>
+<ol type="1">
+<li>初始化总梯度：<code>total_g = 0</code></li>
+<li>样本循环：<code>for each data (x, y) in data batch</code>
+<ul>
+<li>计算误差：<code>err(f(x; θ) - y)</code></li>
+<li>计算当前样本梯度：<span class="math inline">\(g = \frac{\partial
+\text{err}(\theta)}{\partial \theta}\)</span></li>
+<li>累加梯度：<code>total_g += g</code></li>
+</ul></li>
+<li>批次更新：<span class="math inline">\(\theta = \theta - \eta \cdot
+\text{total\_g} / N\)</span> （其中 <span
+class="math inline">\(N\)</span> 为当前 batch 的大小）</li>
+</ol></li>
+</ul></li>
+</ul>
+<p><strong>如何在“任意网络”中计算所有参数的梯度？</strong></p>
+<ul>
+<li><strong>核心目标</strong>：计算损失函数 <span
+class="math inline">\(l\)</span> 对每一个网络参数 <span
+class="math inline">\(w_i\)</span> 的偏导数： <span
+class="math display">\[
+\frac{\partial l}{\partial w_i}
+\]</span></li>
+<li><strong>两大支柱</strong>：
+<ul>
+<li><strong>前向计算（Forward
+computation）</strong>：从输入层开始，逐层计算网络输出，并最终计算损失。</li>
+<li><strong>反向传播（Backpropagation）</strong>：从损失开始，利用链式法则，反向逐层计算梯度。
+<ul>
+<li>计算图</li>
+<li>自动求导</li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="computation-graph">2. Computation Graph</h2>
+<ul>
+<li><p>神经网络计算过程可以用计算图表示。</p></li>
+<li><p>每个节点表示一个变量或者操作。</p></li>
+<li><p>有向边连接节点，表示操作的输入值。</p></li>
+<li><p>例子： <img src="/posts/2026/10/1257763040/image-20261005201649149.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005201649149"></p></li>
+<li><p><span class="math inline">\(x_{1}\)</span> ：输入</p></li>
+<li><p><span class="math inline">\(w_{1,2}\)</span>
+：模型参数/权重</p></li>
+<li><p><span class="math inline">\(h_{2,3,4}\)</span>
+：中间计算结果</p></li>
+<li><p><span class="math inline">\(y_{1}\)</span> ：label</p></li>
+<li><p><span class="math inline">\(o_{5}\)</span> ：输出（loss
+scalar）</p></li>
+</ul>
+<p><strong>计算过程示例：</strong></p>
+<img src="/posts/2026/10/1257763040/image-20261005201702570.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005201702570">
+<p>为了执行计算，需要： - 对所有节点进行拓扑排序。 -
+给定输入，计算每个节点的值。</p>
+<p><strong>拓扑排序：</strong></p>
+<ul>
+<li>将所有节点放入未处理队列。</li>
+<li>重复：
+<ul>
+<li>找到一个没有未处理入边（入度为 0）的节点。</li>
+<li>根据操作计算其值。</li>
+<li>将该节点移出队列，加入已处理队列。</li>
+</ul></li>
+</ul>
+<h2 id="auto-differentiation">3. Auto Differentiation</h2>
+<h3 id="反向传播">反向传播</h3>
+<p>前面已经介绍：为了优化（学习）一个神经网络，需要计算损失函数关于所有网络参数（权重）的梯度。在计算图中，参数也表示为节点（通常为叶子节点）。
+- 问题：如何根据计算图计算参数梯度： - 基础：链式法则 -&gt; 反向传播
+<span class="math display">\[
+\frac{dy(z)}{dx} = \frac{dy(z)}{dz} \cdot \frac{dz}{dx}
+\]</span> <strong>补充说明：关于 <span
+class="math inline">\(y(z)\)</span> 符号的理解</strong></p>
+<blockquote>
+<ul>
+<li><strong>为什么不写成 <span
+class="math inline">\(y(x)\)</span>？</strong> 因为 <span
+class="math inline">\(y\)</span> 和 <span
+class="math inline">\(x\)</span> 在计算图中不直接相连，中间隔着节点
+<span class="math inline">\(z\)</span>。写成 <span
+class="math inline">\(y(x)\)</span> 会抹杀中间变量的存在。</li>
+<li><strong>为什么不写成 <span
+class="math inline">\(y(z(x))\)</span>？</strong>
+数学上最严谨，但深度学习框架采用<strong>局部视角</strong>：每个节点只关心它的直接输入（如节点
+<span class="math inline">\(y\)</span> 只知道输入是 <span
+class="math inline">\(z\)</span>）。写成 <span
+class="math inline">\(y(z)\)</span> 是为了强调<strong>局部梯度</strong>
+<span
+class="math inline">\(\frac{dy}{dz}\)</span>，方便反向传播时按“上游梯度
+× 局部梯度”逐层传递。</li>
+<li><strong>更常见的写法</strong>：通常省略自变量，直接写 <span
+class="math inline">\(\frac{dy}{dx} = \frac{dy}{dz} \cdot
+\frac{dz}{dx}\)</span>，像分数约分一样，纯粹表达导数的传递关系。</li>
+</ul>
+</blockquote>
+<p>根据计算图进行反向传播计算梯度例子：</p>
+<img src="/posts/2026/10/1257763040/image-20261005201725173.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005201725173">
+<p><strong>对于有多个出度的节点反向传播规则：</strong></p>
+<img src="/posts/2026/10/1257763040/image-20261005201737858.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005201737858">
+<ul>
+<li>节点 <span class="math inline">\(x\)</span> 参与了节点 <span
+class="math inline">\(y\)</span> 和 <span
+class="math inline">\(x\)</span> 的计算（输入）</li>
+<li>反向传播规则（不同节点来源梯度累加即可）： <span
+class="math display">\[
+\bar{x} = \bar{y} \cdot \frac{\partial y}{\partial x} + \bar{z} \cdot
+\frac{\partial z}{\partial x}
+\]</span></li>
+</ul>
+<h3 id="向量偏导">向量偏导</h3>
+<ul>
+<li><strong>雅可比矩阵（Jacobian Matrix）</strong>
+<ul>
+<li>对于向量函数 <span class="math inline">\(y =
+f(x)\)</span>，其偏导数构成雅可比矩阵： <span class="math display">\[
+  J = \frac{\partial y}{\partial x} =
+  \begin{pmatrix}
+  \frac{\partial y_1}{\partial x_1} &amp; \frac{\partial y_1}{\partial
+x_2} \\
+  \frac{\partial y_2}{\partial x_1} &amp; \frac{\partial y_2}{\partial
+x_2}
+  \end{pmatrix}
+  \]</span></li>
+<li><strong>行</strong>：保持 <span class="math inline">\(y\)</span>
+的索引，遍历 <span class="math inline">\(x\)</span> 的索引（<span
+class="math inline">\(J_{ij} = \frac{\partial y_i}{\partial
+x_j}\)</span>）。</li>
+<li><strong>列</strong>：保持 <span class="math inline">\(x\)</span>
+的索引，遍历 <span class="math inline">\(y\)</span> 的索引。</li>
+</ul></li>
+</ul>
+<p><strong>向量-雅可比乘积（Vector-Jacobian Product, VJP）</strong></p>
+<ul>
+<li><p><strong>定义</strong>：在计算图反向传播中，每个节点接收上游梯度
+<span
+class="math inline">\(\bar{y}\)</span>，并需要计算传递给下游（更靠近输入）的梯度
+<span class="math inline">\(\bar{x}\)</span>。</p>
+<ul>
+<li>上游梯度：<span class="math inline">\(\bar{y} = \frac{\partial
+L}{\partial y}\)</span></li>
+<li>下游梯度：<span class="math inline">\(\bar{x} = \frac{\partial
+L}{\partial x}\)</span></li>
+<li>数学关系： <span class="math display">\[
+  \bar{x} = J^T \bar{y}, \quad \text{其中 } J = \frac{\partial
+y}{\partial x}
+  \]</span></li>
+</ul></li>
+<li><p><strong>推导（链式法则）</strong>： <span class="math display">\[
+\bar{x} = \frac{\partial L}{\partial x}
+= \left( \frac{\partial y}{\partial x} \right)^T \frac{\partial
+L}{\partial y}
+= J^T \bar{y}
+\]</span></p></li>
+<li><p><strong>关键理解：为什么不显式构建 <span
+class="math inline">\(J\)</span>？</strong></p>
+<ul>
+<li>数学上，<span class="math inline">\(J\)</span> 是 <span
+class="math inline">\(y\)</span> 对 <span
+class="math inline">\(x\)</span> 的雅可比矩阵，形状为 <span
+class="math inline">\(\dim(y) \times
+\dim(x)\)</span>。在深度网络中，这个矩阵可能极其巨大（例如 <span
+class="math inline">\(10000 \times 10000\)</span>），且大多数元素为 0
+或具有特殊结构（如对角阵）。</li>
+<li><strong>自动微分框架从不真正在内存中创建 <span
+class="math inline">\(J\)</span></strong>，而是为每个算子直接定义“给定
+<span class="math inline">\(\bar{y}\)</span>，如何直接算出 <span
+class="math inline">\(\bar{x}\)</span>”的规则（即 VJP 规则）。</li>
+<li>例如：
+<ul>
+<li><span class="math inline">\(y = Wx\)</span>：VJP 规则是 <span
+class="math inline">\(\bar{x} = W^T \bar{y}\)</span>（这里 <span
+class="math inline">\(J = W\)</span>，但 <span
+class="math inline">\(W\)</span> 本来就存在，无需额外构造 <span
+class="math inline">\(J\)</span>）。</li>
+<li><span class="math inline">\(y = \exp(x)\)</span>：VJP 规则是 <span
+class="math inline">\(\bar{x} = \exp(x) \odot
+\bar{y}\)</span>（若显式构建 <span
+class="math inline">\(J\)</span>，会得到巨大的对角矩阵，极其浪费）。</li>
+<li><span class="math inline">\(y = \text{ReLU}(x)\)</span>：VJP 规则是
+<span class="math inline">\(\bar{x} = \mathbb{1}[x&gt;0] \odot
+\bar{y}\)</span>。</li>
+</ul></li>
+</ul></li>
+<li><p><strong>反向传播 = 计算图 + 链式法则 + 逐节点 VJP</strong></p>
+<ul>
+<li>反向传播从损失 <span class="math inline">\(L\)</span>
+开始，沿计算图逆拓扑序遍历每个节点。</li>
+<li>每到达一个节点，就调用该节点的 VJP 规则，将上游梯度 <span
+class="math inline">\(\bar{y}\)</span> 转换为下游梯度 <span
+class="math inline">\(\bar{x}\)</span>，并继续向前传递。</li>
+</ul></li>
+<li><p><strong>总结</strong>：VJP
+是链式法则在单个节点上的数学表达；反向传播是沿计算图反复应用
+VJP；框架只实现每个算子的 VJP 规则，不显式构造雅可比矩阵 J。</p></li>
+<li><p><strong>示例：线性层</strong></p>
+<ul>
+<li>前向：<span class="math inline">\(y = Wx\)</span></li>
+<li>雅可比：<span class="math inline">\(J = \frac{\partial y}{\partial
+x} = W\)</span></li>
+<li>反向（VJP）：<span class="math inline">\(\bar{x} = J^T \bar{y} = W^T
+\bar{y}\)</span></li>
+<li><em>结论：在反向传播中，梯度通过权重矩阵的转置进行传递。</em></li>
+</ul></li>
+</ul>
+<p><strong>反向传播自动求导示意图：</strong></p>
+<img src="/posts/2026/10/1257763040/image-20261005201755481.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005201755481">
+<p><strong>1. 左侧：前向计算图（Forward Pass，黑色部分）</strong></p>
+<ul>
+<li><strong>目标</strong>：从输入计算到最终的标量输出（Loss）。</li>
+<li><strong>节点与计算</strong>：
+<ul>
+<li>输入：<span class="math inline">\(x_1 = 3\)</span>, <span
+class="math inline">\(x_2 = 0.5\)</span></li>
+<li>权重/常量：<span class="math inline">\(w_1 = 1.5\)</span>, <span
+class="math inline">\(w_2 = 2.0\)</span></li>
+<li>中间计算：<span class="math inline">\(x_3 = x_1 \cdot w_1\)</span>,
+<span class="math inline">\(x_4 = x_2 \cdot w_2\)</span>, <span
+class="math inline">\(x_5 = x_3 + x_4\)</span>, <span
+class="math inline">\(x_6 = \exp(x_5)\)</span>, <span
+class="math inline">\(x_7 = x_1 + x_6\)</span>。</li>
+<li>最终输出 <span class="math inline">\(x_7\)</span> 即为 <span
+class="math inline">\(y\)</span>。</li>
+</ul></li>
+<li><strong>方向</strong>：数据从左向右、从下向上流动。</li>
+</ul>
+<p><strong>2. 右侧：反向计算图（Backward Pass，橙色部分）</strong></p>
+<ul>
+<li><strong>本质</strong>：这就是前向图对应的<strong>梯度计算图</strong>。它沿着与前向图相反的方向，从最终输出反向传递梯度。</li>
+<li><strong>起点（右下角）</strong>：<span
+class="math inline">\(\bar{x}_7 = 1\)</span>。因为 <span
+class="math inline">\(\bar{x}_7 = \frac{\partial y}{\partial x_7} =
+1\)</span>，梯度从 1 开始传递。</li>
+<li><strong>边的含义（局部梯度 / VJP 规则）</strong>：
+<ul>
+<li><code>id</code>：恒等映射，表示梯度乘以 1，直接传递。</li>
+<li><code>*</code>：表示乘以常数（如 <span class="math inline">\(w_1,
+w_2\)</span>）或另一个输入变量（如 <span class="math inline">\(x_1,
+x_2\)</span>），对应乘法节点的 VJP。</li>
+<li><code>exp(.)</code>：对应 <span class="math inline">\(\exp\)</span>
+节点的 VJP，梯度乘以 <span
+class="math inline">\(\exp(x_5)\)</span>（即前向计算出的 <span
+class="math inline">\(x_6\)</span>）。</li>
+<li><code>+</code>：对应加法节点的
+VJP，梯度直接分发（多条路径求和）。</li>
+</ul></li>
+<li><strong>多路径累加（左上方）</strong>：
+<ul>
+<li>输入 <span class="math inline">\(x_1\)</span>
+在前向图中影响了两条路径：直接传给 <span
+class="math inline">\(x_7\)</span>，以及通过 <span
+class="math inline">\(x_3\)</span> 传给 <span
+class="math inline">\(x_5\)</span>。</li>
+<li>因此，在反向图中，<span class="math inline">\(\bar{x}_1\)</span>
+从两条路径接收梯度：一条是 <code>id</code>（来自 <span
+class="math inline">\(\bar{x}_7\)</span>），另一条是 <span
+class="math inline">\(\bar{x}_3 \cdot w_1\)</span>。两者在 <span
+class="math inline">\(\bar{x}_1\)</span> 处通过一个 <code>+</code>
+节点<strong>累加</strong>。</li>
+</ul></li>
+<li><strong>权重梯度计算</strong>：
+<ul>
+<li><span class="math inline">\(\bar{w}_1 = \bar{x}_3 \cdot
+x_1\)</span>（上游梯度乘以该权重在前向计算中所乘的输入值）</li>
+<li><span class="math inline">\(\bar{w}_2 = \bar{x}_4 \cdot
+x_2\)</span></li>
+</ul></li>
+</ul>
+<h3 id="implementation">Implementation</h3>
+<p><strong>Implementing Backward Pass</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">backward_pass</span>(<span class="hljs-params">g, end_node</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Backpropagation.</span><br><span class="hljs-string">    </span><br><span class="hljs-string">    Traverse computation graph backwards in topological order from the end node.</span><br><span class="hljs-string">    For each node, compute local gradient contribution and accumulate.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    outgrads = &#123;end_node: g&#125;<br>    <span class="hljs-keyword">for</span> node <span class="hljs-keyword">in</span> toposort(end_node):<br>        outgrad = outgrads.pop(node)<br>        fun, value, args, kwargs, argnums = node.recipe<br>        <span class="hljs-keyword">for</span> argnum, parent <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(argnums, node.parents):<br>            <span class="hljs-comment"># Lookup vector-Jacobian product (gradient) function for this function/argument.</span><br>            vjp = primitive_vjps[fun][argnum]<br>            <br>            <span class="hljs-comment"># Compute vector-Jacobian product (gradient) contribution due to</span><br>            <span class="hljs-comment"># parent node&#x27;s use in this function.</span><br>            parent_grad = vjp(outgrad, value, *args, **kwargs)<br>            <br>            <span class="hljs-comment"># Save vector-Jacobian product (gradient) for upstream nodes.</span><br>            <span class="hljs-comment"># Sum contributions with all others also using parent&#x27;s output.</span><br>            outgrads[parent] = add_outgrads(outgrads.get(parent), parent_grad)<br>    <span class="hljs-keyword">return</span> outgrad<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">add_outgrads</span>(<span class="hljs-params">prev_g, g</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Add gradient contributions together.&quot;&quot;&quot;</span><br>    <span class="hljs-keyword">if</span> prev_g <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">return</span> g<br>    <span class="hljs-keyword">return</span> prev_g + g<br></code></pre></td></tr></table></figure>
+<p><strong>代码解释</strong>：</p>
+<ul>
+<li><strong>核心思想</strong>：逆拓扑序遍历计算图，逐节点应用链式法则（VJP）。</li>
+<li><strong><code>outgrads</code>
+字典</strong>：存储每个节点当前累积的上游梯度。初始只有末端节点（Loss）的梯度
+<code>g</code>（通常为 1）。</li>
+<li><strong>拓扑排序
+<code>toposort(end_node)</code></strong>：保证处理某个节点时，所有需要用到它梯度的下游节点都已经计算完毕。</li>
+<li><strong><code>node.recipe</code> 与 VJP
+查找</strong>：每个节点记录了自己的前向操作（<code>fun</code>）、前向输出值（<code>value</code>）、输入参数等。框架通过
+<code>primitive_vjps[fun][argnum]</code>
+直接取出对应的局部梯度计算规则（VJP），<strong>完全避开雅可比矩阵的显式构建</strong>。</li>
+<li><strong><code>add_outgrads</code>（多路径梯度累加）</strong>：如果一个节点被多次使用（分叉），它的梯度会从多条路径传来。必须通过这个函数将各路梯度<strong>相加</strong>，对应数学上的
+<span class="math inline">\(\bar{x} = \sum \bar{y_i} \cdot
+\frac{\partial y_i}{\partial x}\)</span>。</li>
+</ul>
+<p><strong>Build the AutoDiff Graph</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">make_vjp</span>(<span class="hljs-params">fun, x</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Make function for vector-Jacobian product.</span><br><span class="hljs-string">    </span><br><span class="hljs-string">    Args:</span><br><span class="hljs-string">        fun: single-arg function. Jacobian derived from this.</span><br><span class="hljs-string">        x: ndarray. Point to differentiate about.</span><br><span class="hljs-string">    Returns:</span><br><span class="hljs-string">        vjp: single-arg function. vector -&gt; vector-Jacobian[fun, x] product</span><br><span class="hljs-string">        end_value: end_value = fun(start_node)</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    start_node = Node.new_root()<br>    end_value, end_node = trace(start_node, fun, x)<br>    <span class="hljs-keyword">if</span> end_node <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:<br>        <span class="hljs-keyword">def</span> <span class="hljs-title function_">vjp</span>(<span class="hljs-params">g</span>):<br>            <span class="hljs-keyword">return</span> np.zeros_like(x)<br>    <span class="hljs-keyword">else</span>:<br>        <span class="hljs-keyword">def</span> <span class="hljs-title function_">vjp</span>(<span class="hljs-params">g</span>):<br>            <span class="hljs-keyword">return</span> backward_pass(g, end_node)<br>    <span class="hljs-keyword">return</span> vjp, end_value<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">grad</span>(<span class="hljs-params">fun, argnum=<span class="hljs-number">0</span></span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Constructs gradient function.</span><br><span class="hljs-string">    </span><br><span class="hljs-string">    Given a function fun(x), returns a function fun&#x27;(x) that returns the</span><br><span class="hljs-string">    gradient of fun(x) wrt x.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">gradfun</span>(<span class="hljs-params">*args, **kwargs</span>):<br>        <span class="hljs-comment"># Replace args[argnum] with x. Define a single-argument function to</span><br>        <span class="hljs-comment"># compute derivative wrt.</span><br>        unary_fun = <span class="hljs-keyword">lambda</span> x: fun(*subval(args, argnum, x), **kwargs)<br>        <br>        <span class="hljs-comment"># Construct vector-Jacobian product</span><br>        vjp, ans = make_vjp(unary_fun, args[argnum])<br>        <span class="hljs-keyword">return</span> vjp(np.ones_like(ans))<br>    <span class="hljs-keyword">return</span> gradfun<br></code></pre></td></tr></table></figure>
+<p><strong>代码解释</strong>：</p>
+<ul>
+<li><strong><code>make_vjp</code>（图构建与追踪）</strong>：
+<ul>
+<li><code>Node.new_root()</code> +
+<code>trace(...)</code>：这是自动微分的“录播”机制。它执行一次前向计算，同时把所有的运算步骤和依赖关系记录成计算图（Computation
+Graph）。</li>
+<li>返回的闭包 <code>vjp(g)</code>：封装了反向传播过程。当传入上游梯度
+<code>g</code> 时，它会沿着记录好的图调用
+<code>backward_pass</code>。</li>
+</ul></li>
+<li><strong><code>grad</code>（用户 API 封装）</strong>：
+<ul>
+<li>为什么需要 <code>unary_fun</code>？因为 <code>make_vjp</code>
+只接受单变量函数。<code>subval</code> 把多参数函数中的第
+<code>argnum</code> 个参数替换成变量
+<code>x</code>，其余参数固定，从而化多为单。</li>
+<li><code>vjp(np.ones_like(ans))</code>：反向传播的初始梯度。对于标量损失，其自身的导数为
+1；对于向量输出，用全 1 向量作为起始梯度，相当于求其所有输出分量的和（即
+<span class="math inline">\(\frac{\partial \sum y_i}{\partial
+x}\)</span>）。</li>
+</ul></li>
+</ul>
+<p><strong>Use AutoGrad</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-comment"># Define training objective</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">objective</span>(<span class="hljs-params">params, <span class="hljs-built_in">iter</span></span>):<br>    idx = batch_indices(<span class="hljs-built_in">iter</span>)<br>    <span class="hljs-keyword">return</span> -log_posterior(params, train_images[idx], train_labels[idx], L2_reg)<br><br><span class="hljs-comment"># Get gradient of objective using autograd.</span><br>objective_grad = grad(objective)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">neural_net_predict</span>(<span class="hljs-params">params, inputs</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;Implements a deep neural network for classification.</span><br><span class="hljs-string">    params is a list of (weights, bias) tuples.</span><br><span class="hljs-string">    inputs is an (N x D) matrix.</span><br><span class="hljs-string">    returns normalized class log-probabilities.&quot;&quot;&quot;</span><br>    <span class="hljs-keyword">for</span> W, b <span class="hljs-keyword">in</span> params:<br>        outputs = np.dot(inputs, W) + b<br>        inputs = np.tanh(outputs)<br>    <span class="hljs-keyword">return</span> outputs - logsumexp(outputs, axis=<span class="hljs-number">1</span>, keepdims=<span class="hljs-literal">True</span>)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">log_posterior</span>(<span class="hljs-params">params, inputs, targets, L2_reg</span>):<br>    log_prior = -L2_reg * L2_norm(params)<br>    log_lik = np.<span class="hljs-built_in">sum</span>(neural_net_predict(params, inputs) * targets)<br>    <span class="hljs-keyword">return</span> log_prior + log_lik<br></code></pre></td></tr></table></figure>
+<p><strong>代码解释</strong>：</p>
+<ul>
+<li><strong>前向模型 <code>neural_net_predict</code></strong>：纯 NumPy
+实现的多层感知机。核心逻辑是循环执行
+<code>outputs = np.dot(inputs, W) + b</code> 然后接 <code>np.tanh</code>
+激活。最后使用 <code>logsumexp</code> 做稳定归一化，输出对数概率。</li>
+<li><strong>损失函数
+<code>log_posterior</code></strong>：损失分为两部分。<code>log_prior</code>
+是 L2 正则化项；<code>log_lik</code>
+是对数似然（<code>np.sum(预测值 * 真实标签)</code>）。两者相加构成后验对数概率。</li>
+<li><strong>目标函数与自动微分</strong>：<code>objective</code> 包装了
+<code>log_posterior</code>
+并加上负号（因为优化器通常做最小化）。<code>objective_grad = grad(objective)</code>
+直接产生一个梯度计算函数。<strong>用户无需手动推导任何梯度公式</strong>，框架自动完成了反向图的构建与
+VJP 调用。</li>
+<li><strong>实操要点</strong>：在训练循环中，直接调用
+<code>objective_grad(params, iter)</code>
+就能拿到对应参数的梯度，传给优化器（如
+SGD、Adam）即可完成参数更新。</li>
+</ul>
+<p><strong>How to check the correctness of gradient</strong></p>
+<ul>
+<li><strong>核心方法</strong>：使用有限差分（Finite
+Differences）来验证梯度计算的正确性。</li>
+<li><strong>计算公式（中心差分法）</strong>： <span
+class="math display">\[
+\frac{\partial f(x_1, x_2)}{\partial x_1} = \frac{f(x_1 + h, x_2) -
+f(x_1 - h, x_2)}{2h}
+\]</span>
+<ul>
+<li>通过计算函数在 <span class="math inline">\(x_1 + h\)</span> 和 <span
+class="math inline">\(x_1 - h\)</span> 处的值，来近似 <span
+class="math inline">\(x_1\)</span> 处的导数。</li>
+<li>中心差分比前向差分（<span class="math inline">\(f(x+h) -
+f(x)\)</span>）的误差更小（误差为 <span
+class="math inline">\(O(h^2)\)</span> 而不是 <span
+class="math inline">\(O(h)\)</span>）。</li>
+</ul></li>
+<li><strong>注意事项（精度控制）</strong>：
+<ul>
+<li><strong>使用双精度（fp64）</strong>：浮点数在计算微小的 <span
+class="math inline">\(h\)</span> 时容易产生舍入误差（Catastrophic
+Cancellation）。如果使用 fp32，分子上的差值可能因为精度不足而变成
+0。</li>
+<li><strong>选择较小的 <span class="math inline">\(h =
+0.000001\)</span></strong>（即 <span
+class="math inline">\(10^{-6}\)</span>）：
+<ul>
+<li><span class="math inline">\(h\)</span>
+太大：截断误差大，近似不准。</li>
+<li><span class="math inline">\(h\)</span>
+太小：浮点舍入误差大，导致分母虽然小，但分子因精度丢失变成 0，结果为 NaN
+或 Inf。</li>
+</ul></li>
+<li><strong>通过图计算两次前向差分</strong>：意味着要调用
+<code>f(x_1 + h, x_2)</code> 和 <code>f(x_1 - h, x_2)</code>
+各一次，总共两次前向传播（Forward
+Pass）。这也是为什么它常用于小规模网络的调试，因为计算开销是普通前向的 2
+倍。</li>
+</ul></li>
+</ul>
+<h2 id="put-together-implementing-a-deep-learning-framework">4. Put
+Together: Implementing a Deep Learning Framework</h2>
+<h3 id="deep-learning-frameworks-also-for-llms">Deep Learning Frameworks
+(also for LLMs)</h3>
+<p><strong>深度学习框架需要具备的能力：</strong></p>
+<ul>
+<li>expressive to specify any neural networks
+<ul>
+<li>support future custom operators/layers</li>
+</ul></li>
+<li>productive for ML engineers
+<ul>
+<li>hide low-level details (no need to write CUDA)</li>
+<li>automatic differentiation (no need to derive gradient calculation
+manually)</li>
+</ul></li>
+<li>efficient in large-scale training and inference
+<ul>
+<li>automatically scale to data and model size</li>
+<li>automatic hardware acceleration</li>
+</ul></li>
+</ul>
+<p><strong>典型框架特点：</strong></p>
+<table>
+
+<thead>
+<tr class="header">
+<th style="text-align: left;">Aspect</th>
+<th style="text-align: left;">PyTorch</th>
+<th style="text-align: left;">TensorFlow</th>
+<th style="text-align: left;">JAX</th>
+<th style="text-align: left;">NumPy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Primary Use</strong></td>
+<td style="text-align: left;">Deep learning</td>
+<td style="text-align: left;">Deep learning</td>
+<td style="text-align: left;">numerical and ML computing</td>
+<td style="text-align: left;">numerical computing</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Programming Paradigm</strong></td>
+<td style="text-align: left;">Dynamic (eager execution)</td>
+<td style="text-align: left;">Static (Graph mode, or Eager)</td>
+<td style="text-align: left;">Functional transformations</td>
+<td style="text-align: left;">Procedural</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Autograd</strong></td>
+<td style="text-align: left;">dynamic comp graph</td>
+<td style="text-align: left;">static comp graph</td>
+<td style="text-align: left;">Functional-based with grad/jit</td>
+<td style="text-align: left;">Not available</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Hardware Support</strong></td>
+<td style="text-align: left;">CPU, GPU, TPU</td>
+<td style="text-align: left;">CPU, GPU, TPU</td>
+<td style="text-align: left;">CPU, GPU, TPU</td>
+<td style="text-align: left;">CPU only</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Ease of Use</strong></td>
+<td style="text-align: left;">Pythonic</td>
+<td style="text-align: left;">a bit learning curve</td>
+<td style="text-align: left;">Pythonic and functional</td>
+<td style="text-align: left;">Very easy, native python</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Ecosystem</strong></td>
+<td style="text-align: left;">PyTorch Lightning, TorchVision</td>
+<td style="text-align: left;">TensorBoard, TensorFlow Extended</td>
+<td style="text-align: left;">integrates with NumPy</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Parallelism</strong></td>
+<td style="text-align: left;">Multi-GPU with DataParallel or DDP</td>
+<td style="text-align: left;">Multi-GPU/TPU via tf.distribute</td>
+<td style="text-align: left;">Multi-GPU/TPU via pmap</td>
+<td style="text-align: left;">No parallelism</td>
+</tr>
+</tbody>
+</table>
+<p><strong>深度学习框架设计原则：</strong></p>
+<ul>
+<li>Dataflow graphs (computation graph) of primitive operators</li>
+<li>Deferred execution (two phases)
+<ul>
+<li>Define program i.e., symbolic dataflow graph w/ placeholders,
+essentially constructing the computation graph</li>
+<li>Executes <strong>optimized version</strong> of program on set of
+available devices</li>
+</ul></li>
+</ul>
+<p><strong>基本组成部分（以 TensorFlow 为例）：</strong></p>
+<ul>
+<li>A Computation Graph, which contains these nodes
+<ul>
+<li>Placeholder: to store the input data (as tensors/multi-dim
+array)</li>
+<li>Variable: to store the network parameters</li>
+<li>Constant: some static data</li>
+<li>Operation: the mathmatical operations for each neural network layer,
+the input are any of these nodes, result is stored in output
+<ul>
+<li>each operation needs to define forward and backward operation</li>
+</ul></li>
+</ul></li>
+<li>Session: execution environment
+<ul>
+<li>Perform computation via the topological sort of the nodes</li>
+</ul></li>
+</ul>
+<h3 id="tensorflow">TensorFlow</h3>
+<p>TensorFlow v1 采用
+<strong>声明式编程（静态图）与延迟执行</strong>的设计范式，核心是把神经网络训练抽象成一张有向无环计算图（DAG）。</p>
+<h4 id="计算图核心示例">1. 计算图核心示例</h4>
+<p>以最简单的神经网络层为例： <span class="math display">\[
+h = \text{ReLU}(Wx + b)
+\]</span></p>
+<p>在 TensorFlow v1 中，这行公式会被构建为一张包含不同节点的计算图：
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> tensorflow <span class="hljs-keyword">as</span> tf<br><br><span class="hljs-comment"># 定义参数节点 (Variable)</span><br>b = tf.Variable(tf.zeros((<span class="hljs-number">100</span>,)))<br>W = tf.Variable(tf.random_uniform((<span class="hljs-number">784</span>, <span class="hljs-number">100</span>), -<span class="hljs-number">1</span>, <span class="hljs-number">1</span>))<br><br><span class="hljs-comment"># 定义输入节点 (Placeholder)</span><br>x = tf.placeholder(tf.float32, (<span class="hljs-number">1</span>, <span class="hljs-number">784</span>))<br><br><span class="hljs-comment"># 定义操作节点 (Operation) 并构建计算图</span><br>h = tf.nn.relu(tf.matmul(x, W) + b)<br></code></pre></td></tr></table></figure></p>
+<h4 id="三类核心节点类型">2. 三类核心节点类型</h4>
+<p><strong>① Placeholder（输入节点）</strong> -
+<strong>作用</strong>：代表输入数据、标签等<strong>外部数据</strong>。 -
+<strong>特点</strong>：在构建图时不需要赋值，其具体的值在<strong>执行时（Execution
+time）通过 <code>feed_dict</code> 喂入。 - </strong>注意**：TensorFlow
+v2 中已经不需要显式定义 Placeholder。</p>
+<p><strong>② Variable（参数节点）</strong> -
+<strong>作用</strong>：代表模型的权重参数。 -
+<strong>特点</strong>：是<strong>有状态节点（Stateful
+nodes）</strong>。它们在多次执行图的过程中，会保留当前的值（State is
+retained across multiple executions）。 -
+<strong>API</strong>：<code>tf.Variable(initial_value=None, trainable=None, name=None)</code>。<strong><code>trainable=True</code>
+的标志意味着它会被优化器更新。</strong></p>
+<p><strong>③ Operation（计算节点）</strong> -
+<strong>作用</strong>：定义具体的数学运算，输入是任意其他节点，输出是计算结果。
+- <strong>常见 API</strong>： -
+<code>tf.linalg.matmul(a, b)</code>：矩阵乘法（对应 PyTorch 的
+<code>torch.matmul</code>）。 -
+<code>tf.math.add(a, b)</code>：逐元素加法（对应
+<code>torch.add</code>）。 - <code>tf.nn.relu(a)</code>：逐元素 ReLU
+激活（对应 <code>torch.nn.ReLU</code>）。公式为：<span
+class="math inline">\(\text{ReLU}(x) = \max(0, x)\)</span>。</p>
+<h4 id="自定义-operation-节点">3. 自定义 Operation 节点</h4>
+<p>要自定义一个算子，需要继承 <code>Operation</code> 基类，并在
+<code>__init__</code> 中传入输入节点，同时实现
+<code>forward</code>（前向计算）和
+<code>backward</code>（反向梯度计算）函数。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">AddOperation</span>(<span class="hljs-title class_ inherited__">Operation</span>):<br>    <span class="hljs-comment"># 定义加法操作 a+b</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, a, b</span>):<br>        <span class="hljs-comment"># a, b 是输入节点</span><br>        <span class="hljs-built_in">super</span>().__init__([a, b])<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, a, b</span>):  <span class="hljs-comment"># 计算操作结果</span><br>        <span class="hljs-keyword">return</span> a + b<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">self, upstream_grad</span>):<br>        <span class="hljs-comment"># ... 定义梯度反向传播逻辑</span><br>        ...<br></code></pre></td></tr></table></figure>
+<h4 id="定义-loss-为节点">4. 定义 Loss 为节点</h4>
+<ul>
+<li>使用 <code>Placeholder</code> 表示真实标签。</li>
+<li>结合神经网络输出（预测值）和标签节点，构建 Loss 节点。</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python">prediction = tf.nn.softmax(...)  <span class="hljs-comment"># 神经网络输出</span><br>label = tf.placeholder(tf.float32, [<span class="hljs-number">100</span>, <span class="hljs-number">10</span>])  <span class="hljs-comment"># 标签</span><br><br><span class="hljs-comment"># 交叉熵损失节点</span><br>cross_entropy = -tf.reduce_sum(label * tf.log(prediction), axis=<span class="hljs-number">1</span>)<br></code></pre></td></tr></table></figure>
+<h4 id="梯度计算与优化器">5. 梯度计算与优化器</h4>
+<p>在 TensorFlow v1 中，梯度计算也是计算图的一部分。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">train_step = tf.train.GradientDescentOptimizer(<span class="hljs-number">0.5</span>).minimize(cross_entropy)<br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>tf.train.GradientDescentOptimizer</code>
+是一个优化器对象。</li>
+<li><code>GradientDescentOptimizer(lr).minimize(cross_entropy)</code>
+的作用是<strong>向计算图中添加优化操作</strong>（包括计算梯度和更新参数）。</li>
+<li><strong>自动微分</strong>：TensorFlow
+图中的节点自带附件的梯度操作（Attached gradient
+operations），框架会自动根据计算图进行反向传播（Automatic
+Differentiation），用户无需手写梯度公式。</li>
+<li>当 Session 执行 <code>train_step</code> 时，就会自动完成一次前向 +
+反向 + 参数更新。</li>
+</ul>
+<h4 id="执行机制session与两阶段">6. 执行机制：Session与两阶段</h4>
+<p>静态图的“延迟执行”（Deferred Execution）将整个流程分为两个阶段： -
+<strong>Phase
+1：定义程序（Define）</strong>：构建符号数据流图，不进行实际计算。 -
+<strong>Phase 2：执行程序（Execute）</strong>：在可用设备集（如
+CPU、GPU）上执行优化后的图。</p>
+<p><strong>Session</strong>
+正是连接这两个阶段的桥梁：它绑定特定的执行上下文（例如 CPU 或
+GPU），负责分配资源并运行图。</p>
+<p><strong>代码示例（两阶段完整流程）</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> tensorflow <span class="hljs-keyword">as</span> tf<br><br><span class="hljs-keyword">with</span> tf.Session() <span class="hljs-keyword">as</span> sess:<br>    <span class="hljs-comment"># Phase 1: Constructing the graph</span><br>    a = tf.constant(<span class="hljs-number">15</span>, name=<span class="hljs-string">&quot;a&quot;</span>)<br>    b = tf.constant(<span class="hljs-number">5</span>, name=<span class="hljs-string">&quot;b&quot;</span>)<br>    prod = tf.multiply(a, b, name=<span class="hljs-string">&quot;Multiply&quot;</span>)<br>    <span class="hljs-built_in">sum</span> = tf.add(a, b, name=<span class="hljs-string">&quot;Add&quot;</span>)<br>    res = tf.divide(prod, <span class="hljs-built_in">sum</span>, name=<span class="hljs-string">&quot;Divide&quot;</span>)<br><br>    <span class="hljs-comment"># Phase 2: Running the session</span><br>    out = sess.run(res)<br>    <span class="hljs-built_in">print</span>(out)<br></code></pre></td></tr></table></figure>
+<h2 id="summary">5. Summary</h2>
+<ul>
+<li>Learning parameters of an NN needs gradient calculation</li>
+<li>Computation Graph
+<ul>
+<li>to perform computation: topological traversal along the DAG</li>
+</ul></li>
+<li>Auto Differentiation
+<ul>
+<li>building backward computation graph for gradient calculation</li>
+</ul></li>
+<li>Put together: Deep Learning Framework
+<ul>
+<li>Define program i.e., symbolic computation graph
+w/placeholders/variable/operation nodes</li>
+<li>Executes (optimized) computation graph on a set of available
+devices</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems 05: Deep Learning Framework and Auto Differentiation</div>
+      <div>https://arcsin2.cloud/posts/2026/10/1257763040/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/584140393/" title="LLM Systems 06: Transformer">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems 06: Transformer</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/09/911210382/" title="LLM Systems Assignment 1: CUDA Programming">
+                        <span class="hidden-mobile">LLM Systems Assignment 1: CUDA Programming</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

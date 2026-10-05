@@ -1,0 +1,963 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本次 homework 的任务是实现 Decoder-only 的 Transformer 模型，也就是 GPT-2，并在一个翻译任务数据集上进行模型训练。具体来说，包括以下几个子任务：  实现 CrossEntropy Loss 实现基础模块，包括 Linear&#x2F;Dropout&#x2F;LayerNorm1d&#x2F;Embedding 实现 Transformer，包括：MultiHeadAtte">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems Assignment 3: Transformer Architecture">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/287615401/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="本次 homework 的任务是实现 Decoder-only 的 Transformer 模型，也就是 GPT-2，并在一个翻译任务数据集上进行模型训练。具体来说，包括以下几个子任务：  实现 CrossEntropy Loss 实现基础模块，包括 Linear&#x2F;Dropout&#x2F;LayerNorm1d&#x2F;Embedding 实现 Transformer，包括：MultiHeadAtte">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-10-05T12:50:56.000Z">
+<meta property="article:modified_time" content="2026-10-05T12:55:22.631Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="GPT">
+<meta property="article:tag" content="Transformer">
+<meta property="article:tag" content="minitorch">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems Assignment 3: Transformer Architecture - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems Assignment 3: Transformer Architecture"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-05 20:50" pubdate>
+          2026年10月5日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          14 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems Assignment 3: Transformer Architecture</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>本次 homework 的任务是实现 Decoder-only 的 Transformer 模型，也就是
+GPT-2，并在一个翻译任务数据集上进行模型训练。具体来说，包括以下几个子任务：</p>
+<ul>
+<li>实现 CrossEntropy Loss</li>
+<li>实现基础模块，包括 Linear/Dropout/LayerNorm1d/Embedding</li>
+<li>实现
+Transformer，包括：MultiHeadAttention/FeedForward/TransformerLayer/DecoderLM</li>
+<li>实现 Transformer 模型 generate 接口，即贪婪解码</li>
+</ul>
+<p>下面对实现这几个子任务时的要点进行介绍。</p>
+<h2 id="crossentropy-loss">1. CrossEntropy Loss</h2>
+<p>Problem 1 的 TODOs 要求实现 <code>logsumexp</code> 和
+<code>softmax_loss</code> 两个函数，乍一看它们似乎和 CrossEntropy Loss
+的原始定义没有任何关系。但实际上这是工程上实现 CrossEntropy Loss
+数值稳定计算的典型方式。下面进行详细推导。</p>
+<h3 id="数值稳定的-crossentropy-loss-计算方式推导">1.1 数值稳定的
+CrossEntropy Loss 计算方式推导</h3>
+<p>假设某个样本的原始 logits 为 <span class="math inline">\(\mathbf{z} =
+[z_1, z_2, \dots, z_C]\)</span>，真实类别为 <span
+class="math inline">\(c\)</span>（即 one-hot 向量中只有第 <span
+class="math inline">\(c\)</span> 个位置为 1，其余为 0）。CrossEntropy
+的定义为： <span class="math display">\[
+L = - \sum_{i=1}^{C} y_i \log(p_i)
+\]</span> 因为只有真实类别 <span class="math inline">\(c\)</span> 的
+<span class="math inline">\(y_c = 1\)</span>，其他 <span
+class="math inline">\(y_i = 0\)</span>，公式直接简化为： <span
+class="math display">\[
+L = - \log(p_c)
+\]</span> 其中，概率 <span class="math inline">\(p_c\)</span> 由原始
+logits <span class="math inline">\(z_i\)</span> 经过 Softmax 计算得到：
+<span class="math display">\[
+p_c = \frac{\exp(z_c)}{\sum_{j=1}^{C} \exp(z_j)}
+\]</span> 将 <span class="math inline">\(p_c\)</span> 代入 <span
+class="math inline">\(- \log(p_c)\)</span> 中： <span
+class="math display">\[
+L = - \log\left( \frac{\exp(z_c)}{\sum_{j=1}^{C} \exp(z_j)} \right)
+\]</span> 上式整体是一个 <span
+class="math inline">\(\log{\frac{a}{b}}\)</span>
+的形式，根据对数计算规则，其等于 <span class="math inline">\(\log{a} -
+\log{b}\)</span> ，即： <span class="math display">\[
+L = - \left[ \log(\exp(z_c)) - \log\left( \sum_{j=1}^{C} \exp(z_j)
+\right) \right]
+\]</span> 由于 <strong><span class="math inline">\(\log(\exp(z_c)) =
+z_c\)</span></strong>（自然对数和指数运算互为逆运算，直接抵消）： <span
+class="math display">\[
+L = - \left[ z_c - \log\left( \sum_{j=1}^{C} \exp(z_j) \right) \right]
+\]</span> 把负号放到里面，得到 Problem 1 TODOs 形式： <span
+class="math display">\[
+L = \underbrace{\log\left( \sum_{j=1}^{C} \exp(z_j)
+\right)}_{\text{logsumexp\_res}} - \underbrace{z_c}_{(\text{logits}
+\times \text{labels}).\text{sum()}}
+\]</span> 其中第一项就是需要实现的 <code>logsumexp</code>，第二项是
+label 对应的 logits 值。</p>
+<h3 id="logsumexp-数值稳定计算方式推导">1.2 LogSumExp
+数值稳定计算方式推导</h3>
+<p>在上述 CrossEntropy Loss 化简形式的第一项，就是 LogSumExp（LSE）
+的原始定义： <span class="math display">\[
+\text{LSE}(\mathbf{x}) = \log \left( \sum_{i=1}^{n} \exp(x_i) \right)
+\]</span> 其中，假设沿着某维度有 <span class="math inline">\(n\)</span>
+个数：<span class="math inline">\(\mathbf{x} = (x_1, x_2, \dots,
+x_n)\)</span>。</p>
+<p>设该维度上的最大值为 <span class="math inline">\(x^* = \max(x_1, x_2,
+\dots, x_n)\)</span>。我们可以将每个 <span
+class="math inline">\(x_i\)</span> 拆分为 <span
+class="math inline">\((x_i - x^*) + x^*\)</span>： <span
+class="math display">\[
+\text{LSE}(\mathbf{x}) = \log \left( \sum_{i=1}^{n} \exp((x_i - x^*) +
+x^*) \right)
+\]</span> 根据指数运算法则 <span class="math inline">\(e^{a+b} = e^a
+\cdot e^b\)</span>，展开求和项： <span class="math display">\[
+\text{LSE}(\mathbf{x}) = \log \left( \sum_{i=1}^{n} \left[ \exp(x_i -
+x^*) \cdot \exp(x^*) \right] \right)
+\]</span> 因为 <span class="math inline">\(\exp(x^*)\)</span> 与求和索引
+<span class="math inline">\(i\)</span> 无关，可以将其提到求和号 <span
+class="math inline">\(\sum\)</span> 外面： <span class="math display">\[
+\text{LSE}(\mathbf{x}) = \log \left( \exp(x^*) \cdot \sum_{i=1}^{n}
+\exp(x_i - x^*) \right)
+\]</span> 然后根据对数运算法则 <span class="math inline">\(\log(a \cdot
+b) = \log(a) + \log(b)\)</span>，将对数拆开： <span
+class="math display">\[
+\text{LSE}(\mathbf{x}) = \log(\exp(x^*)) + \log \left( \sum_{i=1}^{n}
+\exp(x_i - x^*) \right)
+\]</span> 第一项简化最终得到： <span class="math display">\[
+\text{LSE}(\mathbf{x}) = x^* + \log \left( \sum_{i=1}^{n} \exp(x_i -
+x^*) \right)
+\]</span></p>
+<p>从上述公式可以看出，通过减去原始 logits
+最大值，可以避免指数运算溢出风险，让数值计算更稳定。这一形式也是 Problem
+1 中 <code>logsumexp</code> 函数中我们需要实现的形式。</p>
+<h2 id="basic-modules">2. Basic Modules</h2>
+<p>Basic Modules 的实现，在有了 Homework 1
+的经验之后整体流程非常清晰：</p>
+<ul>
+<li>定义 Parameter</li>
+<li>实现 forward</li>
+</ul>
+<p>不过，由于 minitorch 框架本身的一些局限性，部分实现需要用一点比较
+trick 的方式，下面简要介绍。</p>
+<p><strong>Dropout</strong></p>
+<p>Dropout 的实现主要要注意两点：</p>
+<ul>
+<li>推荐采用一般框架实现的训练时 scale，推理时 no-op
+的方式。即：在训练模式下，在得到 dropout 之后结果后，进行一个 scale
+计算：<code>result / (1.0 - self.p_dropout)</code>，然后在推理模式下直接返回输入
+tensor 即可。</li>
+<li>实现训练模式下 forward 时，根据文档推荐使用以下形式：
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs Python">mask = np.random.binomial(<span class="hljs-number">1</span>, p_keep, size=x.shape)<br>mask = tensor_from_numpy(mask, x.backend)<br></code></pre></td></tr></table></figure></li>
+<li>需要注意的是，调用 <code>tensor_from_numpy</code> 函数从 numpy array
+构造 minitorch tensor 时，记得传入 backend 参数。</li>
+</ul>
+<p><strong>LayerNorm1d</strong></p>
+<p>这个实现公式本文就不贴了，就是个简单的：<span
+class="math inline">\(\frac{(x - mean)}{\sqrt{var}} * weight
++bias\)</span> ，但是需要注意的是，forward 实现过程中可能需要调用
+<code>mean/var</code> 等接口时，传入 dim 参数最好不要是负数
+<code>-1</code>，除非你的 CUDA kernel 处理了传入的 reduce_dim
+是负数的情况（泪的教训）。</p>
+<p><strong>Embedding</strong></p>
+<p>Embedding Layer 从概念上来说非常简单：就是一个 Lookup
+Table，但是在基于 minitorch 框架实现 forward
+时，还是不太直观的。理论上来说，我们应该：</p>
+<ul>
+<li>forward 时从 weights embeddings 中 select 对应 index 位置的
+embedding，并 gather 成需要输出的 tensor shape。</li>
+<li>backward 时，将上游传下来的 grads token_id
+相同的位置累加起来，对于没出现的 token_id 梯度设置为 0。</li>
+</ul>
+<p>不过这一实现方式需要我们自行实现 Embedding 层的 fwd/bwd
+Function，但是这显然不是本次 homework 的重点。（实际上，PyTorch 的
+Embedding 层 fwd/bwd 实现要更加复杂，尤其是
+bwd，这里我们不深入讨论。）</p>
+<p>对于本次 homework 而言，推荐的 Embedding forward 实现方式是：</p>
+<ul>
+<li>根据输入 token ids tensor 构造一个 one-hot 矩阵，形状为 (bs *
+seq_len, vocab_size)；</li>
+<li>然后与 weights 矩阵进行矩阵乘法，得到 shape 为 (bs * seq_len,
+n_embd) 的结果矩阵；</li>
+<li>最后将其 view 为目标 shape：(bs, seq_len, n_embd)。</li>
+</ul>
+<h2 id="transformerlayer">3. TransformerLayer</h2>
+<p><strong>MultiHeadAttention</strong></p>
+<p>Attention 的实现相对复杂一些，但是已有的代码框架和 homework
+文档已经非常详细，跟着一步一步实现也比较清晰。这里简单列几个注意点：</p>
+<ul>
+<li>shape 变换需要调用 Tensor 的 <code>permute</code>
+方法。注意调用该方法后如果需要 view，要先调用一次
+<code>contiguous</code> 然后再调用 view。</li>
+<li>Dropout 要应用在 Attention Score 矩阵上。</li>
+</ul>
+<p><strong>TransformerLayer</strong></p>
+<p>实现这一模块主要注意点是：</p>
+<ul>
+<li>forward 时注意添加适当的 view 改变 tensor 形状，因为
+LayerNorm1D/Attention 等模块预期的输入 tensor 维度不一样，部分要求 2D
+输入部分要求 3D。</li>
+</ul>
+<h2 id="generate">4. generate</h2>
+<p>Problem 4 的 generate 函数，从概念上来讲非常简单：</p>
+<ul>
+<li>将 token_ids 转换为 tensor 输入模型得到 logits</li>
+<li>取最后一个 token 位置的 logits，得到其中最大值对应的
+index，作为预测的 next token</li>
+<li>循环上述过程</li>
+</ul>
+<p>不过，在代码实现时，由于 minitorch 框架接口的限制，推荐首选把 logits
+转换为 numpy array，然后愉快的调用 slice/argmax 等接口实现。</p>
+<h2 id="总结">5. 总结</h2>
+<p>本次 homework 主要收获点：</p>
+<ul>
+<li>CrossEntropy Loss 数值稳定实现方式。</li>
+<li>Decoder-only Transformer 实现。</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/GPT/">#GPT</a>
+      
+        <a href="/tags/Transformer/">#Transformer</a>
+      
+        <a href="/tags/minitorch/">#minitorch</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems Assignment 3: Transformer Architecture</div>
+      <div>https://arcsin2.cloud/posts/2026/10/287615401/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/2104219689/" title="LLM Systems Assignment 2: Minitorch Framework">
+                        <span class="hidden-mobile">LLM Systems Assignment 2: Minitorch Framework</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

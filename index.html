@@ -265,15 +265,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/911210382/" target="_self">
-          LLM Systems Assignment 1: CUDA Programming
+        <a href="/posts/2026/10/287615401/" target="_self">
+          LLM Systems Assignment 3: Transformer Architecture
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/911210382/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/287615401/" target="_self">
         <div>
-          本次作业主要涉及两个文件：  llmsys_hw1/minitorch/cuda_kernel_ops.py：Python 侧调用 kernel 编译成的 .so 接口 llmsys_hw1/src/combine.cu：CUDA kernel 实现  完成本次作业的主要预备知识要求是掌握基本的 CUDA 编程能力（如：按照课程 readings 要求完成 PMPP 这本书前 6
+          本次 homework 的任务是实现 Decoder-only 的 Transformer 模型，也就是 GPT-2，并在一个翻译任务数据集上进行模型训练。具体来说，包括以下几个子任务：  实现 CrossEntropy Loss 实现基础模块，包括 Linear/Dropout/LayerNorm1d/Embedding 实现 Transformer，包括：MultiHeadAtte
         </div>
       </a>
 
@@ -281,8 +281,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:54" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:50" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -316,7 +316,11 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/CUDA/">#CUDA</a>
+              <a href="/tags/GPT/">#GPT</a>
+            
+              <a href="/tags/Transformer/">#Transformer</a>
+            
+              <a href="/tags/minitorch/">#minitorch</a>
             
           </div>
         
@@ -330,15 +334,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/2846274018/" target="_self">
-          PMPP Chapter 06: Performance considerations
+        <a href="/posts/2026/10/2104219689/" target="_self">
+          LLM Systems Assignment 2: Minitorch Framework
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/2846274018/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/2104219689/" target="_self">
         <div>
-          本章主要内容  present the off-chip memory (DRAM) architecture and discuss related performance considerations such as memory coalescing and memory latency hiding. discuss an important type of optimizati
+          本次 homework 需要编写的代码量实际上非常少（100 行左右），完成作业的关键是理解 minitorch 设计和已有代码。因此，本文主要介绍 minitorch 代码结构，解释其 Tensor、Parameter、Operator、Module、History 等关键设计和实现。 课程官方对 minitorch 有个 Jupyter Notebook 做了详细介绍可参考。本文
         </div>
       </a>
 
@@ -346,8 +350,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:53" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:50" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -381,9 +385,7 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/CUDA/">#CUDA</a>
-            
-              <a href="/tags/PMPP/">#PMPP</a>
+              <a href="/tags/minitorch/">#minitorch</a>
             
           </div>
         
@@ -397,15 +399,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/881023638/" target="_self">
-          PMPP Chapter 05: Memory architecture and data locality
+        <a href="/posts/2026/10/1425595528/" target="_self">
+          LLaMA: Open and Efficient Foundation Language Models
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/881023638/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1425595528/" target="_self">
         <div>
-          本章主要关注 GPU 的 on-chip memory，重点是利用 shared memory 减少 global memory 访问，提升 kernel 性能。  Importance of memory access efficiency Compute to Global Memory Access Ratio（算术强度 / 计算强度）  定义：  指程序某区域内，每
+          LLaMA: Open and Efficient Foundation Language Models arXiv 提交日期：27 Feb 2023（ChatGPT 发布后约 3 个月） GitHub 链接：https://github.com/meta-llama/llama 作者：    摘要：  我们提出了 LLaMA，一组从 7B 到 65B 参数的基础语言模型。我们
         </div>
       </a>
 
@@ -413,8 +415,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:53" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:12" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -448,9 +450,7 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/CUDA/">#CUDA</a>
-            
-              <a href="/tags/PMPP/">#PMPP</a>
+              <a href="/tags/LLaMA/">#LLaMA</a>
             
           </div>
         
@@ -464,15 +464,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/2233186881/" target="_self">
-          PMPP Chapter 04: Compute architecture and scheduling
+        <a href="/posts/2026/10/4151764295/" target="_self">
+          GPT-3: Language Models are Few-Shot Learners
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/2233186881/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/4151764295/" target="_self">
         <div>
-          Architecture of a modern GPU    GPU 计算单元由若干个 SM 组成（通常几十到一百多）  每个 SM 有若干个处理单元，称为 CUDA Cores（简称 cores） Memory（on-chip memory） Example：A100 GPU，108 SMs，每个 SM 64 个 cores  global memory（off-chip
+          Language Models are Few-Shot Learners arXiv 提交日期：28 May 2020 OpenAI blog：Language models are few-shot learners 作者：   摘要：  近期工作表明，通过在大规模文本语料上预训练，再针对特定任务进行微调，可以在许多 NLP 任务和基准上取得显著提升。虽然这种方法在架
         </div>
       </a>
 
@@ -480,8 +480,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:53" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:11" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -515,9 +515,7 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/CUDA/">#CUDA</a>
-            
-              <a href="/tags/PMPP/">#PMPP</a>
+              <a href="/tags/GPT/">#GPT</a>
             
           </div>
         
@@ -531,15 +529,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/3085498718/" target="_self">
-          PMPP Chapter 03: Multidimensional grids and data
+        <a href="/posts/2026/10/4222479410/" target="_self">
+          GPT-2: Language Models are Unsupervised Multitask Learners
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/3085498718/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/4222479410/" target="_self">
         <div>
-          多维 grid &amp; block  gridDim  gridDim.x 范围：[1, 2^{31} -1] gridDim.y &amp; gridDim.z 范围：[1, 2^{16} -1]  blockDim  最多 1024 线程（blockDim.x blockDim.y blockDim.z &lt;= 1024）  blockIdx threadId
+          Language Models are Unsupervised Multitask Learners OpenAI Technical Report，blog 链接：Better language models and their implications ，发布日期：February 14, 2019 官方 GitHub repo（TF 实现）：gpt-2 ，仅公布了小模型权重
         </div>
       </a>
 
@@ -547,8 +545,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:52" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:11" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -582,9 +580,7 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/CUDA/">#CUDA</a>
-            
-              <a href="/tags/PMPP/">#PMPP</a>
+              <a href="/tags/GPT/">#GPT</a>
             
           </div>
         
@@ -598,15 +594,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/2496157368/" target="_self">
-          PMPP Chapter 02: Heterogeneous data parallel computing
+        <a href="/posts/2026/10/247085281/" target="_self">
+          GPT-1: Improving Language Understanding by Generative Pre-Training
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/2496157368/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/247085281/" target="_self">
         <div>
-          以 RGB 图片 -&gt; 灰度图片转换为例，说明 Data Parallel 如何运行并行计算：   CUDA 编程步骤：  分配 device global memory 拷贝 host memory 内容到 device memory launch kernel 在 device 进行计算 从 device 拷贝计算结果到 host 释放 device 内存  注：
+          Improving Language Understanding by Generative Pre-Training OpenAI Technical Report，blog 链接：Improving language understanding with unsupervised learning ，发布日期：June 11, 2018（Transformer paper 发布后的
         </div>
       </a>
 
@@ -614,8 +610,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:52" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:11" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -649,9 +645,7 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/CUDA/">#CUDA</a>
-            
-              <a href="/tags/PMPP/">#PMPP</a>
+              <a href="/tags/GPT/">#GPT</a>
             
           </div>
         
@@ -665,15 +659,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/1418183045/" target="_self">
-          PMPP Chapter 01: Introduction
+        <a href="/posts/2026/10/3099712915/" target="_self">
+          The Annotated Transformer
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/1418183045/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/3099712915/" target="_self">
         <div>
-          CPU vs. GPU 2003 年摩尔定律失效后，单核心 CPU 的频率/性能增长有限，新一代 CPU 的单核性能往往提升很小。面对这一问题 ，半导体产业产生了两条解决路径：  多核（multicore）CPU 多线程（multi-thread）GPU  在浮点运算性能（FLOPs）上，GPU 已经远远超过 CPU。这是因为二者设计哲学的区别：   CPU 设计目的是优化
+          The Annotated Transformer code   本文仅摘录原始 blog 部分代码并添加部分注释，不涉及原文全部内容，推荐阅读原文。  Model Architecture 1234567891011121314151617181920212223class EncoderDecoder(nn.Module):    &quot;&quot;&quot;
         </div>
       </a>
 
@@ -681,8 +675,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:51" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:10" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -716,9 +710,7 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/CUDA/">#CUDA</a>
-            
-              <a href="/tags/PMPP/">#PMPP</a>
+              <a href="/tags/Transformer/">#Transformer</a>
             
           </div>
         
@@ -732,15 +724,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/1906032670/" target="_self">
-          LLM Systems 04: GPU Acceleration
+        <a href="/posts/2026/10/2017164533/" target="_self">
+          Transformer: Attention Is All You Need
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/1906032670/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/2017164533/" target="_self">
         <div>
-          0. Recap  Basic GPU CUDA operations  memory allocation data movement creating threads and running on SMs  specifying number of threads and number of blocks in a grid  referring to data in GP
+          Attention Is All You Need 发表于 NIPS 2017（arXiv 提交日期：12 Jun 2017） 作者：   Abstract  主流的序列转换模型基于复杂的循环或卷积神经网络，这些网络包含一个编码器和一个解码器。性能最佳的模型还通过注意力机制连接编码器和解码器。我们提出了一种新的简单网络架构——Transformer，它完全基于注意力机制，彻底摒弃
         </div>
       </a>
 
@@ -748,8 +740,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:51" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:10" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -782,6 +774,8 @@
               <a href="/tags/CMU-11868/">#CMU 11868</a>
             
               <a href="/tags/LLM-System/">#LLM System</a>
+            
+              <a href="/tags/Transformer/">#Transformer</a>
             
           </div>
         
@@ -795,15 +789,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/667991994/" target="_self">
-          LLM Systems 03: GPU Programming-2
+        <a href="/posts/2026/10/3469689404/" target="_self">
+          TensorFlow: A system for large-scale machine learning
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/667991994/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/3469689404/" target="_self">
         <div>
-          This article is the learning note of CMU 11868 LLM Systems course Lecture 3. For more details, please refer to the original slides.  0. Recap  GPU is composed of  streaming processing units (
+          TensorFlow: A system for large-scale machine learning  OSDI 2016 paper link  阅读该 paper 主要要了解：  TensorFlow 诞生背景  DistBelief 存在的问题  设计原则 关键概念&amp;实现（TensorFlow execution model） 如何支持大规模训练（E
         </div>
       </a>
 
@@ -811,8 +805,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-19 20:50" pubdate>
-              2026-09-19
+            <time datetime="2026-10-05 20:10" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -845,6 +839,8 @@
               <a href="/tags/CMU-11868/">#CMU 11868</a>
             
               <a href="/tags/LLM-System/">#LLM System</a>
+            
+              <a href="/tags/TensorFlow/">#TensorFlow</a>
             
           </div>
         
@@ -858,15 +854,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/09/2032429701/" target="_self">
-          LLM Systems 02: GPU Programming
+        <a href="/posts/2026/10/957201169/" target="_self">
+          LLM Systems 07: Pre-trained LLMs
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/09/2032429701/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/957201169/" target="_self">
         <div>
-          This article is the learning note of CMU 11868 LLM Systems course Lecture 2. For more details, please refer to the original slides.  0. Recap  Autoregressive Language Model: \(P\left( x_{1..T}
+          0. Recap  Sequence-to-sequence encoder-decoder framework for conditional generation, including Machine Translation Key components in Transformer  Positional Embedding (to distinguish tokens at d
         </div>
       </a>
 
@@ -874,8 +870,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-09-12 22:01" pubdate>
-              2026-09-12
+            <time datetime="2026-10-05 20:09" pubdate>
+              2026-10-05
             </time>
           </div>
         
@@ -908,6 +904,8 @@
               <a href="/tags/CMU-11868/">#CMU 11868</a>
             
               <a href="/tags/LLM-System/">#LLM System</a>
+            
+              <a href="/tags/Transformer/">#Transformer</a>
             
           </div>
         
@@ -919,7 +917,7 @@
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/#board">6</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/#board">8</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 

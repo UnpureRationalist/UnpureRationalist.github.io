@@ -1,0 +1,1099 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="TensorFlow: A system for large-scale machine learning  OSDI 2016 paper link  阅读该 paper 主要要了解：  TensorFlow 诞生背景  DistBelief 存在的问题  设计原则 关键概念&amp;实现（TensorFlow execution model） 如何支持大规模训练（E">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TensorFlow: A system for large-scale machine learning">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/3469689404/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="TensorFlow: A system for large-scale machine learning  OSDI 2016 paper link  阅读该 paper 主要要了解：  TensorFlow 诞生背景  DistBelief 存在的问题  设计原则 关键概念&amp;实现（TensorFlow execution model） 如何支持大规模训练（E">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3469689404/image-20261005203014791.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3469689404/image-20261005203035910.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3469689404/image-20261005203054110.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3469689404/image-20261005203107097.png">
+<meta property="article:published_time" content="2026-10-05T12:10:05.000Z">
+<meta property="article:modified_time" content="2026-10-05T12:55:22.633Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="TensorFlow">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/3469689404/image-20261005203014791.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>TensorFlow: A system for large-scale machine learning - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="TensorFlow: A system for large-scale machine learning"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-05 20:10" pubdate>
+          2026年10月5日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          19 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">TensorFlow: A system for large-scale machine learning</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>TensorFlow: A system for large-scale machine learning</p>
+<ul>
+<li>OSDI 2016</li>
+<li><a
+target="_blank" rel="noopener" href="https://www.usenix.org/system/files/conference/osdi16/osdi16-abadi.pdf">paper
+link</a></li>
+</ul>
+<p>阅读该 paper 主要要了解：</p>
+<ul>
+<li>TensorFlow 诞生背景
+<ul>
+<li>DistBelief 存在的问题</li>
+</ul></li>
+<li>设计原则</li>
+<li>关键概念&amp;实现（TensorFlow execution model）</li>
+<li>如何支持大规模训练（Extensibility case studies）</li>
+</ul>
+<h2 id="background-motivation">Background &amp; Motivation</h2>
+<p>DistBelief 存在的问题：</p>
+<ul>
+<li>Defining new layers：实现新层时需要使用 C++（machine learning
+researchers 一般并不熟悉）。</li>
+<li>Refining the training algorithms：由于 PS
+架构限制，不能方便的修改优化算法的实现（需要修改 server）。</li>
+<li>Defining new training algorithms：PS
+架构无法实现一些更复杂的模型训练，如：RNN、GAN、RL 算法模型等。</li>
+<li>专为大规模神经网络在数据中心训练设计，难以适配更多的其他环境，如：
+<ul>
+<li>提交数据中心训练前在本地工作站运行 debug</li>
+<li>训练完成后部署为在线服务</li>
+<li>手机等设备部署</li>
+</ul></li>
+</ul>
+<h3 id="design-principles">Design principles</h3>
+<p>TensorFlow 核心抽象：</p>
+<ul>
+<li>dataflow-based programming abstraction that allows users to deploy
+applications on distributed clusters, local workstations, mobile
+devices, and custom-designed accelerators.</li>
+</ul>
+<p>示例代码：</p>
+<img src="/posts/2026/10/3469689404/image-20261005203014791.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005203014791">
+<p><br></p>
+<p>核心设计原则：</p>
+<ul>
+<li><strong>Dataflow graphs of primitive operators</strong>：
+<ul>
+<li>使用 dataflow 表示模型</li>
+<li>数据（tensor）通过算子（functional
+operators）表示流动，组织为计算图（dataflow）</li>
+</ul></li>
+<li><strong>Deferred execution</strong>：
+<ul>
+<li>两阶段：定义 -&gt; 执行
+<ul>
+<li>the first phase defines the program (e.g., a neural network to be
+trained and the update rules) as a symbolic dataflow graph with
+placeholders for the input data and variables that represent the
+state.</li>
+<li>the second phase executes an optimized version of the program on the
+set of available devices.</li>
+</ul></li>
+<li>静态图，能够感知更多信息，进行更好的优化
+<ul>
+<li>例如：利用计算图的结构，同时 launch 多个互相独立的 kernel，以提高
+GPU 利用率。</li>
+</ul></li>
+<li>缺点：control flow 实现更复杂，需要显式作为节点表示在计算图中。</li>
+</ul></li>
+<li><strong>Common abstraction for heterogeneous accelerators</strong>：
+<ul>
+<li>支持 CPU、GPU、TPU 等不同 device</li>
+<li>支持不同 device 的抽象（device 必须实现的方法）：
+<ul>
+<li>issuing a kernel（某个 operator 的实现） for execution</li>
+<li>allocating memory for inputs and outputs</li>
+<li>transferring buffers to and from host memory</li>
+</ul></li>
+<li>例如：矩阵乘法可以在不同 device 上有不同的实现版本</li>
+</ul></li>
+</ul>
+<h2 id="tensorflow-execution-model">TensorFlow execution model</h2>
+<h3 id="dataflow-graph-elements">Dataflow graph elements</h3>
+<p>TensorFlow
+计算图的基本构成：顶点代表<strong>操作（Operation）</strong>，边代表<strong>张量（Tensor）</strong>。即计算由操作完成，数据以张量形式在边上游走。</p>
+<p><strong>Tensors</strong></p>
+<ul>
+<li>本质：<strong>n
+维数组</strong>，元素类型为少数原始类型（<code>int32</code>、<code>float32</code>、<code>string</code>）。</li>
+<li>自然对应常见数学运算的输入和输出：
+<ul>
+<li>矩阵乘法：两个 2-D 张量 → 一个 2-D 张量</li>
+<li>批量 2-D 卷积：两个 4-D 张量 → 另一个 4-D 张量</li>
+</ul></li>
+</ul>
+<p><strong>Operations</strong></p>
+<ul>
+<li>接受 <span class="math inline">\(m \ge 0\)</span>
+个张量作为输入，产生 <span class="math inline">\(n \ge 0\)</span>
+个张量作为输出。</li>
+</ul>
+<p><strong>Stateful operations: variables</strong></p>
+<ul>
+<li>拥有一个<strong>可变缓冲区</strong>，用于存储训练中模型的共享参数。</li>
+<li><strong>无输入</strong>，产生一个<strong>引用句柄（reference
+handle）</strong>，作为读写缓冲区的类型化能力。</li>
+<li><code>Read</code> 操作：输入引用句柄 <span
+class="math inline">\(r\)</span>，输出变量的值 <span
+class="math inline">\(\text{State}[r]\)</span>（稠密张量）。</li>
+<li>修改操作：如 <code>AssignAdd</code> 输入引用句柄 <span
+class="math inline">\(r\)</span> 和张量值 <span
+class="math inline">\(x\)</span>，执行 <span
+class="math inline">\(\text{State}[r] \leftarrow \text{State}[r] +
+x\)</span>。后续 <code>Read(r)</code> 会输出更新后的值。</li>
+</ul>
+<p><strong>Stateful operations: queues</strong></p>
+<ul>
+<li>支持更高级的协调机制。</li>
+<li>最简单的是
+<code>FIFOQueue</code>，拥有内部张量队列，支持并发访问，按先进先出顺序。</li>
+<li>其他队列：随机顺序、优先级顺序，确保输入数据被适当地采样。</li>
+<li>类似 <code>Variable</code>，<code>FIFOQueue</code>
+也产生<strong>引用句柄</strong>，可被标准队列操作消费：
+<ul>
+<li><code>Enqueue</code>：将输入推入队尾。</li>
+<li><code>Dequeue</code>：弹出队首元素并输出。</li>
+</ul></li>
+<li><strong>阻塞行为</strong>：
+<ul>
+<li><code>Enqueue</code> 在队列满时阻塞。</li>
+<li><code>Dequeue</code> 在队列空时阻塞。</li>
+<li>在输入预处理流水线中，这种阻塞提供<strong>背压（backpressure）</strong>，并支持同步。</li>
+</ul></li>
+<li>队列 + 动态控制流可以实现子图之间的<strong>流式计算（streaming
+computation）</strong>。</li>
+</ul>
+<p><strong>补充：概念模型 vs 实现视角</strong></p>
+<ul>
+<li>论文视角：<strong>顶点 = 操作，边 =
+张量</strong>。这是经典数据流架构的纯粹定义，张量无独立身份，是边上的值。</li>
+<li>实现视角（如 minitorch）：<strong>节点 = 操作 +
+数据节点</strong>，张量是节点的 <code>output</code> 属性，边隐含在
+<code>input_nodes</code> 引用中。</li>
+<li>两者描述同一张
+DAG，只是抽象层次不同：一个以边为中心，一个以节点为中心。</li>
+</ul>
+<h3 id="partial-and-concurrent-execution">Partial and concurrent
+execution</h3>
+<img src="/posts/2026/10/3469689404/image-20261005203035910.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005203035910">
+<p><br></p>
+<ul>
+<li>TensorFlow
+用一张数据流图表示应用中<strong>所有可能计算</strong>，但执行时只执行客户端声明所需的<strong>子图</strong>。</li>
+<li>客户端通过 <code>feed</code> 指定输入边、<code>fetch</code>
+指定输出边；运行时<strong>剪枝</strong>图，仅保留必要操作。</li>
+<li>每次 API 调用称为一个
+<strong>step</strong>；同一张图上支持<strong>多个 step
+并发执行</strong>。</li>
+<li><strong>有状态操作</strong>（变量、队列）允许 step
+间共享数据，并在需要时同步。</li>
+<li>上图表示的典型训练应用包含多个并发子图：
+<ul>
+<li><strong>核心训练子图</strong>：依赖模型参数和输入队列，多个 step
+基于不同批次更新模型 → <strong>数据并行训练</strong>。</li>
+<li><strong>预处理子图</strong>：解码、扰动输入记录，填充输入队列。</li>
+<li><strong>I/O 子图</strong>：从分布式文件系统读取记录。</li>
+<li><strong>检查点子图</strong>：周期性运行，用于容错。</li>
+</ul></li>
+<li>灵活性来源：<strong>可变状态 +
+队列协调</strong>，使用户能在用户级代码中定义复杂训练流程，无需修改运行时。</li>
+<li>默认并发执行是<strong>异步</strong>的，适合弱一致性算法（如异步
+SGD）；TensorFlow 也提供同步原语以支持同步训练。</li>
+</ul>
+<h3 id="distributed-execution">Distributed execution</h3>
+<p>TensorFlow 通过数据流图显式表达子计算之间的通信，使同一程序可部署到
+GPU 集群、TPU 集群或手机。本节回答两个问题：</p>
+<p><strong>1. 计算图如何映射到 device（Placement）</strong></p>
+<ul>
+<li>每个操作驻留在特定设备（CPU/GPU/TPU
+等）上；设备负责执行分配给它的操作的内核（kernel）。</li>
+<li>同一操作可注册多个内核，针对特定设备或数据类型特化；逐元素操作（Add、Sub
+等）可用不同编译器为 CPU/GPU 编译同一份内核。</li>
+<li>放置算法：为每个操作计算可行设备集，计算必须同置（colocated）的操作集，并为每个同置组选择满足条件的设备。</li>
+<li>隐式约束：有状态操作及其状态必须在同一设备。</li>
+<li>显式约束：用户可指定部分设备偏好，如“某 task 中任意设备”或“任意 task
+中的 GPU”；典型训练应用通过客户端编程结构添加约束，例如将参数分布到一组
+PS 任务。</li>
+<li>灵活性：简单启发式对新手够用；专家可手动放置以平衡多任务、多设备间的计算、内存和网络需求。</li>
+</ul>
+<p><strong>2. 分布式执行时计算图如何划分，引入哪些通信</strong></p>
+<ul>
+<li>放置后，针对一个 step 的部分子图，TensorFlow 将操作划分成 per-device
+子图。</li>
+<li>设备 <span class="math inline">\(d\)</span> 的子图包含分配给 <span
+class="math inline">\(d\)</span> 的所有操作；跨设备边界的边被替换为
+<code>Send</code> 和 <code>Recv</code> 操作。</li>
+<li><code>Send</code>：单输入，张量可用时立即发送到指定设备，用
+rendezvous key 命名值。</li>
+<li><code>Recv</code>：单输出，阻塞直到指定 rendezvous key
+的值在本地可用，然后产生该值。</li>
+<li><code>Send</code>/<code>Recv</code>
+对多种设备类型对有特化实现（§5）。</li>
+<li>优化低延迟重复执行：剪枝、放置、分区后，子图缓存在各自设备；客户端
+session 维护 step 定义到缓存子图的映射，大图上的分布式 step
+只需向每个参与任务发一个小消息即可启动。节）。</li>
+</ul>
+<h3 id="dynamic-control-flow">Dynamic control flow</h3>
+<p><strong>核心原语（借用自经典动态数据流架构）</strong></p>
+<ul>
+<li><strong>Switch（解复用器）</strong>：输入一个数据和一个控制信号，由控制信号决定两个输出中哪一个产生值；未被选中的输出收到特殊的
+<strong>dead value</strong>，该值递归传播到图中的
+<code>Merge</code>。</li>
+<li><strong>Merge（复用器）</strong>：至多将一个非 dead
+输入转发到输出；若两个输入都是 dead，则输出 dead。</li>
+<li><strong>Conditional（if）</strong>：用 <code>Switch</code>
+根据运行时布尔张量执行两个分支之一，用 <code>Merge</code>
+合并分支输出。</li>
+<li><strong>While loop</strong>：更复杂，使用
+<code>Enter</code>、<code>Exit</code>、<code>NextIteration</code>
+算子保证循环结构良构。</li>
+</ul>
+<p><strong>分布式执行与自动微分</strong></p>
+<ul>
+<li>迭代执行可<strong>重叠</strong>；条件分支与循环体可<strong>跨多设备/多进程划分</strong>。</li>
+<li>分区步骤增加协调逻辑：协调每个设备上每次迭代的开始与终止，并决定循环的终止。</li>
+<li>TensorFlow 支持对控制流构造<strong>自动微分</strong>：
+<ul>
+<li>自动微分把计算梯度的子图加入数据流图。</li>
+<li>TensorFlow 将其划分到（可能分布式的）设备上并行计算梯度。</li>
+<li>实现方式：在前向传播中记录控制流决策，在反向传播中按逆序重放这些决策。</li>
+</ul></li>
+</ul>
+<h2 id="extensibility-case-studies">Extensibility case studies</h2>
+<h3 id="differentiation-and-optimization">Differentiation and
+optimization</h3>
+<p>TensorFlow 支持自动求导，其实现就是 LLM Systems
+课程中介绍的经典步骤：</p>
+<ul>
+<li>拓扑排序</li>
+<li>反向传播，支持多路梯度累加</li>
+</ul>
+<p>对控制流求导的支持：</p>
+<ul>
+<li>We have extended the algorithm to differentiate conditional and
+iterative subcomputations by adding nodes to the graph that record the
+control flow decisions in the forward pass, and replaying those
+decisions in reverse during the backward pass.</li>
+<li>核心：记录 forward 时决策，backward
+时重放以选择正确的反向传播路径。</li>
+</ul>
+<h3 id="training-very-large-models">Training very large models</h3>
+<p>语言模型的 word embedding 占据大量参数。</p>
+<img src="/posts/2026/10/3469689404/image-20261005203054110.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005203054110">
+<p><br></p>
+<ul>
+<li><strong>Shard 0 / Shard 1</strong>：按行分片的 embedding
+变量，分布在不同的 PS 任务上。</li>
+<li><strong><code>Gather</code></strong>：从分片张量中提取稀疏行；与对应变量同置（colocate），避免把参数搬到
+worker 再计算。</li>
+<li><strong><code>Part</code>（dynamic
+partition）</strong>：把输入索引按目标分片划分成变长张量，决定哪些索引去哪个
+shard。</li>
+<li><strong><code>Stitch</code>（dynamic
+stitching）</strong>：把各分片的部分结果重新组装成单个结果张量。</li>
+<li><strong><code>Sum</code></strong>：图中示意最终聚合结果。</li>
+<li>每个算子都有对应梯度 → 支持自动微分（§4.1） →
+反向产生稀疏更新，只作用于最初被 gather 的值。</li>
+</ul>
+<h3 id="fault-tolerance">Fault tolerance</h3>
+<ul>
+<li>We implement user-level checkpointing for fault tolerance.
+<ul>
+<li>Save</li>
+<li>Restore</li>
+</ul></li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<img src="/posts/2026/10/3469689404/image-20261005203107097.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005203107097">
+<p><br></p>
+<ul>
+<li>The core TensorFlow library: implemented in C++ for portability and
+performance.</li>
+<li>The <strong>distributed master</strong>: translates user requests
+into execution across a set of tasks. Also do possible
+optimization.</li>
+<li>The <strong>dataflow executor</strong> in each task：handles
+requests from the master, and schedules the execution of the kernels
+that comprise a local subgraph. dispatches kernels to local devices and
+runs kernels in parallel when possible.</li>
+<li>Specialize Send and Recv operations for each pair of source and
+destination device types.
+<ul>
+<li><code>cudaMemcpyAsync</code></li>
+<li>DMA</li>
+<li>For transfers between tasks, TensorFlow uses multiple protocols,
+including gRPC over TCP, and RDMA over Converged Ethernet.</li>
+</ul></li>
+<li>Client languages：Python &amp; C++.</li>
+<li>总结：C API 分离用户代码与核心运行时；Distributed master
+负责剪枝、分区和跨任务协调；Dataflow executor
+负责本地子图调度与并行执行；Networking 和 Device
+层分别处理通信与设备特化。</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/TensorFlow/">#TensorFlow</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>TensorFlow: A system for large-scale machine learning</div>
+      <div>https://arcsin2.cloud/posts/2026/10/3469689404/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/2017164533/" title="Transformer: Attention Is All You Need">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Transformer: Attention Is All You Need</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/957201169/" title="LLM Systems 07: Pre-trained LLMs">
+                        <span class="hidden-mobile">LLM Systems 07: Pre-trained LLMs</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

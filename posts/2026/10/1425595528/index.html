@@ -1,0 +1,983 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="LLaMA: Open and Efficient Foundation Language Models arXiv 提交日期：27 Feb 2023（ChatGPT 发布后约 3 个月） GitHub 链接：https:&#x2F;&#x2F;github.com&#x2F;meta-llama&#x2F;llama 作者：    摘要：  我们提出了 LLaMA，一组从 7B 到 65B 参数的基础语言模型。我们">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLaMA: Open and Efficient Foundation Language Models">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/1425595528/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="LLaMA: Open and Efficient Foundation Language Models arXiv 提交日期：27 Feb 2023（ChatGPT 发布后约 3 个月） GitHub 链接：https:&#x2F;&#x2F;github.com&#x2F;meta-llama&#x2F;llama 作者：    摘要：  我们提出了 LLaMA，一组从 7B 到 65B 参数的基础语言模型。我们">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1425595528/image-20261005204915845.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1425595528/image-20261005204927658.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1425595528/image-20261005204938397.png">
+<meta property="article:published_time" content="2026-10-05T12:12:10.000Z">
+<meta property="article:modified_time" content="2026-10-05T12:55:22.633Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="LLaMA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/1425595528/image-20261005204915845.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLaMA: Open and Efficient Foundation Language Models - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLaMA: Open and Efficient Foundation Language Models"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-05 20:12" pubdate>
+          2026年10月5日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          10k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          34 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLaMA: Open and Efficient Foundation Language Models</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2302.13971">LLaMA: Open and Efficient
+Foundation Language Models</a></li>
+<li>arXiv 提交日期：27 Feb 2023（ChatGPT 发布后约 3 个月）</li>
+<li>GitHub 链接：<a
+target="_blank" rel="noopener" href="https://github.com/meta-llama/llama">https://github.com/meta-llama/llama</a></li>
+<li>作者： <img src="/posts/2026/10/1425595528/image-20261005204915845.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005204915845"> <br></li>
+</ul>
+<p><strong>摘要：</strong></p>
+<blockquote>
+<p>我们提出了 LLaMA，一组从 7B 到 65B 参数的基础语言模型。我们在数万亿
+token
+上训练我们的模型，并表明可以仅使用公开可用的数据集来训练最先进的模型，而无需依赖专有且无法获取的数据集。特别地，LLaMA-13B
+在大多数基准上优于 GPT-3（175B），而 LLaMA-65B 与最佳模型 Chinchilla-70B
+和 PaLM-540B 相比具有竞争力。我们向研究社区发布了所有模型。</p>
+</blockquote>
+<h2 id="introduction">1. Introduction</h2>
+<p><strong>核心卖点：</strong></p>
+<ul>
+<li><strong>范式转变：从“训练最优”到“推理最优”</strong>
+<ul>
+<li>不同于 Hoffmann 等 (2022) 的 Chinchilla
+缩放定律（给定训练预算，找最优模型/数据配比），LLaMA
+关注的是<strong>给定推理预算</strong>。</li>
+<li>结论：虽然训练一个大模型达到某性能可能更便宜，但<strong>训练更久的小模型在推理时成本更低</strong>。例如，7B
+模型在 1T token 后性能仍在提升。</li>
+</ul></li>
+<li><strong>更小规模，更强性能</strong>
+<ul>
+<li>规模范围：7B ~ 65B。</li>
+<li>LLaMA-13B 在大多数基准上超越 GPT-3 (175B)，规模小 10 倍。</li>
+<li>LLaMA-65B 与 Chinchilla-70B、PaLM-540B 性能相当。</li>
+</ul></li>
+<li><strong>推理友好</strong>
+<ul>
+<li>LLaMA-13B 可在<strong>单张 V100 GPU</strong>
+上推理，大幅降低部署成本，有助于民主化 LLM 研究。</li>
+</ul></li>
+<li><strong>完全开源</strong>
+<ul>
+<li>仅使用公开数据集训练，模型权重全部开源，与现有闭源模型（GPT-3、Chinchilla、PaLM）形成对比。</li>
+<li>与 OPT、GPT-NeoX、BLOOM 等开源模型相比，性能具有明显竞争力。</li>
+</ul></li>
+</ul>
+<h2 id="approach">2. Approach</h2>
+<p>训练方法整体类似于 GPT-3。</p>
+<h3 id="pre-training-data">2.1 Pre-training Data</h3>
+<p>多个开源数据集的混合：</p>
+<img src="/posts/2026/10/1425595528/image-20261005204927658.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005204927658">
+<p><br> 共约 1.4T tokens，除了 Wikipedia 与 Books 数据集 tokens 被训练约
+2 个 epoch，其他数据集都只训练一个 epoch。</p>
+<h3 id="architecture">2.2 Architecture</h3>
+<p>基于 decoder-only Transformer 架构，部分与原始 Transformer
+不一样地方和来源如下：</p>
+<ul>
+<li>Pre-normalization [GPT3]，RMSNorm。</li>
+<li>SwiGLU activation function [PaLM]，<span
+class="math inline">\(d_{ffn}=\frac{2}{3}4d\)</span>。</li>
+<li>Rotary Embeddings [GPTNeo]。</li>
+</ul>
+<img src="/posts/2026/10/1425595528/image-20261005204938397.png" srcset="/img/loading.gif" lazyload class="" title="image-20261005204938397">
+<h3 id="optimizer">2.3 Optimizer</h3>
+<p>使用 AdamW 优化器，超参数：<span class="math inline">\(\beta_{1}=0.9,
+\beta_{2}=0.95\)</span> 。余弦学习率衰减。权重衰减为 0.1，梯度裁剪为
+1.0。</p>
+<h3 id="efficient-implementation">2.4 Efficient implementation</h3>
+<ul>
+<li><strong>高效因果多头注意力</strong>：使用 xformers
+实现，反向传播来自 FlashAttention。不存储 attention
+weights，不计算被因果掩码屏蔽的 key/query
+scores，降低显存和运行时间。</li>
+<li><strong>Checkpointing</strong>：手动实现 Transformer
+层反向传播，保存计算昂贵的激活（如 linear
+层输出），减少反向重计算量。</li>
+<li><strong>并行策略</strong>：模型并行 + 序列并行，降低显存占用。</li>
+<li><strong>通信重叠</strong>：尽可能重叠激活计算与 GPU 间 all_reduce
+通信。</li>
+<li><strong>训练吞吐</strong>：65B 模型，2048×A100-80GB，约 380
+tokens/sec/GPU。</li>
+<li><strong>训练时间</strong>：1.4T tokens 约 21 天。</li>
+</ul>
+<p><em>实验结果等内容略。</em></p>
+<h2 id="代码实现">3. 代码实现</h2>
+<p>官方代码链接：<a
+target="_blank" rel="noopener" href="https://github.com/meta-llama/llama/blob/main/llama/model.py">link</a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-comment"># ---------- 模型配置 ----------</span><br><span class="hljs-meta">@dataclass</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ModelArgs</span>:<br>    dim: <span class="hljs-built_in">int</span> = <span class="hljs-number">4096</span>              <span class="hljs-comment"># d_model</span><br>    n_layers: <span class="hljs-built_in">int</span> = <span class="hljs-number">32</span>           <span class="hljs-comment"># Transformer block 数量</span><br>    n_heads: <span class="hljs-built_in">int</span> = <span class="hljs-number">32</span>            <span class="hljs-comment"># query 头数</span><br>    n_kv_heads: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">int</span>] = <span class="hljs-literal">None</span>  <span class="hljs-comment"># KV 头数，用于 GQA；None 时等于 n_heads</span><br>    vocab_size: <span class="hljs-built_in">int</span> = -<span class="hljs-number">1</span>         <span class="hljs-comment"># 由 tokenizer 决定</span><br>    multiple_of: <span class="hljs-built_in">int</span> = <span class="hljs-number">256</span>       <span class="hljs-comment"># SwiGLU hidden dim 向上取整的倍数</span><br>    ffn_dim_multiplier: <span class="hljs-type">Optional</span>[<span class="hljs-built_in">float</span>] = <span class="hljs-literal">None</span>  <span class="hljs-comment"># FFN hidden dim 缩放因子</span><br>    norm_eps: <span class="hljs-built_in">float</span> = <span class="hljs-number">1e-5</span>       <span class="hljs-comment"># RMSNorm eps</span><br><br>    max_batch_size: <span class="hljs-built_in">int</span> = <span class="hljs-number">32</span><br>    max_seq_len: <span class="hljs-built_in">int</span> = <span class="hljs-number">2048</span><br><br><br><span class="hljs-comment"># ---------- RMSNorm ----------</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">RMSNorm</span>(nn.Module):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    相比 LayerNorm，去掉 mean-centering 和 bias，只保留缩放。</span><br><span class="hljs-string">    RMSNorm(x) = x / sqrt(mean(x^2) + eps) * weight</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, dim: <span class="hljs-built_in">int</span>, eps: <span class="hljs-built_in">float</span> = <span class="hljs-number">1e-6</span></span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.eps = eps<br>        self.weight = nn.Parameter(torch.ones(dim))<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">_norm</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-comment"># 在 fp32 下计算，数值稳定</span><br>        <span class="hljs-keyword">return</span> x * torch.rsqrt(x.<span class="hljs-built_in">pow</span>(<span class="hljs-number">2</span>).mean(-<span class="hljs-number">1</span>, keepdim=<span class="hljs-literal">True</span>) + self.eps)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-keyword">return</span> self._norm(x.<span class="hljs-built_in">float</span>()).type_as(x) * self.weight<br><br><br><span class="hljs-comment"># ---------- Rotary Position Embedding (RoPE) ----------</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">precompute_freqs_cis</span>(<span class="hljs-params">dim: <span class="hljs-built_in">int</span>, end: <span class="hljs-built_in">int</span>, theta: <span class="hljs-built_in">float</span> = <span class="hljs-number">10000.0</span></span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    预计算 RoPE 的复数频率 e^(i * t * theta_k)。</span><br><span class="hljs-string">    dim: head_dim</span><br><span class="hljs-string">    end: 最大位置数</span><br><span class="hljs-string">    返回: [end, dim//2] 的 complex64 张量</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    freqs = <span class="hljs-number">1.0</span> / (theta ** (torch.arange(<span class="hljs-number">0</span>, dim, <span class="hljs-number">2</span>)[: (dim // <span class="hljs-number">2</span>)].<span class="hljs-built_in">float</span>() / dim))<br>    t = torch.arange(end, device=freqs.device)<br>    freqs = torch.outer(t, freqs).<span class="hljs-built_in">float</span>()   <span class="hljs-comment"># [end, dim//2]</span><br>    freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  <span class="hljs-comment"># e^(i*angle)</span><br>    <span class="hljs-keyword">return</span> freqs_cis<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">reshape_for_broadcast</span>(<span class="hljs-params">freqs_cis: torch.Tensor, x: torch.Tensor</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;将 freqs_cis 形状调整为可与 x 广播。&quot;&quot;&quot;</span><br>    ndim = x.ndim<br>    <span class="hljs-keyword">assert</span> <span class="hljs-number">0</span> &lt;= <span class="hljs-number">1</span> &lt; ndim<br>    <span class="hljs-keyword">assert</span> freqs_cis.shape == (x.shape[<span class="hljs-number">1</span>], x.shape[-<span class="hljs-number">1</span>])<br>    shape = [d <span class="hljs-keyword">if</span> i == <span class="hljs-number">1</span> <span class="hljs-keyword">or</span> i == ndim - <span class="hljs-number">1</span> <span class="hljs-keyword">else</span> <span class="hljs-number">1</span> <span class="hljs-keyword">for</span> i, d <span class="hljs-keyword">in</span> <span class="hljs-built_in">enumerate</span>(x.shape)]<br>    <span class="hljs-keyword">return</span> freqs_cis.view(*shape)<br><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">apply_rotary_emb</span>(<span class="hljs-params">xq, xk, freqs_cis</span>):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    对 query 和 key 应用旋转位置编码。</span><br><span class="hljs-string">    xq, xk: [B, T, n_heads, head_dim]</span><br><span class="hljs-string">    freqs_cis: [T, head_dim//2] complex</span><br><span class="hljs-string">    做法: 把 head_dim 视为复数对 (2i, 2i+1)，乘以 e^(i*angle) 实现旋转。</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-comment"># head_dim -&gt; complex: [.., head_dim//2]</span><br>    xq_ = torch.view_as_complex(xq.<span class="hljs-built_in">float</span>().reshape(*xq.shape[:-<span class="hljs-number">1</span>], -<span class="hljs-number">1</span>, <span class="hljs-number">2</span>))<br>    xk_ = torch.view_as_complex(xk.<span class="hljs-built_in">float</span>().reshape(*xk.shape[:-<span class="hljs-number">1</span>], -<span class="hljs-number">1</span>, <span class="hljs-number">2</span>))<br>    freqs_cis = reshape_for_broadcast(freqs_cis, xq_)<br>    xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(<span class="hljs-number">3</span>)<br>    xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(<span class="hljs-number">3</span>)<br>    <span class="hljs-keyword">return</span> xq_out.type_as(xq), xk_out.type_as(xk)<br><br><br><span class="hljs-comment"># ---------- GQA: KV head 复制 ----------</span><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">repeat_kv</span>(<span class="hljs-params">x: torch.Tensor, n_rep: <span class="hljs-built_in">int</span></span>) -&gt; torch.Tensor:<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    当 n_kv_heads &lt; n_heads 时，把 KV heads 复制 n_rep 次以匹配 Q heads。</span><br><span class="hljs-string">    x: [B, T, n_kv_heads, head_dim] -&gt; [B, T, n_kv_heads * n_rep, head_dim]</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    bs, slen, n_kv_heads, head_dim = x.shape<br>    <span class="hljs-keyword">if</span> n_rep == <span class="hljs-number">1</span>:<br>        <span class="hljs-keyword">return</span> x<br>    <span class="hljs-keyword">return</span> (<br>        x[:, :, :, <span class="hljs-literal">None</span>, :]<br>        .expand(bs, slen, n_kv_heads, n_rep, head_dim)<br>        .reshape(bs, slen, n_kv_heads * n_rep, head_dim)<br>    )<br><br><br><span class="hljs-comment"># ---------- 多头注意力 (含 GQA + KV Cache + RoPE) ----------</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Attention</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, args: ModelArgs</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        <span class="hljs-comment"># GQA: KV 头数可小于 Q 头数</span><br>        self.n_kv_heads = args.n_heads <span class="hljs-keyword">if</span> args.n_kv_heads <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span> <span class="hljs-keyword">else</span> args.n_kv_heads<br>        self.n_heads = args.n_heads<br>        self.n_rep = self.n_heads // self.n_kv_heads   <span class="hljs-comment"># KV 复制次数</span><br>        self.head_dim = args.dim // args.n_heads<br><br>        <span class="hljs-comment"># 无 bias，与 LLaMA 论文一致</span><br>        self.wq = nn.Linear(args.dim, args.n_heads * self.head_dim, bias=<span class="hljs-literal">False</span>)<br>        self.wk = nn.Linear(args.dim, self.n_kv_heads * self.head_dim, bias=<span class="hljs-literal">False</span>)<br>        self.wv = nn.Linear(args.dim, self.n_kv_heads * self.head_dim, bias=<span class="hljs-literal">False</span>)<br>        self.wo = nn.Linear(args.n_heads * self.head_dim, args.dim, bias=<span class="hljs-literal">False</span>)<br><br>        <span class="hljs-comment"># KV Cache 预分配，避免推理时反复申请显存</span><br>        self.cache_k = torch.zeros(<br>            (args.max_batch_size, args.max_seq_len, self.n_kv_heads, self.head_dim)<br>        )<br>        self.cache_v = torch.zeros(<br>            (args.max_batch_size, args.max_seq_len, self.n_kv_heads, self.head_dim)<br>        )<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x, start_pos, freqs_cis, mask</span>):<br>        bsz, seqlen, _ = x.shape<br>        xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)<br><br>        <span class="hljs-comment"># [B, T, n_heads, head_dim]</span><br>        xq = xq.view(bsz, seqlen, self.n_heads, self.head_dim)<br>        xk = xk.view(bsz, seqlen, self.n_kv_heads, self.head_dim)<br>        xv = xv.view(bsz, seqlen, self.n_kv_heads, self.head_dim)<br><br>        <span class="hljs-comment"># RoPE 只作用于 Q 和 K</span><br>        xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)<br><br>        <span class="hljs-comment"># 写入 KV Cache</span><br>        self.cache_k = self.cache_k.to(xq)<br>        self.cache_v = self.cache_v.to(xq)<br>        self.cache_k[:bsz, start_pos:start_pos + seqlen] = xk<br>        self.cache_v[:bsz, start_pos:start_pos + seqlen] = xv<br><br>        <span class="hljs-comment"># 读取历史 + 当前</span><br>        keys = self.cache_k[:bsz, :start_pos + seqlen]<br>        values = self.cache_v[:bsz, :start_pos + seqlen]<br><br>        <span class="hljs-comment"># GQA: KV heads 复制到与 Q heads 数量一致</span><br>        keys = repeat_kv(keys, self.n_rep)<br>        values = repeat_kv(values, self.n_rep)<br><br>        <span class="hljs-comment"># 转成 [B, n_heads, T, head_dim]</span><br>        xq = xq.transpose(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>)<br>        keys = keys.transpose(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>)<br>        values = values.transpose(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>)<br><br>        <span class="hljs-comment"># 缩放点积注意力</span><br>        scores = torch.matmul(xq, keys.transpose(<span class="hljs-number">2</span>, <span class="hljs-number">3</span>)) / math.sqrt(self.head_dim)<br>        <span class="hljs-keyword">if</span> mask <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            scores = scores + mask<br>        scores = F.softmax(scores.<span class="hljs-built_in">float</span>(), dim=-<span class="hljs-number">1</span>).type_as(xq)<br><br>        output = torch.matmul(scores, values)  <span class="hljs-comment"># [B, n_heads, T, head_dim]</span><br>        output = output.transpose(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>).contiguous().view(bsz, seqlen, -<span class="hljs-number">1</span>)<br>        <span class="hljs-keyword">return</span> self.wo(output)<br><br><br><span class="hljs-comment"># ---------- SwiGLU FFN ----------</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">FeedForward</span>(nn.Module):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    SwiGLU: FFN(x) = W2( SiLU(W1 x) * W3 x )</span><br><span class="hljs-string">    hidden_dim 通常取 4*dim 的 2/3，且向上取整到 multiple_of 的倍数。</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, dim, hidden_dim, multiple_of, ffn_dim_multiplier=<span class="hljs-literal">None</span></span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        hidden_dim = <span class="hljs-built_in">int</span>(<span class="hljs-number">2</span> * hidden_dim / <span class="hljs-number">3</span>)<br>        <span class="hljs-keyword">if</span> ffn_dim_multiplier <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            hidden_dim = <span class="hljs-built_in">int</span>(ffn_dim_multiplier * hidden_dim)<br>        <span class="hljs-comment"># 向上取整到 multiple_of 的倍数</span><br>        hidden_dim = multiple_of * ((hidden_dim + multiple_of - <span class="hljs-number">1</span>) // multiple_of)<br><br>        self.w1 = nn.Linear(dim, hidden_dim, bias=<span class="hljs-literal">False</span>)<br>        self.w2 = nn.Linear(hidden_dim, dim, bias=<span class="hljs-literal">False</span>)<br>        self.w3 = nn.Linear(dim, hidden_dim, bias=<span class="hljs-literal">False</span>)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-comment"># 门控：SiLU(w1(x)) * w3(x)，再投影回 dim</span><br>        <span class="hljs-keyword">return</span> self.w2(F.silu(self.w1(x)) * self.w3(x))<br><br><br><span class="hljs-comment"># ---------- Transformer Block ----------</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TransformerBlock</span>(nn.Module):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Pre-Norm 结构：</span><br><span class="hljs-string">      h = x + Attention(RMSNorm(x))</span><br><span class="hljs-string">      out = h + FFN(RMSNorm(h))</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, layer_id, args</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.n_heads = args.n_heads<br>        self.dim = args.dim<br>        self.head_dim = args.dim // args.n_heads<br>        self.attention = Attention(args)<br>        self.feed_forward = FeedForward(<br>            dim=args.dim,<br>            hidden_dim=<span class="hljs-number">4</span> * args.dim,<br>            multiple_of=args.multiple_of,<br>            ffn_dim_multiplier=args.ffn_dim_multiplier,<br>        )<br>        self.layer_id = layer_id<br>        self.attention_norm = RMSNorm(args.dim, eps=args.norm_eps)<br>        self.ffn_norm = RMSNorm(args.dim, eps=args.norm_eps)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x, start_pos, freqs_cis, mask</span>):<br>        <span class="hljs-comment"># 残差 + Pre-Norm Attention</span><br>        h = x + self.attention(self.attention_norm(x), start_pos, freqs_cis, mask)<br>        <span class="hljs-comment"># 残差 + Pre-Norm FFN</span><br>        out = h + self.feed_forward(self.ffn_norm(h))<br>        <span class="hljs-keyword">return</span> out<br><br><br><span class="hljs-comment"># ---------- 完整 Transformer ----------</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Transformer</span>(nn.Module):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, params: ModelArgs</span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.params = params<br>        self.vocab_size = params.vocab_size<br>        self.n_layers = params.n_layers<br><br>        self.tok_embeddings = nn.Embedding(params.vocab_size, params.dim)<br><br>        self.layers = nn.ModuleList()<br>        <span class="hljs-keyword">for</span> layer_id <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(params.n_layers):<br>            self.layers.append(TransformerBlock(layer_id, params))<br><br>        self.norm = RMSNorm(params.dim, eps=params.norm_eps)<br>        self.output = nn.Linear(params.dim, params.vocab_size, bias=<span class="hljs-literal">False</span>)<br><br>        <span class="hljs-comment"># 预计算 RoPE 频率，*2 是为了支持更长序列的微调</span><br>        self.freqs_cis = precompute_freqs_cis(<br>            self.params.dim // self.params.n_heads,<br>            self.params.max_seq_len * <span class="hljs-number">2</span>,<br>        )<br><br><span class="hljs-meta">    @torch.inference_mode()</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, tokens, start_pos</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">        tokens: [B, T]</span><br><span class="hljs-string">        start_pos: 当前 token 在序列中的起始位置（用于 KV Cache 和 RoPE）</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        _bsz, seqlen = tokens.shape<br>        h = self.tok_embeddings(tokens)<br>        self.freqs_cis = self.freqs_cis.to(h.device)<br>        freqs_cis = self.freqs_cis[start_pos:start_pos + seqlen]<br><br>        <span class="hljs-comment"># 因果掩码：仅当 seqlen &gt; 1 时需要</span><br>        mask = <span class="hljs-literal">None</span><br>        <span class="hljs-keyword">if</span> seqlen &gt; <span class="hljs-number">1</span>:<br>            mask = torch.full((seqlen, seqlen), <span class="hljs-built_in">float</span>(<span class="hljs-string">&quot;-inf&quot;</span>), device=tokens.device)<br>            mask = torch.triu(mask, diagonal=<span class="hljs-number">1</span>)<br>            <span class="hljs-comment"># 拼接 cache 部分：左边 start_pos 列全 0（可看见历史）</span><br>            mask = torch.hstack([<br>                torch.zeros((seqlen, start_pos), device=tokens.device),<br>                mask<br>            ]).type_as(h)<br><br>        <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers:<br>            h = layer(h, start_pos, freqs_cis, mask)<br>        h = self.norm(h)<br>        output = self.output(h).<span class="hljs-built_in">float</span>()<br>        <span class="hljs-keyword">return</span> output<br></code></pre></td></tr></table></figure>
+<p><strong>补充：MHA/GQA/MQA</strong></p>
+<table>
+
+<thead>
+<tr class="header">
+<th>特性</th>
+<th>MHA (Multi-Head Attention)</th>
+<th>GQA (Grouped Query Attention)</th>
+<th>MQA (Multi-Query Attention)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>全称</strong></td>
+<td>Multi-Head Attention</td>
+<td>Grouped Query Attention</td>
+<td>Multi-Query Attention</td>
+</tr>
+<tr class="even">
+<td><strong>核心思想</strong></td>
+<td>Q、K、V 头数相同</td>
+<td>Q 头多，K/V 头少，多个 Q 头共享一组 K/V</td>
+<td>Q 头多，K/V 头只有 1 组</td>
+</tr>
+<tr class="odd">
+<td><strong>Q 头数</strong></td>
+<td><span class="math inline">\(n_{heads}\)</span></td>
+<td><span class="math inline">\(n_{heads}\)</span></td>
+<td><span class="math inline">\(n_{heads}\)</span></td>
+</tr>
+<tr class="even">
+<td><strong>KV 头数</strong></td>
+<td><span class="math inline">\(n_{heads}\)</span></td>
+<td><span class="math inline">\(n_{kv\_heads}\)</span>（<span
+class="math inline">\(1 &lt; n_{kv\_heads} &lt;
+n_{heads}\)</span>）</td>
+<td><span class="math inline">\(1\)</span></td>
+</tr>
+<tr class="odd">
+<td><strong>KV 共享比例</strong></td>
+<td><span class="math inline">\(1:1\)</span></td>
+<td><span class="math inline">\(n_{rep} = n_{heads} /
+n_{kv\_heads}\)</span></td>
+<td><span class="math inline">\(n_{rep} = n_{heads}\)</span></td>
+</tr>
+<tr class="even">
+<td><strong>KV Cache 大小</strong></td>
+<td>最大</td>
+<td>中等，减少 <span class="math inline">\(n_{rep}\)</span> 倍</td>
+<td>最小，减少 <span class="math inline">\(n_{heads}\)</span> 倍</td>
+</tr>
+<tr class="odd">
+<td><strong>推理速度</strong></td>
+<td>慢</td>
+<td>较快</td>
+<td>最快</td>
+</tr>
+<tr class="even">
+<td><strong>显存/带宽开销</strong></td>
+<td>高</td>
+<td>中</td>
+<td>低</td>
+</tr>
+<tr class="odd">
+<td><strong>质量</strong></td>
+<td>最好</td>
+<td>接近 MHA</td>
+<td>可能下降</td>
+</tr>
+<tr class="even">
+<td><strong>训练稳定性</strong></td>
+<td>好</td>
+<td>好</td>
+<td>可能需调参</td>
+</tr>
+<tr class="odd">
+<td><strong>代表模型</strong></td>
+<td>GPT-2、GPT-3、LLaMA 7B/13B</td>
+<td>LLaMA 2 34B/70B、LLaMA 3、Mistral</td>
+<td>PaLM、Falcon</td>
+</tr>
+<tr class="even">
+<td><strong>适用场景</strong></td>
+<td>训练优先、小规模推理</td>
+<td>大模型推理、显存/带宽敏感</td>
+<td>极致推理速度、显存受限</td>
+</tr>
+<tr class="odd">
+<td><strong>备注</strong></td>
+<td>KV Cache 瓶颈明显</td>
+<td>与 PagedAttention 兼容，vLLM 优化</td>
+<td>KV Cache 极小，但质量需验证</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>说明：<span class="math inline">\(n_{heads}\)</span> 为 Query
+头数，<span class="math inline">\(n_{kv\_heads}\)</span> 为 Key/Value
+头数。GQA 当 <span
+class="math inline">\(n_{kv\_heads}=n_{heads}\)</span> 时退化为 MHA，当
+<span class="math inline">\(n_{kv\_heads}=1\)</span> 时退化为 MQA。</p>
+</blockquote>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/LLaMA/">#LLaMA</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLaMA: Open and Efficient Foundation Language Models</div>
+      <div>https://arcsin2.cloud/posts/2026/10/1425595528/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/2104219689/" title="LLM Systems Assignment 2: Minitorch Framework">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems Assignment 2: Minitorch Framework</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/4151764295/" title="GPT-3: Language Models are Few-Shot Learners">
+                        <span class="hidden-mobile">GPT-3: Language Models are Few-Shot Learners</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

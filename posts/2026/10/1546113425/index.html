@@ -1,0 +1,1397 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="0. Recap Transformer Architecture：  1. Accelerated GPU Computation for Transformer Training Overview:   对应下面将要介绍的 4 个优化手段：  Kernel Fusion：计算图级别优化，通过算子融合减少计算图节点。 Reduce synchronization：算子内优化">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/1546113425/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="0. Recap Transformer Architecture：  1. Accelerated GPU Computation for Transformer Training Overview:   对应下面将要介绍的 4 个优化手段：  Kernel Fusion：计算图级别优化，通过算子融合减少计算图节点。 Reduce synchronization：算子内优化">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224103045.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224114398.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224134830.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224147217.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224201092.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224212376.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224223113.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224252922.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224317578.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224331372.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224344115.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224354961.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224422001.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224433389.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224448879.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224504901.png">
+<meta property="article:published_time" content="2026-10-17T14:22:59.000Z">
+<meta property="article:modified_time" content="2026-10-17T14:46:12.097Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="kernel">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/1546113425/image-20261017224103045.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-17 22:22" pubdate>
+          2026年10月17日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          19k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          62 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="recap">0. Recap</h2>
+<p>Transformer Architecture：</p>
+<img src="/posts/2026/10/1546113425/image-20261017224103045.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224103045">
+<h2 id="accelerated-gpu-computation-for-transformer-training">1.
+Accelerated GPU Computation for Transformer Training</h2>
+<p>Overview:</p>
+<img src="/posts/2026/10/1546113425/image-20261017224114398.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224114398">
+<p><br></p>
+<p>对应下面将要介绍的 4 个优化手段：</p>
+<ul>
+<li>Kernel Fusion：计算图级别优化，通过算子融合减少计算图节点。</li>
+<li>Reduce synchronization：算子内优化，通过算子实现形式变换，减少
+kernel 内同步开销。</li>
+<li>Mixed-precision
+Calculation：框架层面优化，混合精度训练提升训练速度，降低显存开销。</li>
+<li>Memory reuse：细粒度内存管理优化。</li>
+</ul>
+<h3 id="kernel-fusion">1.1 Kernel Fusion</h3>
+<p><strong>Kernel Fusion Motivation</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224134830.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224134830">
+<p><br></p>
+<ul>
+<li>将多个小 kernel 融合为一个。</li>
+<li>减少了 CPU launch kernel 开销。</li>
+</ul>
+<p><strong>例子：</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224147217.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224147217">
+<p><br></p>
+<ul>
+<li>三个矩阵相加
+<ul>
+<li>朴素实现：先计算 A+B 得到 C，然后计算 C+D 得到最终结果。
+<ul>
+<li>需要两次 kernel launch。</li>
+<li>需要读显存 4 次，写 2 次。</li>
+</ul></li>
+<li>Kernel Fusion：一个 kernel 完成 A+B+D。
+<ul>
+<li>需要 1 次 kernel launch。</li>
+<li>减少了 1 次显存读和 1 次显存写。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h4 id="transformer-layer-and-operator">1.1.1 Transformer Layer and
+Operator</h4>
+<p>MHA 与 FFN 层：</p>
+<img src="/posts/2026/10/1546113425/image-20261017224201092.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224201092">
+<p><br> 对应的算子（计算过程)：</p>
+<img src="/posts/2026/10/1546113425/image-20261017224212376.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224212376">
+<p><br></p>
+<ul>
+<li>其中的非 GEMM op 可以通过 kernel fusion 加速。</li>
+</ul>
+<h4 id="fused-embedding-operator">1.1.2 Fused Embedding Operator</h4>
+<p><strong>Forward</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224223113.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224223113">
+<p><br></p>
+<ul>
+<li>Embedding 层 forward 计算过程
+<ul>
+<li>朴素实现：需要 5 个 kernel
+<ul>
+<li>Word Embedding Lookup</li>
+<li>Position Embedding Lookup</li>
+<li>Word Embedding Scale</li>
+<li>Word Embedding + Position Embedding</li>
+<li>Dropout</li>
+</ul></li>
+<li>Kernel Fusion：融合到 1 个 kernel 完成
+<ul>
+<li><span class="math inline">\(y = \text{Dropout}\left(s \cdot
+\mathbf{E}_{w} + \mathbf{P}_{p}\right)\)</span></li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>fwd fused kernel 代码：</strong></p>
+<ul>
+<li>link: <a
+target="_blank" rel="noopener" href="https://github.com/bytedance/lightseq/blob/master/lightseq/csrc/kernels/cuda/embedding_kernels.cu">lightseq:embedding_kernels.cu</a></li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * @brief Fused Embedding Forward CUDA Kernel (词嵌入前向融合算子)</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * 融合操作包含：</span><br><span class="hljs-comment"> *   1. Token Embedding Lookup (词向量查找)</span><br><span class="hljs-comment"> *   2. Positional Embedding Lookup (位置向量查找)</span><br><span class="hljs-comment"> *   3. Token Scaling (词向量缩放, 如 sqrt(d_model))</span><br><span class="hljs-comment"> *   4. Fake Quantization (可选伪量化/截断)</span><br><span class="hljs-comment"> *   5. Dropout &amp; Mask Saving (按元素 Dropout 并存掩码)</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * =============================== 参数含义与 Shape 说明 ===============================</span><br><span class="hljs-comment"> * @param output          [输出] 融合计算后的词嵌入特征矩阵。</span><br><span class="hljs-comment"> *                        Shape: (batch_size, seq_len, embedding_dim) -&gt; 展平 [B * S * D]</span><br><span class="hljs-comment"> *                        内部强转为 float4* 访问，内存按 128-bit (4 * float) 打包。</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param input           [输入] Token ID 矩阵 (Batch 内每个位置的词索引)。</span><br><span class="hljs-comment"> *                        Shape: (batch_size, seq_len) -&gt; 展平 [B * S]</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param tokens_position [输入] 位置 Index 矩阵 (每个 Token 在序列中的位置 0~S-1)。</span><br><span class="hljs-comment"> *                        Shape: (batch_size, seq_len) -&gt; 展平 [B * S]</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param embeddings      [输入] 词表嵌入矩阵 (Token Embedding Table)。</span><br><span class="hljs-comment"> *                        Shape: (vocab_size, embedding_dim) -&gt; 展平 [V * D]</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param pos_embeddings  [输入] 位置嵌入矩阵 (Positional Embedding Table)。</span><br><span class="hljs-comment"> *                        Shape: (max_pos_len, embedding_dim) -&gt; 展平 [P * D]</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param clip_max        [输入] 伪量化/截断阈值指针 (可选，不量化时传 nullptr)。</span><br><span class="hljs-comment"> *                        Shape: 标量指针 (1,) 或 nullptr</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param dropout_mask    [输出] 保存生成的 Dropout 掩码，供反向传播 (Backward) 复用。</span><br><span class="hljs-comment"> *                        Shape: (batch_size, seq_len, embedding_dim) -&gt; 展平 [B * S * D]</span><br><span class="hljs-comment"> *                        内部强转为 uint32_t* 打包写入 (每 4 个 uint8_t 掩码打包为 1 个 uint32_t)。</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param seq_len         [输入] 序列长度 S (Sequence Length)。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param embedding_dim   [输入] 词向量维度 D (Embedding Dimension)，通常需为 4 的倍数。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param padding_idx     [输入] Padding 字符 ID (如 &lt;pad&gt;)，遇到该 ID 输出直接置 0。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param dropout_ratio   [输入] Dropout 丢弃概率 (例如 0.1)。</span><br><span class="hljs-comment"> *                        Shape: 标量 (float)</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param emb_scale       [输入] 词向量缩放因子 (例如 Transformer 中的 sqrt(d_model))。</span><br><span class="hljs-comment"> *                        Shape: 标量 (float)</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param step            [输入] 自回归解码 (Inference) 时的当前步数偏移量 (训练阶段固定为 0)。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> * </span><br><span class="hljs-comment"> * @param seed            [输入] CUDA 在卡 Philox 伪随机数生成器的随机种子。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> * ===================================================================================</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">template</span> &lt;&gt;<br>__global__ <span class="hljs-type">void</span> <span class="hljs-built_in">lookup_scale_pos_dropout</span>&lt;<span class="hljs-type">float</span>&gt;(<br>    <span class="hljs-type">float</span> *output, <span class="hljs-type">const</span> <span class="hljs-type">int</span> *input, <span class="hljs-type">const</span> <span class="hljs-type">int</span> *tokens_position,<br>    <span class="hljs-type">const</span> <span class="hljs-type">float</span> *embeddings, <span class="hljs-type">const</span> <span class="hljs-type">float</span> *pos_embeddings, <span class="hljs-type">const</span> <span class="hljs-type">float</span> *clip_max,<br>    <span class="hljs-type">uint8_t</span> *dropout_mask, <span class="hljs-type">int</span> seq_len, <span class="hljs-type">int</span> embedding_dim, <span class="hljs-type">int</span> padding_idx,<br>    <span class="hljs-type">float</span> dropout_ratio, <span class="hljs-type">float</span> emb_scale, <span class="hljs-type">int</span> step, <span class="hljs-type">int</span> seed) &#123;<br>  <span class="hljs-comment">// blockIdx.x 处理 batch 维度</span><br>  <span class="hljs-type">int</span> batch_id = blockIdx.x;<br>  <span class="hljs-comment">// blockIdx.y 结合 threadIdx.x/blockDim.x 确定 seq_id，处理 sequence 维度</span><br>  <span class="hljs-type">int</span> seq_id = blockIdx.y * blockDim.x + threadIdx.x;<br>  <span class="hljs-keyword">if</span> (seq_id &gt;= seq_len) <span class="hljs-keyword">return</span>;<br><br>  <span class="hljs-type">int</span> target_pos = batch_id * seq_len + seq_id;<br>  <span class="hljs-comment">// threadIdx.y 处理 embedding 维度</span><br>  <span class="hljs-type">int</span> start = target_pos * embedding_dim + threadIdx.y;<br>  <span class="hljs-type">int</span> end = (target_pos + <span class="hljs-number">1</span>) * embedding_dim;<br>  <span class="hljs-comment">// token id, not thread id</span><br>  <span class="hljs-type">int</span> tid = input[target_pos];<br><br>  <span class="hljs-type">int</span> token_pos_id = tokens_position[target_pos];<br><br>  <span class="hljs-comment">// 向量化访存</span><br>  float4 *output4 = <span class="hljs-built_in">reinterpret_cast</span>&lt;float4 *&gt;(output);<br>  <span class="hljs-type">const</span> float4 *embeddings4 = <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">const</span> float4 *&gt;(embeddings);<br>  <span class="hljs-type">const</span> float4 *pos_embeddings4 =<br>      <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">const</span> float4 *&gt;(pos_embeddings);<br>  <span class="hljs-type">uint32_t</span> *dropout_mask4 = <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">uint32_t</span> *&gt;(dropout_mask);<br><br>  <span class="hljs-comment">// no need to calculate dropout_mask</span><br>  <span class="hljs-keyword">if</span> (tid == padding_idx) &#123;<br>    float4 zero4;<br>    zero4.x = zero4.y = zero4.z = zero4.w = <span class="hljs-number">0.f</span>;<br>    <span class="hljs-comment">// 对于 padding token id，直接写回 0</span><br>    <span class="hljs-keyword">for</span> (uint i = start; i &lt; end; i += blockDim.y) &#123;<br>      output4[i] = zero4;<br>    &#125;<br>    <span class="hljs-keyword">return</span>;<br>  &#125;<br><br>  <span class="hljs-type">const</span> <span class="hljs-type">float</span> dropout_scale = <span class="hljs-number">1.f</span> / (<span class="hljs-number">1.f</span> - dropout_ratio);<br>  <span class="hljs-type">float</span> clip_max_val;<br>  <span class="hljs-keyword">if</span> (clip_max) &#123;<br>    clip_max_val = clip_max[<span class="hljs-number">0</span>];<br>  &#125;<br>  curandStatePhilox4_32_10_t state;<br><br>  <span class="hljs-keyword">for</span> (uint i = start; i &lt; end; i += blockDim.y) &#123;<br>    <span class="hljs-built_in">curand_init</span>(seed, i, <span class="hljs-number">0</span>, &amp;state);<br>    float4 rand4 = <span class="hljs-built_in">curand_uniform4</span>(&amp;state);<br>    <span class="hljs-type">uint8_t</span> m[<span class="hljs-number">4</span>];<br>    <span class="hljs-comment">// dropout mask</span><br>    m[<span class="hljs-number">0</span>] = (<span class="hljs-type">uint8_t</span>)(rand4.x &gt; dropout_ratio);<br>    m[<span class="hljs-number">1</span>] = (<span class="hljs-type">uint8_t</span>)(rand4.y &gt; dropout_ratio);<br>    m[<span class="hljs-number">2</span>] = (<span class="hljs-type">uint8_t</span>)(rand4.z &gt; dropout_ratio);<br>    m[<span class="hljs-number">3</span>] = (<span class="hljs-type">uint8_t</span>)(rand4.w &gt; dropout_ratio);<br><br>    <span class="hljs-type">int</span> offset = i - target_pos * embedding_dim;<br>    <span class="hljs-comment">// step is non-zero only in inference</span><br>    float4 e4 = embeddings4[tid * embedding_dim + offset];<br>    float4 pe4 =<br>        pos_embeddings4[(token_pos_id + step) * embedding_dim + offset];<br>    float4 res4;<br><br>    <span class="hljs-comment">// apply dropout</span><br>    <span class="hljs-type">float</span> scale_mask[<span class="hljs-number">4</span>];<br>    scale_mask[<span class="hljs-number">0</span>] = dropout_scale * m[<span class="hljs-number">0</span>];<br>    scale_mask[<span class="hljs-number">1</span>] = dropout_scale * m[<span class="hljs-number">1</span>];<br>    scale_mask[<span class="hljs-number">2</span>] = dropout_scale * m[<span class="hljs-number">2</span>];<br>    scale_mask[<span class="hljs-number">3</span>] = dropout_scale * m[<span class="hljs-number">3</span>];<br><br>    <span class="hljs-type">uint8_t</span> clip_mask[<span class="hljs-number">4</span>];<br>    <span class="hljs-keyword">if</span> (clip_max) &#123;<br>      e4.x = <span class="hljs-built_in">fake_quantize</span>(e4.x, clip_max_val, clip_mask[<span class="hljs-number">0</span>], <span class="hljs-number">2</span>);<br>      e4.y = <span class="hljs-built_in">fake_quantize</span>(e4.y, clip_max_val, clip_mask[<span class="hljs-number">1</span>], <span class="hljs-number">2</span>);<br>      e4.z = <span class="hljs-built_in">fake_quantize</span>(e4.z, clip_max_val, clip_mask[<span class="hljs-number">2</span>], <span class="hljs-number">2</span>);<br>      e4.w = <span class="hljs-built_in">fake_quantize</span>(e4.w, clip_max_val, clip_mask[<span class="hljs-number">3</span>], <span class="hljs-number">2</span>);<br>    &#125;<br>    <span class="hljs-comment">// scale</span><br>    res4.x = (emb_scale * e4.x + pe4.x) * scale_mask[<span class="hljs-number">0</span>];<br>    res4.y = (emb_scale * e4.y + pe4.y) * scale_mask[<span class="hljs-number">1</span>];<br>    res4.z = (emb_scale * e4.z + pe4.z) * scale_mask[<span class="hljs-number">2</span>];<br>    res4.w = (emb_scale * e4.w + pe4.w) * scale_mask[<span class="hljs-number">3</span>];<br><br>    output4[i] = res4;<br>    <span class="hljs-type">uint32_t</span> *m4 = <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">uint32_t</span> *&gt;(m);<br>    <span class="hljs-keyword">if</span> (clip_max) &#123;<br>      m4[<span class="hljs-number">0</span>] = m4[<span class="hljs-number">0</span>] | <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">uint32_t</span> *&gt;(clip_mask)[<span class="hljs-number">0</span>];<br>    &#125;<br>    dropout_mask4[i] = m4[<span class="hljs-number">0</span>];<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><strong>Backward</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224252922.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224252922">
+<p><br></p>
+<ul>
+<li>Embedding 层 backward 计算过程
+<ul>
+<li>朴素实现：3 个 kernel
+<ul>
+<li>Dropout backward：mask elementwise multiply，将上层传回的梯度 <span
+class="math inline">\(\nabla y\)</span> 与前向传播保留的 Dropout Mask
+进行元素级相乘 <span class="math inline">\(\nabla y \odot Mask\)</span>
+。</li>
+<li>Scale backward：乘以相应的缩放因子 <span
+class="math inline">\(s\)</span>，得到 <span class="math inline">\(s
+\cdot \nabla y \odot Mask\)</span>。</li>
+<li>Embedding Lookup backward：Reduce Sum，查找当前 Batch 中所有 Token
+的 ID，对序列中多次出现相同词（Same
+Words）的梯度进行累加，最后写回词表梯度矩阵 <span
+class="math inline">\(\nabla E_w\)</span>。</li>
+</ul></li>
+<li>Kernel Fusion：1 个 kernel
+<ul>
+<li><span class="math inline">\(\nabla \mathbf{E} =
+\text{ReduceSum}\left( s \cdot \nabla y \odot \text{Mask}
+\right)\)</span></li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>backward fused kernel 代码：</strong></p>
+<ul>
+<li>link: <a
+target="_blank" rel="noopener" href="https://github.com/bytedance/lightseq/blob/master/lightseq/csrc/kernels/cuda/embedding_kernels.cu">lightseq:embedding_kernels.cu</a></li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * @brief Fused Embedding Backward CUDA Kernel (词嵌入反向传播融合算子)</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * 融合操作包含：</span><br><span class="hljs-comment"> *   1. Upstream Gradient Read (读取上层传回的梯度 grad_output)</span><br><span class="hljs-comment"> *   2. Dropout &amp; Scale Backward (根据前向保存的 Mask 与 Scale 计算 Embedding 梯度)</span><br><span class="hljs-comment"> *   3. Fake Quantization Clip Backward (伪量化截断阈值的梯度计算)</span><br><span class="hljs-comment"> *   4. Embedding Gradient Accumulation (使用 atomicAdd 聚合 Batch 内相同词的梯度)</span><br><span class="hljs-comment"> *   5. Hierarchical Reduction for grad_clip_max (共享内存两级规约求截断阈值总梯度)</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * =============================== 参数含义与 Shape 说明 ===============================</span><br><span class="hljs-comment"> * @param grad_embeddings [输出/累加] 词表嵌入矩阵的梯度 (Embedding Table Gradient)。</span><br><span class="hljs-comment"> *                        Shape: (vocab_size, embedding_dim_float) -&gt; 展平 [V * D_float]</span><br><span class="hljs-comment"> *                        由于 Batch 内可能存在相同的词 ID，采用 atomicAdd 并发累加。</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param grad_clip_max   [输出/累加] 伪量化截断阈值的梯度指针 (可选)。</span><br><span class="hljs-comment"> *                        Shape: 标量指针 (1,) 或 nullptr</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param grad_output     [输入] 上层反向传播传回的梯度矩阵 (\nabla Y)。</span><br><span class="hljs-comment"> *                        Shape: (batch_size, seq_len, embedding_dim_float) -&gt; 展平 [B * S * D_float]</span><br><span class="hljs-comment"> *                        内部强转为 const float4* 读取 (按 128-bit 打包)。</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param input           [输入] Token ID 矩阵 (前向传入的输入词索引)。</span><br><span class="hljs-comment"> *                        Shape: (batch_size, seq_len) -&gt; 展平 [B * S]</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param dropout_mask    [输入] 前向传播时保存的 Dropout 掩码。</span><br><span class="hljs-comment"> *                        Shape: (batch_size, seq_len, embedding_dim_float) -&gt; 展平 [B * S * D_float]</span><br><span class="hljs-comment"> *                        内部强转为 const uint32_t* 读取 (打包包含 4 个 uint8_t 掩码)。</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param seq_len         [输入] 序列长度 S (Sequence Length)。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param embedding_dim   [输入] 向量化的词维度 (以 float4 为单位，即 D_float / 4)。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param padding_idx     [输入] Padding 字符 ID (如 &lt;pad&gt;)，遇到该 ID 跳过梯度计算。</span><br><span class="hljs-comment"> *                        Shape: 标量 (int)</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param dropout_ratio   [输入] Dropout 丢弃概率 (例如 0.1)。</span><br><span class="hljs-comment"> *                        Shape: 标量 (float)</span><br><span class="hljs-comment"> *</span><br><span class="hljs-comment"> * @param emb_scale       [输入] 词向量缩放因子 (例如 Transformer 中的 sqrt(d_model))。</span><br><span class="hljs-comment"> *                        Shape: 标量 (float)</span><br><span class="hljs-comment"> * ===================================================================================</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">template</span> &lt;&gt;<br>__global__ <span class="hljs-type">void</span> <span class="hljs-built_in">d_lookup_scale_pos_dropout</span>&lt;<span class="hljs-type">float</span>&gt;(<br>    <span class="hljs-type">float</span> *grad_embeddings, <span class="hljs-type">float</span> *grad_clip_max, <span class="hljs-type">const</span> <span class="hljs-type">float</span> *grad_output,<br>    <span class="hljs-type">const</span> <span class="hljs-type">int</span> *input, <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> *dropout_mask, <span class="hljs-type">int</span> seq_len,<br>    <span class="hljs-type">int</span> embedding_dim, <span class="hljs-type">int</span> padding_idx, <span class="hljs-type">float</span> dropout_ratio, <span class="hljs-type">float</span> emb_scale) &#123;<br>  <span class="hljs-comment">// 线程网格映射：确定 Batch 和 Sequence 维度位置</span><br>  <span class="hljs-type">int</span> batch_id = blockIdx.x;<br>  <span class="hljs-type">int</span> seq_id = blockIdx.y * blockDim.x + threadIdx.x;<br>  <span class="hljs-keyword">if</span> (seq_id &gt;= seq_len) <span class="hljs-keyword">return</span>;<br><br>  <span class="hljs-comment">// 计算全局 Token 索引与对应线程在 Embedding 维度的起始/结束偏移</span><br>  <span class="hljs-type">int</span> target_pos = batch_id * seq_len + seq_id;<br>  <span class="hljs-type">int</span> start = target_pos * embedding_dim + threadIdx.y;<br>  <span class="hljs-type">int</span> end = (target_pos + <span class="hljs-number">1</span>) * embedding_dim;<br>  <span class="hljs-comment">// token id</span><br>  <span class="hljs-type">int</span> tid = input[target_pos];<br><br>  <span class="hljs-keyword">if</span> (tid == padding_idx) &#123;<br>    <span class="hljs-keyword">return</span>;<br>  &#125;<br><br>  <span class="hljs-type">const</span> <span class="hljs-type">float</span> scale = <span class="hljs-number">1.f</span> / (<span class="hljs-number">1.f</span> - dropout_ratio);<br>  <span class="hljs-comment">// 向量化读取</span><br>  <span class="hljs-type">const</span> float4 *grad_output4 = <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">const</span> float4 *&gt;(grad_output);<br>  <span class="hljs-type">const</span> <span class="hljs-type">uint32_t</span> *dropout_mask4 =<br>      <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">const</span> <span class="hljs-type">uint32_t</span> *&gt;(dropout_mask);<br>  <span class="hljs-comment">// float block_g_clip_max = 0;</span><br>  <span class="hljs-type">float</span> thread_cmax_grad = <span class="hljs-number">0</span>;<br>  <span class="hljs-type">float</span> temp_cmax_grad = <span class="hljs-number">0</span>;<br>  <span class="hljs-comment">// 沿 Embedding 维度迭代计算梯度（步长为 blockDim.y）</span><br>  <span class="hljs-keyword">for</span> (uint i = start; i &lt; end; i += blockDim.y) &#123;<br>    float4 go4 = grad_output4[i];<br>    <span class="hljs-type">uint32_t</span> m4 = dropout_mask4[i];<br>    <span class="hljs-type">uint8_t</span> *m4_ptr = <span class="hljs-built_in">reinterpret_cast</span>&lt;<span class="hljs-type">uint8_t</span> *&gt;(&amp;m4);<br>    float4 res4;<br>    <span class="hljs-comment">// 链式法则：d_emb = emb_scale * grad_output * mask * scale</span><br>    res4.x = emb_scale * go4.x * (m4_ptr[<span class="hljs-number">0</span>] &amp; <span class="hljs-number">1</span>) * scale;<br>    res4.y = emb_scale * go4.y * (m4_ptr[<span class="hljs-number">1</span>] &amp; <span class="hljs-number">1</span>) * scale;<br>    res4.z = emb_scale * go4.z * (m4_ptr[<span class="hljs-number">2</span>] &amp; <span class="hljs-number">1</span>) * scale;<br>    res4.w = emb_scale * go4.w * (m4_ptr[<span class="hljs-number">3</span>] &amp; <span class="hljs-number">1</span>) * scale;<br>    <span class="hljs-type">int</span> offset = i - target_pos * embedding_dim;<br>    <span class="hljs-type">int</span> idx = (tid * (embedding_dim) + offset) &lt;&lt; <span class="hljs-number">2</span>;<br>    <span class="hljs-built_in">clip_bwd</span>(res4.x, temp_cmax_grad, res4.x, m4_ptr[<span class="hljs-number">0</span>], <span class="hljs-number">2</span>);<br>    thread_cmax_grad += temp_cmax_grad;<br>    <span class="hljs-built_in">clip_bwd</span>(res4.y, temp_cmax_grad, res4.y, m4_ptr[<span class="hljs-number">1</span>], <span class="hljs-number">2</span>);<br>    thread_cmax_grad += temp_cmax_grad;<br>    <span class="hljs-built_in">clip_bwd</span>(res4.z, temp_cmax_grad, res4.z, m4_ptr[<span class="hljs-number">2</span>], <span class="hljs-number">2</span>);<br>    thread_cmax_grad += temp_cmax_grad;<br>    <span class="hljs-built_in">clip_bwd</span>(res4.w, temp_cmax_grad, res4.w, m4_ptr[<span class="hljs-number">3</span>], <span class="hljs-number">2</span>);<br>    thread_cmax_grad += temp_cmax_grad;<br>    <span class="hljs-comment">// 使用 atomicAdd 原子加将梯度累加回全局词表梯度矩阵 grad_embeddings </span><br>    <span class="hljs-comment">// 原因：同一 Batch 或序列中可能出现多个相同的词 ID (tid)，并发写入会产生写冲突</span><br>    <span class="hljs-built_in">atomicAdd</span>(grad_embeddings + idx, res4.x);<br>    <span class="hljs-built_in">atomicAdd</span>(grad_embeddings + idx + <span class="hljs-number">1</span>, res4.y);<br>    <span class="hljs-built_in">atomicAdd</span>(grad_embeddings + idx + <span class="hljs-number">2</span>, res4.z);<br>    <span class="hljs-built_in">atomicAdd</span>(grad_embeddings + idx + <span class="hljs-number">3</span>, res4.w);<br>  &#125;<br><br>  <span class="hljs-comment">// grad_clip_max 的两级层次化规约 (Block Shared Memory -&gt; Global Memory)</span><br>  <span class="hljs-keyword">if</span> (grad_clip_max) &#123;<br>    __shared__ <span class="hljs-type">float</span> block_cmax_grad;<br>    <span class="hljs-keyword">if</span> (threadIdx.x == <span class="hljs-number">0</span> &amp;&amp; threadIdx.y == <span class="hljs-number">0</span>) &#123;<br>      block_cmax_grad = <span class="hljs-number">0</span>;<br>    &#125;<br>    __syncthreads();<br>    <span class="hljs-keyword">if</span> (thread_cmax_grad != <span class="hljs-number">0</span>) &#123;<br>      <span class="hljs-built_in">atomicAdd</span>(&amp;block_cmax_grad, thread_cmax_grad);<br>    &#125;<br>    __syncthreads();<br>    <span class="hljs-keyword">if</span> (threadIdx.x == <span class="hljs-number">0</span> &amp;&amp; threadIdx.y == <span class="hljs-number">0</span>) &#123;<br>      <span class="hljs-keyword">if</span> (block_cmax_grad != <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-built_in">atomicAdd</span>(&amp;grad_clip_max[<span class="hljs-number">0</span>], block_cmax_grad);<br>      &#125;<br>    &#125;<br>  &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<h4 id="gradient-of-criterion-operatorcrossentropyloss">1.1.3 Gradient
+of Criterion Operator（CrossEntropyLoss）</h4>
+<p><strong>带 Label Smoothing 的 CrossEntropyLoss forward
+流程：</strong></p>
+<ul>
+<li>Label Smoothing 后目标概率分布 <span
+class="math inline">\(p\)</span> ：</li>
+</ul>
+<p><span class="math display">\[
+p_i = (1 - \alpha) y_i + \frac{\alpha}{V}
+\]</span></p>
+<p>其中 <span class="math inline">\(y_i\)</span> 为原始的 One-hot
+真实标签，<span class="math inline">\(\alpha\)</span>
+为标签平滑系数，<span class="math inline">\(V\)</span> 为词表大小。</p>
+<ul>
+<li>预测概率分布 <span class="math inline">\(q\)</span> ：</li>
+</ul>
+<p><span class="math display">\[
+q_i = \text{Softmax}(x_i) = \frac{e^{x_i}}{\sum_j e^{x_j}}
+\]</span> 其中 <span class="math inline">\(x\)</span> 为 logits
+向量。</p>
+<ul>
+<li>交叉熵损失 <span class="math inline">\(\mathcal{L}\)</span>：</li>
+</ul>
+<p><span class="math display">\[
+\mathcal{L} = -\sum_i p_i \log(q_i)
+\]</span></p>
+<ul>
+<li>朴素实现：
+<ul>
+<li>Label Smoothing</li>
+<li>Softmax</li>
+<li>log</li>
+<li>向量内积</li>
+</ul></li>
+<li>Kernel Fusion：
+<ul>
+<li>输入 Logits <span class="math inline">\(x\)</span> 和标签 <span
+class="math inline">\(y\)</span>，一步到位输出 Loss <span
+class="math inline">\(\mathcal{L}\)</span> 和预测概率 <span
+class="math inline">\(q\)</span></li>
+</ul></li>
+</ul>
+<p><strong>反向传播 Fusion 推导：</strong></p>
+<p>通过对损失函数 <span class="math inline">\(\mathcal{L}\)</span>
+直接推导关于输入 Logits <span class="math inline">\(x_k\)</span>
+的偏导数（利用 <span class="math inline">\(\sum_i p_i = 1\)</span>
+的性质，Softmax 梯度的分母项与交叉熵求导项相互抵消）：</p>
+<p><span class="math display">\[
+\nabla_x \mathcal{L} = \frac{\partial \mathcal{L}}{\partial x} = q - p
+\]</span></p>
+<p>具体推导过程如下：</p>
+<ul>
+<li>Softmax 导数：</li>
+</ul>
+<p><span class="math display">\[
+\frac{\partial \mathbf{q}_i}{\partial \mathbf{h}_j} = \begin{cases}
+\mathbf{q}_i (1 - \mathbf{q}_i), &amp; \text{if } i = j \\ -\mathbf{q}_i
+\mathbf{q}_j, &amp; \text{if } i \neq j \end{cases}
+\]</span></p>
+<ul>
+<li>损失函数对 Logit <span class="math inline">\(\mathbf{h}_i\)</span>
+求导：</li>
+</ul>
+<p>根据链式法则：</p>
+<p><span class="math display">\[
+\nabla \mathbf{h}_i = \frac{\partial \mathcal{L}}{\partial \mathbf{h}_i}
+= -\sum_j \frac{\mathbf{p}_j}{\mathbf{q}_j} \cdot \frac{\partial
+\mathbf{q}_j}{\partial \mathbf{h}_i}
+\]</span></p>
+<p>按目标位置 <span class="math inline">\(i\)</span> 是否为 Ground Truth
+分情况讨论：</p>
+<p><strong>1) 当</strong> <span class="math inline">\(i = k\)</span>
+<strong>（即 Token</strong> <span class="math inline">\(i\)</span>
+<strong>是真实标签）时</strong>：</p>
+<p><span class="math display">\[
+\begin{aligned} \nabla \mathbf{h}_k = \frac{\partial
+\mathcal{L}}{\partial \mathbf{h}_k} &amp;= -\frac{\alpha}{V} \sum_{j
+\neq k} \frac{1}{\mathbf{q}_j} \cdot \frac{\partial
+\mathbf{q}_j}{\partial \mathbf{h}_k} - \left(1 - \alpha +
+\frac{\alpha}{V}\right) \cdot \frac{1}{\mathbf{q}_k} \cdot
+\frac{\partial \mathbf{q}_k}{\partial \mathbf{h}_k} \\ &amp;=
+-\frac{\alpha}{V} \sum_{j \neq k} \frac{1}{\mathbf{q}_j} (-\mathbf{q}_j
+\mathbf{q}_k) - \left(1 - \alpha + \frac{\alpha}{V}\right) \cdot
+\frac{1}{\mathbf{q}_k} \cdot \mathbf{q}_k (1 - \mathbf{q}_k) \\ &amp;=
+\frac{\alpha}{V} \sum_{j \neq k} \mathbf{q}_k - \left(1 - \alpha +
+\frac{\alpha}{V}\right) (1 - \mathbf{q}_k) \\ &amp;= \frac{\alpha}{V} (V
+- 1) \mathbf{q}_k - \left(1 - \alpha + \frac{\alpha}{V}\right) (1 -
+\mathbf{q}_k) \\ &amp;= \mathbf{q}_k - \frac{\alpha}{V} - 1 + \alpha
+\end{aligned}
+\]</span></p>
+<p><strong>2) 当</strong> <span class="math inline">\(i \neq k\)</span>
+<strong>（非真实标签位置）时</strong>： <span class="math display">\[
+\begin{aligned} \nabla \mathbf{h}_i = \frac{\partial
+\mathcal{L}}{\partial \mathbf{h}_i} &amp;= -\frac{\alpha}{V} \sum_{j
+\neq k, j \neq i} \frac{1}{\mathbf{q}_j} \cdot \frac{\partial
+\mathbf{q}_j}{\partial \mathbf{h}_i} - \frac{\alpha}{V} \cdot
+\frac{1}{\mathbf{q}_i} \cdot \frac{\partial \mathbf{q}_i}{\partial
+\mathbf{h}_i} - \left(1 - \alpha + \frac{\alpha}{V}\right) \cdot
+\frac{1}{\mathbf{q}_k} \cdot \frac{\partial \mathbf{q}_k}{\partial
+\mathbf{h}_i} \\ &amp;= -\frac{\alpha}{V} \sum_{j \neq k, j \neq i}
+\frac{1}{\mathbf{q}_j} (-\mathbf{q}_j \mathbf{q}_i) - \frac{\alpha}{V}
+\cdot \frac{1}{\mathbf{q}_i} \cdot \mathbf{q}_i (1 - \mathbf{q}_i) -
+\left(1 - \alpha + \frac{\alpha}{V}\right) \cdot \frac{1}{\mathbf{q}_k}
+(-\mathbf{q}_k \mathbf{q}_i) \\ &amp;= \frac{\alpha}{V} \sum_{j \neq k,
+j \neq i} \mathbf{q}_i - \frac{\alpha}{V} (1 - \mathbf{q}_i) + \left(1 -
+\alpha + \frac{\alpha}{V}\right) \mathbf{q}_i \\ &amp;= \mathbf{q}_i -
+\frac{\alpha}{V} \end{aligned}
+\]</span></p>
+<p>整理上述两项，对任意分量 <span class="math inline">\(i\)</span>
+的梯度表达为： <span class="math display">\[
+\nabla \mathbf{h}_i = \begin{cases} \mathbf{q}_i - \frac{\alpha}{V} - 1
++ \alpha, &amp; \text{if token } i \text{ is the ground truth} \\
+\mathbf{q}_i - \frac{\alpha}{V}, &amp; \text{otherwise} \end{cases}
+\]</span></p>
+<p>结合前面定义的真实分布 <span
+class="math inline">\(\mathbf{p}_i\)</span>，上式可以精简并统一表示为向量级别的逐元素减法：
+<span class="math display">\[
+\mathbf{g} = \nabla_{\mathbf{h}} \mathcal{L} = \mathbf{q} - \mathbf{p}
+\]</span></p>
+<p><strong>Fused Criterion Operator 示意图：</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224317578.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224317578">
+<p><br></p>
+<h4 id="layer-batched-cross-attention">1.1.4 Layer-Batched Cross
+Attention</h4>
+<p>将原本 encoder 输出特征与 <span class="math inline">\(L\)</span> 层
+decoder 权重计算得到 <span class="math inline">\(L\)</span> 个
+Key/Value（<span class="math inline">\(L\)</span> 次 kernel
+launch），fuse 成一个 kernel 完成 <span class="math inline">\(L\)</span>
+层的所有 Key 或者 Value 计算，即将多个小的 GEMM 融合为一个大
+GEMM。示意图：</p>
+<img src="/posts/2026/10/1546113425/image-20261017224331372.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224331372">
+<p><br></p>
+<h3 id="reduce-synchronization">1.2 Reduce synchronization</h3>
+<h4 id="rewrite-reduction-layernorm">1.2.1 Rewrite Reduction:
+LayerNorm</h4>
+<p><strong>forward</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224344115.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224344115">
+<p><br></p>
+<ul>
+<li>朴素实现方式：
+<ul>
+<li>先计算均值，再基于均值计算标准差。</li>
+<li>需要两次 kernel 内同步。</li>
+</ul></li>
+<li>改进实现方式：
+<ul>
+<li>利用公式 <span class="math inline">\(\sigma(x) = \sqrt{\mu(x^2) -
+{\mu(x)}^2 }\)</span>
+，即：<strong>标准差/方差等于“平方的均值”减去“均值的平方”</strong>。</li>
+<li>线程在<strong>同一趟遍历</strong>中，可以同时并行累加 <span
+class="math inline">\(x_i\)</span> 的和以及 <span
+class="math inline">\(x_i^2\)</span> 的和，一次性同时求出均值 <span
+class="math inline">\(\mu(x)\)</span> 和平方均值 <span
+class="math inline">\(\mu(x^2)\)</span>。只需要一次 kernel 内同步。</li>
+<li><strong>数值精度</strong>：存储采用
+<strong>FP16</strong>，而内部累加计算采用 <strong>FP32</strong>
+以保证精度。</li>
+</ul></li>
+</ul>
+<p><strong>backward</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224354961.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224354961">
+<p><br></p>
+<p>符号含义说明：</p>
+<ul>
+<li><span class="math inline">\(\mathbf{x}\)</span> <strong>与</strong>
+<span class="math inline">\(x_i\)</span><strong>（输入特征）</strong>：
+<ul>
+<li><span class="math inline">\(\mathbf{x}\)</span>：LayerNorm
+的<strong>输入特征向量</strong>（如一个 Token 的隐藏层向量）。</li>
+<li><span
+class="math inline">\(x_i\)</span>：输入向量中<strong>第</strong> <span
+class="math inline">\(i\)</span>
+<strong>个通道/维度</strong>上的具体数值（<span class="math inline">\(i
+= 1, 2, \dots, m\)</span>）。</li>
+<li><span
+class="math inline">\(x_j\)</span>：求和公式中用于遍历所有通道的下标符号。</li>
+</ul></li>
+<li><span class="math inline">\(\mathbf{y}\)</span> <strong>与</strong>
+<span class="math inline">\(y_i\)</span><strong>（输出特征）</strong>：
+<ul>
+<li><span class="math inline">\(\mathbf{y}\)</span>：LayerNorm
+归一化并缩放平移后的<strong>输出特征向量</strong>。</li>
+<li><span
+class="math inline">\(y_i\)</span>：输出向量中<strong>第</strong> <span
+class="math inline">\(i\)</span>
+<strong>个维度</strong>的具体数值。</li>
+</ul></li>
+<li><span
+class="math inline">\(m\)</span><strong>（特征维度大小）</strong>：
+<ul>
+<li>隐藏层向量的<strong>总维度/通道数</strong>（Hidden Dimension
+Size，即向量 <span class="math inline">\(\mathbf{x}\)</span>
+里一共有多少个元素）。在求均值和方差时作为分母除数 <span
+class="math inline">\(\frac{1}{m}\)</span>。</li>
+</ul></li>
+<li><span class="math inline">\(i, j\)</span><strong>（通道下标索引
+Index）</strong>：
+<ul>
+<li><span class="math inline">\(i\)</span>
+代表我们当前正在计算的那个<strong>特定通道</strong>。</li>
+<li><span class="math inline">\(j\)</span> 代表在做全局求和（<span
+class="math inline">\(\sum_j\)</span>）时遍历的<strong>所有通道</strong>（从
+<span class="math inline">\(1\)</span> 到 <span
+class="math inline">\(m\)</span>）。</li>
+</ul></li>
+<li><span class="math inline">\(w_i\)</span><strong>（缩放权重 Weight /
+Gamma</strong> <span
+class="math inline">\(\gamma\)</span><strong>）</strong>：
+<ul>
+<li>模型可学习的<strong>缩放系数</strong>，用来恢复模型的表达能力。<span
+class="math inline">\(w_i\)</span> 是第 <span
+class="math inline">\(i\)</span> 个通道专属的权重。</li>
+</ul></li>
+<li><span class="math inline">\(b_i\)</span><strong>（平移偏置 Bias /
+Beta</strong> <span
+class="math inline">\(\beta_{\text{bias}}\)</span><strong>）</strong>：
+<ul>
+<li>模型可学习的<strong>偏移量</strong>。<span
+class="math inline">\(b_i\)</span> 是第 <span
+class="math inline">\(i\)</span> 个通道专属的偏置。</li>
+</ul></li>
+<li><span class="math inline">\(\mu(\mathbf{x})\)</span><strong>（均值
+Mean）</strong>：
+<ul>
+<li>输入向量 <span class="math inline">\(\mathbf{x}\)</span>
+在所有通道上的平均值：<span class="math inline">\(\mu(\mathbf{x}) =
+\frac{1}{m} \sum_{k=1}^m x_k\)</span>。</li>
+</ul></li>
+<li><span
+class="math inline">\(\sigma(\mathbf{x})\)</span><strong>（标准差
+Standard Deviation）</strong>：
+<ul>
+<li>输入向量 <span class="math inline">\(\mathbf{x}\)</span>
+在所有通道上的标准差：<span class="math inline">\(\sigma(\mathbf{x}) =
+\sqrt{\frac{1}{m} \sum_{k=1}^m (x_k -
+\mu(\mathbf{x}))^2}\)</span>。</li>
+</ul></li>
+<li><span
+class="math inline">\(\sigma(\mathbf{x})^2\)</span><strong>（方差
+Variance）</strong>：
+<ul>
+<li>标准差的平方，即输入的方差。</li>
+</ul></li>
+<li><span
+class="math inline">\(\hat{\mathbf{x}}_i\)</span><strong>（归一化后的临时特征）</strong>：
+<ul>
+<li>零均值、单位方差的标准特征：<span
+class="math inline">\(\hat{\mathbf{x}}_i = \frac{x_i -
+\mu(\mathbf{x})}{\sigma(\mathbf{x})}\)</span>。</li>
+</ul></li>
+<li><span class="math inline">\(\nabla y_i\)</span> <strong>或</strong>
+<span class="math inline">\(\nabla
+\mathbf{y}_i\)</span><strong>（上层传回的梯度）</strong>：
+<ul>
+<li>损失函数 <span class="math inline">\(\mathcal{L}\)</span> 对
+LayerNorm 输出 <span class="math inline">\(y_i\)</span> 的偏导数 <span
+class="math inline">\(\frac{\partial \mathcal{L}}{\partial
+y_i}\)</span>（由网络后续层反向传回）。</li>
+</ul></li>
+<li><span class="math inline">\(\nabla x_i\)</span> <strong>或</strong>
+<span class="math inline">\(\nabla
+\mathbf{x}_i\)</span><strong>（需要求解的梯度）</strong>：
+<ul>
+<li>损失函数 <span class="math inline">\(\mathcal{L}\)</span> 对
+LayerNorm 输入 <span class="math inline">\(x_i\)</span> 的偏导数 <span
+class="math inline">\(\frac{\partial \mathcal{L}}{\partial
+x_i}\)</span>（求出后继续向前传递给上一层）。</li>
+</ul></li>
+<li>原始形式：
+<ul>
+<li>第二项 sum 依赖于 mean/std，需要两次同步。</li>
+</ul></li>
+<li>变换后形式：
+<ul>
+<li>第二项 sum 依赖于输入，只需要一次同步。</li>
+</ul></li>
+</ul>
+<h4 id="rewrite-reduction-softmax-forward">1.2.2 Rewrite Reduction:
+Softmax Forward</h4>
+<p><strong>传统 Safe Softmax 的计算痛点（3 趟遍历 + 2
+次同步）</strong></p>
+<p>为了防止浮点数指数运算 <span class="math inline">\(e^{x_i}\)</span>
+发生 overflow，实际工程中必须使用数值安全的 <strong>Safe
+Softmax</strong>： <span class="math display">\[
+y_i = \text{Softmax}(x_i) = \frac{e^{x_i - m}}{\sum_{j=1}^N e^{x_j - m}}
+\quad \text{其中 } m = \max_{j} x_j
+\]</span></p>
+<p>在未优化的传统实现中，这一过程需要 <strong>3 趟数据遍历（3
+Passes）</strong> 和 <strong>2 次线程同步屏障</strong>：</p>
+<ol type="1">
+<li><strong>Pass 1 (Max Reduction)</strong>：遍历整行元素，找到最大值
+<span class="math inline">\(m = \max(x_j)\)</span>。此时需要 <strong>第
+1 次线程同步</strong>，等待所有线程拿到全局最大值 <span
+class="math inline">\(m\)</span>。</li>
+<li><strong>Pass 2 (SumExp
+Reduction)</strong>：再次遍历整行，计算减去最大值后的指数和 <span
+class="math inline">\(S = \sum e^{x_j - m}\)</span>。此时需要 <strong>第
+2 次线程同步</strong>，等待所有线程拿到全局和 <span
+class="math inline">\(S\)</span>。</li>
+<li><strong>Pass 3 (Element-wise
+Division)</strong>：第三次遍历，计算最终归一化结果 <span
+class="math inline">\(y_i = \frac{e^{x_i - m}}{S}\)</span>。</li>
+</ol>
+<p><strong>优化实现：</strong></p>
+<ul>
+<li>Parameters (e.g. # of blocks, warps per block) are shape dependent
+for maximal speedup.</li>
+<li>根据 dim 大小进行不同 kernel template 特化，以加速计算过程。</li>
+</ul>
+<img src="/posts/2026/10/1546113425/image-20261017224422001.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224422001">
+<p><br></p>
+<h3 id="mixed-precision-calculation">1.3 Mixed-precision
+Calculation</h3>
+<ul>
+<li>Modern GPU supports half-precision (FP16) or FP8 (on H100)</li>
+<li>Benefits
+<ul>
+<li>lower memory for storing model and data ==&gt; enlarge batch
+size.</li>
+<li>transfer data at a higher rate (with same bandwith) between GPU main
+memory and SMs.</li>
+<li>more FLOPs for FP16 (up to 8x more) compared to FP32.</li>
+</ul></li>
+</ul>
+<p><strong>低精度适用范围：</strong></p>
+<ul>
+<li>Forward / Backward could use FP16 or FP8.</li>
+<li>Gradient update in Optimizer (or trainer) needs FP32.</li>
+<li>Nvidia APEX library provides automatic mixed-precision calculation
+for many NN layers.
+<ul>
+<li>but still miss fine-grained memory optimization with mixed-precision
+for LLM.</li>
+</ul></li>
+</ul>
+<p><strong>Accelerated Mixed-Precision Update</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224433389.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224433389">
+<p><br></p>
+<ul>
+<li>朴素实现：
+<ul>
+<li>需要在显存中额外维护一份完整 FP32 浓度的 <strong>主权重（Master
+Weights）与主梯度</strong>。更新时需要将 FP16 参数与梯度复制成 FP32，用
+FP32 更新完主权重后，再复制回 FP16。</li>
+<li><strong>频繁的 Kernel Launch
+与内存搬运</strong>：传统实现中，模型每个层/张量（Tensor）都是独立分散存放的，每次参数更新会为每个张量单独启动一次
+CUDA
+Kernel，导致产生<strong>上百/上千次内核启动</strong>与昂贵的显存复制（Memory
+Copy）开销。</li>
+</ul></li>
+<li>LightSeq2：
+<ul>
+<li><strong>存储层面</strong>：显存中仅保持 FP16 的参数和梯度。</li>
+<li><strong>计算层面</strong>：在 GPU 寄存器内部以 FP32
+精度进行高精度的累加与更新计算。</li>
+<li><strong>连续内存空间 (Continuous Space)</strong> 将模型所有层的 FP16
+参数和梯度平铺映射到一段 <strong>连续的内存空间（Workspace）</strong>
+中，取代原先分散独立的张量内存布局。</li>
+<li><strong>单个内核一次性更新 (Only One Kernel Launch)</strong>
+由于所有的参数和梯度都在连续内存空间中，整个 Optimizer
+参数更新过程不再逐张量 Launch，而是<strong>全局仅发起 1 次 CUDA Kernel
+Launch</strong>，完成全模型所有参数的更新。</li>
+<li><strong>消除显存实体备份 (Dotted lines: no actual memory
+storage)</strong> 上图中的虚线框表示 <strong>没有实际的 FP32
+主权重/主梯度显存实体</strong>。Kernel 在读取 FP16
+数据后，在寄存器中直接转换为 FP32 完成更新，并直接写回 FP16
+显存中，消除了 FP32 内存实体的占用。</li>
+</ul></li>
+</ul>
+<h3 id="memory-reuse">1.4 Memory Reuse</h3>
+<p><strong>GPU Memory Management for Self Attention
+Backward</strong></p>
+<img src="/posts/2026/10/1546113425/image-20261017224448879.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224448879">
+<p><br></p>
+<ul>
+<li>backward 计算时
+<ul>
+<li>识别出生命周期结束的张量。</li>
+<li>将后创的梯度张量直接写入原张量的显存地址中。</li>
+<li>大幅减少了训练阶段反向传播的显存峰值，使得 GPU 能够容纳更大的 Batch
+Size 或更长的输入序列 <span class="math inline">\(L\)</span>。</li>
+</ul></li>
+</ul>
+<h3 id="summary">1.5 Summary</h3>
+<ul>
+<li>High performance Kernels for Forward and Backward</li>
+<li>Eﬃcient Parameter Update</li>
+<li>Memory Management: Reuse Memory</li>
+</ul>
+<p><strong>key techniques</strong></p>
+<ul>
+<li>Kernel Fusion: merge kernels other than matmul</li>
+<li>Algebraic Transformation: reduce sync</li>
+<li>Mix-precision calculation (use half precision whenever
+possible)</li>
+<li>Memory reuse (dependent on architecture)</li>
+</ul>
+<h2 id="fast-inference-for-transformer">2. Fast Inference for
+Transformer</h2>
+<h3 id="hierarchical-auto-regressive-search-hars-for-decoding">2.1
+Hierarchical Auto Regressive Search (HARS) for decoding</h3>
+<p><strong>Beam Search 存在的问题</strong></p>
+<p>在传统的 Beam Search 解码中，每一步生成都需要：</p>
+<ol type="1">
+<li>计算当前 Beam 中所有候选词的条件概率分布（Softmax）。</li>
+<li>计算累计序列概率，并在全局的 <span class="math inline">\(k \times
+V\)</span> 个候选元素中选出得分最高的前 <span
+class="math inline">\(k\)</span> 个序列（Top-<span
+class="math inline">\(k\)</span>）。</li>
+<li><strong>存在的问题</strong>：当词表 <span
+class="math inline">\(V\)</span> 很大（如 30,000+）时，直接对 <span
+class="math inline">\(k \times V\)</span> 个元素进行全局排序（Direct
+Sorting）会在 GPU
+上引发巨大的<strong>显存访存开销</strong>与<strong>线程同步等待</strong>。</li>
+</ol>
+<p><strong>HARS 的核心思想</strong></p>
+<p>HARS 的核心优化策略是 <strong>“先粗筛过滤，再局部精排”</strong>
+（retrieve and re-rank）：</p>
+<ul>
+<li>不再直接对全部 <span class="math inline">\(k \times V\)</span>
+个元素执行昂贵的全局 Top-<span class="math inline">\(k\)</span>
+排序。</li>
+<li>将大规约排序拆解为 <strong>并行 Max 过滤（Retrieve）</strong> 与
+<strong>小规模候选重排（Re-rank）</strong>，减少最终需要参与排序的元素数量。</li>
+</ul>
+<p><strong>算法流程：</strong></p>
+<p>第一步：检索阶段 (Retrieve Step)</p>
+<ol type="1">
+<li><strong>分组 (Divide Groups)</strong>：将每个 Beam 的 <span
+class="math inline">\(V\)</span> 个 Logit 划分为 <span
+class="math inline">\(G\)</span> 个小组。</li>
+<li><strong>组内求最大值 (Group
+Maximums)</strong>：计算每个小组内的最大值，记为 <span
+class="math inline">\(m_i\)</span>。</li>
+<li><strong>求阈值 (Rough Lower Bound)</strong>：求当前 Beam
+中所有小组最大值 <span class="math inline">\(m_i\)</span>
+中的最小值，记作粗略截断阈值 <span
+class="math inline">\(m_{\min}\)</span>。</li>
+<li><strong>粗筛过滤 (Filter)</strong>：只筛选出大于 <span
+class="math inline">\(m_{\min}\)</span> 的 Logit，并写入 GPU
+候选内存中，丢弃大部分极低概率的词。</li>
+</ol>
+<p>第二步：重排阶段 (Re-rank Step)</p>
+<ul>
+<li>对粗筛后保留下来的少数字候选 Logit 执行最终的 Top-<span
+class="math inline">\(k\)</span> 排序（Re-rank）。</li>
+</ul>
+<img src="/posts/2026/10/1546113425/image-20261017224504901.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224504901">
+<p><br></p>
+<h3 id="details-in-gpu-inference-implementation">2.2 Details in GPU
+Inference Implementation</h3>
+<ul>
+<li>share tensor memory across layers</li>
+<li>mixed precision computation, mostly using FP16 for computation</li>
+<li>Using float4 and half2 to increase bandwidth</li>
+<li>No need to keep intermediate results and gradients during infernece,
+similar to <code>with torch.no_grad()</code></li>
+</ul>
+<h3 id="summary-1">2.2 Summary</h3>
+<p><strong>Accelerating decoding</strong></p>
+<ul>
+<li>hierarchical auto-regressive search for large vocabulary
+<ul>
+<li>converting sorting to parallel operations (max, filter,
+re-rank)</li>
+</ul></li>
+</ul>
+<p><strong>Other Approaches for Acceleration</strong></p>
+<ul>
+<li>Alternative Model Structures: Linformer, Reformer</li>
+<li>Training Strategy: Shallow to Deep, Layer Dropout</li>
+<li>Eﬃcient Computation: LAMB, Quantization, Hardware Optimization</li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/kernel/">#kernel</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference</div>
+      <div>https://arcsin2.cloud/posts/2026/10/1546113425/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/3321773915/" title="LLM Systems 14: Distributed Training">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems 14: Distributed Training</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1367290113/" title="LLM Systems 09: Decoding: Sampling, Beam Search and Speculative Decoding">
+                        <span class="hidden-mobile">LLM Systems 09: Decoding: Sampling, Beam Search and Speculative Decoding</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

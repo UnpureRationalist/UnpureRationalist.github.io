@@ -1,0 +1,1199 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="0. Recap 之前课程主线：  LLM 简介 CUDA 编程基础 深度学习框架（自动求导） Transformer&#x2F;Pre-trained LLM LLM 前后两个辅助组件：Tokenizer 与 Decoding Transformer 加速：Kernel Fusion &amp; Mix-precision &amp; Memory Management Optimiza">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems 14: Distributed Training">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/3321773915/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="0. Recap 之前课程主线：  LLM 简介 CUDA 编程基础 深度学习框架（自动求导） Transformer&#x2F;Pre-trained LLM LLM 前后两个辅助组件：Tokenizer 与 Decoding Transformer 加速：Kernel Fusion &amp; Mix-precision &amp; Memory Management Optimiza">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224753171.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224810076.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224825761.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224840691.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224859321.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224914165.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224930883.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224944905.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017225005177.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017225026387.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017225044037.png">
+<meta property="article:published_time" content="2026-10-17T14:24:09.000Z">
+<meta property="article:modified_time" content="2026-10-17T14:50:56.803Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="Distributed Training">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/3321773915/image-20261017224753171.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems 14: Distributed Training - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems 14: Distributed Training"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-17 22:24" pubdate>
+          2026年10月17日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          33 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems 14: Distributed Training</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="recap">0. Recap</h2>
+<p>之前课程主线：</p>
+<ul>
+<li>LLM 简介</li>
+<li>CUDA 编程基础</li>
+<li>深度学习框架（自动求导）</li>
+<li>Transformer/Pre-trained LLM</li>
+<li>LLM 前后两个辅助组件：Tokenizer 与 Decoding</li>
+<li>Transformer 加速：Kernel Fusion &amp; Mix-precision &amp; Memory
+Management Optimization</li>
+<li>支线（跳过）：Guest Lecture：Google TPU/JAX 生态介绍</li>
+</ul>
+<p>从本 lecture 开始，我们将视角转向大规模模型的训练：当模型无法在一张
+GPU
+上进行训练时，该如何实现系统，以支持高效利用多卡支持模型进行分布式训练。</p>
+<p>除了本课程 slides，这里额外推荐个介绍 LLM 分布式训练的在线书籍：</p>
+<ul>
+<li><a
+target="_blank" rel="noopener" href="https://huggingface.co/spaces/nanotron/ultrascale-playbook">The
+Ultra-Scale Playbook: Training LLMs on GPU Clusters</a></li>
+</ul>
+<p>其中对各种分布式训练策略，如：DP、FSDP、TP、SP、PP、CP、EP
+等有非常详细的分析与介绍。</p>
+<h2 id="overview-of-large-scale-model-training">1. Overview of
+large-scale model training</h2>
+<h3 id="background">1.1 Background</h3>
+<p>模型参数量与训练数据量增长：</p>
+<img src="/posts/2026/10/3321773915/image-20261017224753171.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224753171">
+<p><br></p>
+<img src="/posts/2026/10/3321773915/image-20261017224810076.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224810076">
+<p><br></p>
+<ul>
+<li>从 Transformer 提出的 2017 年至今（2026 年），模型参数量与训练 token
+数呈指数增长。</li>
+<li>问题：系统该如何支持如此大规模的模型训练？</li>
+</ul>
+<h3 id="case-study">1.2 Case Study</h3>
+<ul>
+<li>Pretraining for Deepseek V3 (671B)
+<ul>
+<li>2,048 H800 GPUs</li>
+<li>trained for 2 months</li>
+<li>a total of 2.664 million H800 GPU hours</li>
+</ul></li>
+<li>LLaMA 3.1(405B)
+<ul>
+<li>using 16,000 H100 GPUs</li>
+<li>a total of 30.84 million GPU hours</li>
+</ul></li>
+</ul>
+<h3 id="strategies-for-scalable-training">1.3 Strategies for Scalable
+Training</h3>
+<ul>
+<li><strong>Partition the data</strong>
+<ul>
+<li>single node data parallel</li>
+<li>distributed data parallel</li>
+<li>parameter server</li>
+</ul></li>
+<li><strong>Partition the model</strong>
+<ul>
+<li>Model parallel</li>
+<li>Pipeline parallel</li>
+<li>Tensor parallel</li>
+</ul></li>
+</ul>
+<h3 id="classical-distributed-training-parameter-server">1.4 Classical
+Distributed Training: Parameter Server</h3>
+<p>PS 示意图：</p>
+<img src="/posts/2026/10/3321773915/image-20261017224825761.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224825761">
+<p><br> 在一个完整训练迭代（Iteration)中，系统执行以下 4 个步骤：</p>
+<ol type="1">
+<li><strong>Pull（拉取参数）</strong>： Worker 节点从 Parameter Server
+获取当前最新的全局模型参数（在 NCCL 等通信库中对应
+<code>ncclBroadcast</code> 操作）。</li>
+<li><strong>Compute（本地计算）</strong>：Worker
+利用最新参数和本地数据执行前向与反向传播，生成局部梯度。</li>
+<li><strong>Push（推送与聚合梯度）</strong>： Worker 将局部梯度发送给
+Parameter Server；PS 将所有 Worker 的梯度进行规约求和/平均（对应
+<code>ncclReduce</code> 操作）。</li>
+<li><strong>Update（更新参数）</strong>：Parameter Server
+使用聚合后的全局梯度更新模型权重，进入下一个迭代。</li>
+</ol>
+<p><strong>PS 架构存在的问题：</strong></p>
+<ul>
+<li><strong>两次同步开销</strong>：每个迭代周期内，系统需要在网络上进行<strong>两次全量数据传输</strong>（一次广播
+Pull 模型参数，一次规约 Push 梯度数据）。</li>
+<li><strong>网络带宽瓶颈</strong>：所有 Worker 均与中心 PS 节点通信，当
+Worker 数量较多时，PS 节点的网络卡/总线带宽容易成为单点瓶颈。</li>
+</ul>
+<h2 id="multi-gpu-communication">2. Multi-GPU communication</h2>
+<p>在支持模型的多卡分布式训练时，通常使用 NCCL（Nvidia Collective
+Communication Library）进行多 GPU 间的集合通信。NCCL 特性如下：</p>
+<ul>
+<li>provides inter-GPU communication APIs</li>
+<li>both collective and point-to-point send/receive primitives</li>
+<li>supports various of interconnect technologies
+<ul>
+<li>PCIe</li>
+<li>NVLink</li>
+<li>InfiniBand</li>
+<li>IP sockets</li>
+</ul></li>
+<li>Operations are tied to a CUDA stream.</li>
+</ul>
+<h3 id="nccl-primitives">2.1 NCCL Primitives</h3>
+<h4 id="broadcast">2.1.1 Broadcast</h4>
+<ul>
+<li>The Broadcast operation copies an N-element buffer on the root rank
+to all ranks (devices).</li>
+</ul>
+<img src="/posts/2026/10/3321773915/image-20261017224840691.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224840691">
+<p><br></p>
+<p>NCCL API：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function">ncclResult_t <span class="hljs-title">ncclBroadcast</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">const</span> <span class="hljs-type">void</span>* sendbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">void</span>* recvbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">size_t</span> count,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclDataType_t datatype,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">int</span> root,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclComm_t comm,</span></span><br><span class="hljs-params"><span class="hljs-function">	cudaStream_t stream</span></span><br><span class="hljs-params"><span class="hljs-function">)</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>count</code>：datatype 类型的元素数量（个数）。</li>
+<li><code>root</code>：发送方（数据源根节点）的 Rank 编号。</li>
+<li><code>sendbuff</code>：发送缓冲区，仅在 root 节点生效并读取；非 root
+节点可传 NULL。</li>
+<li><code>recvbuff</code>：接收缓冲区，所有 rank
+用于存放广播接收到的数据。大小要与 <code>sendbuff</code>
+相同，保证可以接收所有广播结果。</li>
+<li><code>comm</code>：通信句柄，标识参与本次通信的 GPU 拓扑集合。</li>
+</ul>
+<h4 id="reduce">2.1.2 Reduce</h4>
+<ul>
+<li>Compute reduction (max, min, sum) across devices and write on one
+rank (device).</li>
+</ul>
+<img src="/posts/2026/10/3321773915/image-20261017224859321.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224859321">
+<p><br></p>
+<p>NCCL API：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function">ncclResult_t <span class="hljs-title">ncclReduce</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">const</span> <span class="hljs-type">void</span>* sendbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">void</span>* recvbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">size_t</span> count,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclDataType_t datatype,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclRedOp_t op,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">int</span> root,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclComm_t comm,</span></span><br><span class="hljs-params"><span class="hljs-function">	cudaStream_t stream</span></span><br><span class="hljs-params"><span class="hljs-function">)</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>sendbuff</code>：发送缓冲区，所有 Rank（包含
+root）都需要传入各自包含局部数据的 buffer。</li>
+<li><code>recvbuf</code>：接收缓冲区，仅在 root
+节点生效，用于存放最终聚合后的数据；非 root 节点可传 NULL。大小要与
+<code>sendbuff</code> 相同。</li>
+<li><code>count</code>：元素数量，传输和规约的元素个数（与 ncclBroadcast
+一致，代表 datatype 类型的个数，非字节数）。</li>
+<li><code>op</code>：规约操作符，指定具体的聚合运算方式（如求和、最大值等）。</li>
+<li><code>root</code>：目标根节点 Rank，接收并保存最终规约结果的 GPU
+编号。</li>
+</ul>
+<h4 id="reduce-scatter">2.1.3 Reduce Scatter</h4>
+<ul>
+<li>Compute reduction (sum, min, max) and writing parts of results
+scattered in ranks.</li>
+</ul>
+<img src="/posts/2026/10/3321773915/image-20261017224914165.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224914165">
+<p><br></p>
+<p>NCCL API：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function">ncclResult_t <span class="hljs-title">ncclReduceScatter</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">const</span> <span class="hljs-type">void</span>* sendbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">void</span>* recvbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">size_t</span> recvcount,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclDataType_t datatype,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclRedOp_t op,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclComm_t comm,</span></span><br><span class="hljs-params"><span class="hljs-function">	cudaStream_t stream</span></span><br><span class="hljs-params"><span class="hljs-function">)</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>sendbuff</code>：大小为 <code>nrank * recvcount</code>。</li>
+<li><code>recvbuff</code>：大小为 <code>recvcount</code>。</li>
+<li><code>recvcount</code>：每个 rank 接收的元素数量。</li>
+</ul>
+<h4 id="allgather">2.1.4 AllGather</h4>
+<ul>
+<li>gathers N values from k ranks into an output of size k * N, and
+distributes that result to all ranks (devices).</li>
+</ul>
+<img src="/posts/2026/10/3321773915/image-20261017224930883.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224930883">
+<p><br></p>
+<p>NCCL API：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function">ncclResult_t <span class="hljs-title">ncclAllGather</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">const</span> <span class="hljs-type">void</span>* sendbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">void</span>* recvbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">size_t</span> sendcount,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclDataType_t datatype,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclComm_t comm,</span></span><br><span class="hljs-params"><span class="hljs-function">	cudaStream_t stream</span></span><br><span class="hljs-params"><span class="hljs-function">)</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li><code>sendbuff</code>：大小为 <code>sendcount</code>。</li>
+<li><code>recvbuff</code>：大小为
+<code>nranks * sendcount</code>。通信完成后，<code>recvbuff</code>
+内元素顺序为：rank 0 chunk；rank 1 chunk；...；rank n-1 chunk。</li>
+<li><code>sendcount</code>：每个 rank 发送的元素数量。</li>
+</ul>
+<h4 id="allreduce">2.1.5 AllReduce</h4>
+<ul>
+<li>Compute reduction (sum, min, max) across devices and writing the
+result in the receive buffers of <strong>every rank</strong>.</li>
+</ul>
+<p>AllReduce = Reduce + Broadcast = ReduceScatter + AllGather</p>
+<img src="/posts/2026/10/3321773915/image-20261017224944905.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017224944905">
+<p><br></p>
+<p>NCCL API：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-function">ncclResult_t <span class="hljs-title">ncclAllReduce</span><span class="hljs-params">(</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">const</span> <span class="hljs-type">void</span>* sendbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">void</span>* recvbuff,</span></span><br><span class="hljs-params"><span class="hljs-function">	<span class="hljs-type">size_t</span> count,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclDataType_t datatype,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclRedOp_t op,</span></span><br><span class="hljs-params"><span class="hljs-function">	ncclComm_t comm,</span></span><br><span class="hljs-params"><span class="hljs-function">	cudaStream_t stream</span></span><br><span class="hljs-params"><span class="hljs-function">)</span></span><br></code></pre></td></tr></table></figure>
+<ul>
+<li>整体类似于 <code>ncclReduce</code> 接口。</li>
+<li><code>recvbuff</code>：不同于 <code>ncclReduce</code> 接口只需要
+root rank 传入有效地址，所有节点都必须传入有效地址。</li>
+</ul>
+<h4 id="point-to-point-communication">2.1.6 Point-to-Point
+Communication</h4>
+<p>NCCL 点对点通信相关 API：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-built_in">ncclGroupStart</span>();<br><br><span class="hljs-built_in">ncclSend</span>(sendbuff, sendcount, sendtype, peer, comm, stream);<br><br><span class="hljs-built_in">ncclRecv</span>(recvbuff, recvcount, recvtype, peer, comm, stream);<br><br><span class="hljs-built_in">ncclGroupEnd</span>();<br></code></pre></td></tr></table></figure>
+<ul>
+<li>调用点对点通信 API <code>ncclSend</code> / <code>ncclRecv</code>
+时必须使用 <code>ncclGroupStart()</code> / <code>ncclGroupEnd()</code>
+包裹起来。
+<ul>
+<li><strong>为什么必须要 Group 封装？</strong> NCCL 的 P2P
+调用的底层逻辑是非阻塞的异步操作。如果不使用 Group API 进行打包，各 GPU
+进程各自独立发起通信请求，非常容易导致线程间阻塞甚至网络死锁（Deadlock）。Group
+API 能够将这一组 Send/Recv 操作汇总，让 NCCL
+在底层统一构建传输拓扑并调度硬件链路，实现高效无死锁的并发传输。</li>
+</ul></li>
+<li><code>ncclSend(sendbuff, sendcount, sendtype, peer, comm, stream)</code>：将当前节点
+<code>sendbuff</code> 中的 <code>sendcount</code> 个元素发送给目标节点
+peer。</li>
+<li><code>ncclRecv(recvbuff, recvcount, recvtype, peer, comm, stream)</code>：从源节点
+peer 接收数据存入当前节点的 <code>recvbuff</code>。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<ul>
+<li>单向传输：Rank 0 <span class="math inline">\(\rightarrow\)</span>
+Rank 1</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">// ----------------- Rank 0 执 行 代码 -----------------</span><br><span class="hljs-keyword">if</span> (rank == <span class="hljs-number">0</span>) &#123;<br>    <span class="hljs-built_in">ncclGroupStart</span>();<br>    <span class="hljs-comment">// 将 sendbuff 里的 1000 个 float 发送给 Rank 1 (peer = 1)</span><br>    <span class="hljs-built_in">ncclSend</span>(sendbuff, <span class="hljs-number">1000</span>, ncclFloat, <span class="hljs-number">1</span> <span class="hljs-comment">/* peer */</span>, comm, stream);<br>    <span class="hljs-built_in">ncclGroupEnd</span>();<br>&#125;<br><br><span class="hljs-comment">// ----------------- Rank 1 执 行 代码 -----------------</span><br><span class="hljs-keyword">if</span> (rank == <span class="hljs-number">1</span>) &#123;<br>    <span class="hljs-built_in">ncclGroupStart</span>();<br>    <span class="hljs-comment">// 从 Rank 0 (peer = 0) 接收数据填入 recvbuff</span><br>    <span class="hljs-built_in">ncclRecv</span>(recvbuff, <span class="hljs-number">1000</span>, ncclFloat, <span class="hljs-number">0</span> <span class="hljs-comment">/* peer */</span>, comm, stream);<br>    <span class="hljs-built_in">ncclGroupEnd</span>();<br>&#125;<br><br><span class="hljs-comment">// 两个 Rank 分别同步各自的 CUDA 流确保传输完毕</span><br><span class="hljs-built_in">cudaStreamSynchronize</span>(stream);<br></code></pre></td></tr></table></figure>
+<ul>
+<li>双向传输：Rank 0 与 Rank 1 互相发送/接收</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">// ----------------- Rank 0 代码 -----------------</span><br><span class="hljs-built_in">ncclGroupStart</span>();<br><span class="hljs-built_in">ncclSend</span>(sendbuff, count, ncclFloat, <span class="hljs-number">1</span> <span class="hljs-comment">/* 发给 Rank 1 */</span>, comm, stream);<br><span class="hljs-built_in">ncclRecv</span>(recvbuff, count, ncclFloat, <span class="hljs-number">1</span> <span class="hljs-comment">/* 来自 Rank 1 */</span>, comm, stream);<br><span class="hljs-built_in">ncclGroupEnd</span>();<br><br><span class="hljs-comment">// ----------------- Rank 1 代码 -----------------</span><br><span class="hljs-built_in">ncclGroupStart</span>();<br><span class="hljs-built_in">ncclSend</span>(sendbuff, count, ncclFloat, <span class="hljs-number">0</span> <span class="hljs-comment">/* 发给 Rank 0 */</span>, comm, stream);<br><span class="hljs-built_in">ncclRecv</span>(recvbuff, count, ncclFloat, <span class="hljs-number">0</span> <span class="hljs-comment">/* 来自 Rank 0 */</span>, comm, stream);<br><span class="hljs-built_in">ncclGroupEnd</span>();<br></code></pre></td></tr></table></figure>
+<h3 id="broadcast-implementation">2.2 Broadcast Implementation</h3>
+<ul>
+<li>朴素实现：单向环通信</li>
+</ul>
+<img src="/posts/2026/10/3321773915/image-20261017225005177.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017225005177">
+<p><br></p>
+<ul>
+<li><p>假设需要广播 <span class="math inline">\(N\)</span>
+bytes，网络带宽为 <span class="math inline">\(B\)</span>，GPU 数量为
+<span class="math inline">\(K\)</span></p></li>
+<li><p>分为 <span class="math inline">\(K-1\)</span> 步，每步发送全量
+<span class="math inline">\(N\)</span> bytes 到下一个
+rank，单步通信耗时为 <span class="math inline">\(t =
+\frac{N}{B}\)</span></p></li>
+<li><p>总通信耗时为：<span
+class="math inline">\((K-1)\frac{N}{B}\)</span></p></li>
+<li><p>改进实现：将全量数据划分为 <span class="math inline">\(S\)</span>
+个 chunk，每步发送一个 chunk 到相邻 rank</p></li>
+</ul>
+<img src="/posts/2026/10/3321773915/image-20261017225026387.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017225026387">
+<p><br></p>
+<ul>
+<li>每步通信一个 chunk 大小为 <span
+class="math inline">\(\frac{N}{S}\)</span> bytes，耗时为 <span
+class="math inline">\(t = \frac{N}{SB}\)</span></li>
+<li>一共需要 <span class="math inline">\(K+S-2\)</span>
+步以完成全量广播</li>
+<li>总通信耗时为：<span class="math inline">\(t = (K+S-2)\frac{N}{SB} =
+(1 + \frac{K-2}{S})\frac{N}{B}\)</span>
+，当分块数量远大于节点数，即：<span class="math inline">\(S &gt;&gt;
+K\)</span> 时，耗时可近似为 <span
+class="math inline">\(\frac{N}{B}\)</span> 。</li>
+</ul>
+<p><strong>NCCL 示例代码：</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">//initializing NCCL, group API is required around ncclCommInitRank as it is</span><br><span class="hljs-comment">//called across multiple GPUs in each thread/process NCCLCHECK(ncclGroupStart());</span><br><span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i=<span class="hljs-number">0</span>; i&lt;nDev; i++) &#123;<br>	<span class="hljs-built_in">CUDACHECK</span>(<span class="hljs-built_in">cudaSetDevice</span>(localRank*nDev + i));<br>	<span class="hljs-built_in">NCCLCHECK</span>(<span class="hljs-built_in">ncclCommInitRank</span>(comms+i, nRanks*nDev, id, myRank*nDev + i));<br>&#125;<br><span class="hljs-built_in">NCCLCHECK</span>(<span class="hljs-built_in">ncclGroupEnd</span>());<br><br><span class="hljs-comment">//calling NCCL communication API. Group API is required when using</span><br><span class="hljs-comment">//multiple devices per thread/process</span><br><span class="hljs-built_in">NCCLCHECK</span>(<span class="hljs-built_in">ncclGroupStart</span>());<br><span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i=<span class="hljs-number">0</span>; i&lt;nDev; i++)<br>	<span class="hljs-built_in">NCCLCHECK</span>(<span class="hljs-built_in">ncclAllReduce</span>((<span class="hljs-type">const</span> <span class="hljs-type">void</span>*)sendbuff[i], (<span class="hljs-type">void</span>*)recvbuff[i], size, ncclFloat, ncclSum, comms[i], s[i]));<br><span class="hljs-built_in">NCCLCHECK</span>(<span class="hljs-built_in">ncclGroupEnd</span>());<br><br><span class="hljs-comment">//synchronizing on CUDA stream to complete NCCL communication</span><br><span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i=<span class="hljs-number">0</span>; i&lt;nDev; i++)<br>	<span class="hljs-built_in">CUDACHECK</span>(<span class="hljs-built_in">cudaStreamSynchronize</span>(s[i]));<br></code></pre></td></tr></table></figure>
+<ul>
+<li>在 <strong>单线程/单进程管理多个 GPU（Single-Thread/Process
+Multi-GPU）</strong> 的模式下，使用 NCCL 进行通信域初始化以及发起并发
+<code>ncclAllReduce</code> 集合通信的标准范式。</li>
+<li><strong><code>ncclGroupStart()</code> / <code>ncclGroupEnd()</code>
+使用</strong>
+<ul>
+<li><code>ncclCommInitRank</code>
+是一个<strong>阻塞式握手函数</strong>，它要求集群中所有的 GPU Rank
+必须同时参与初始化。</li>
+<li>如果不使用 Group API 包裹，当前单线程在执行到
+<code>i=0</code>（即第一个 GPU）时就会<strong>一直阻塞</strong>等待其他
+Rank；而由于其他
+GPU（<code>i=1, 2...</code>）也在同一个线程内等待轮询，线程永远无法执行到下一个
+GPU 的初始化，<strong>直接导致死锁</strong>。</li>
+<li>通过 Group API，NCCL 会将这 <code>nDev</code> 个 GPU
+的初始化意图先挂起并打包，直到 <code>ncclGroupEnd()</code>
+时才一次性向所有设备发起并行握手，从而避免死锁。</li>
+</ul></li>
+</ul>
+<h3 id="implementing-parameter-server-using-nccl">2.3 Implementing
+Parameter Server using NCCL</h3>
+<ul>
+<li>Pull: <code>ncclBroadcast</code>
+<ul>
+<li>Parameter server to send parameters to all workers</li>
+</ul></li>
+<li>Push: <code>ncclReduce</code>
+<ul>
+<li>workers send grads to server and sum</li>
+</ul></li>
+<li>Synchronization:
+<ul>
+<li>workers need to wait for server to send param</li>
+<li>server need to wait for work to send grad * N</li>
+</ul></li>
+</ul>
+<h2 id="data-parallel-training-via-allreduce">3. Data Parallel Training
+via AllReduce</h2>
+<p><strong>Data Parallel 训练与 AllReduce 梯度通信示意图：</strong></p>
+<img src="/posts/2026/10/3321773915/image-20261017225044037.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017225044037">
+<p><br> - 数据划分到多个 worker； - 每个 worker 用各自的数据独立进行 fwd
+与 bwd，得到 local grad； - 所有调用 AllReduce 得到 local grad reduce
+后的结果，确保不同 worker 最终梯度相同； - 用 reduce
+结果梯度进行参数更新。</p>
+<h3 id="ring-allreduce">3.1 Ring AllReduce</h3>
+<h4 id="algorithm">3.1.1 Algorithm</h4>
+<p>假设有 <span class="math inline">\(K\)</span> 个 GPU，Ring AllReduce
+核心思想是将数据分为 <span class="math inline">\(K\)</span> 个
+chunk，通过 ReduceScatter + AllGather 高效实现 AllReduce。</p>
+<p><strong>数据切分</strong></p>
+<p>以 <span class="math inline">\(K=4\)</span> 个 Worker 为例：</p>
+<ul>
+<li><strong>Worker 0</strong>：梯度切分为 <span
+class="math inline">\([a_0, a_1, a_2, a_3]\)</span></li>
+<li><strong>Worker 1</strong>：梯度切分为 <span
+class="math inline">\([b_0, b_1, b_2, b_3]\)</span></li>
+<li><strong>Worker 2</strong>：梯度切分为 <span
+class="math inline">\([c_0, c_1, c_2, c_3]\)</span></li>
+<li><strong>Worker 3</strong>：梯度切分为 <span
+class="math inline">\([d_0, d_1, d_2, d_3]\)</span></li>
+</ul>
+<p><strong>ReduceScatter</strong></p>
+<ul>
+<li><strong>执行过程</strong>：共经历 <span class="math inline">\(K -
+1\)</span> 次传输迭代。在每一次迭代中，每个 GPU
+将自己持有的某个分块发送给环中的右相邻节点，同时接收左相邻节点发来的分块，并在本地执行累加规约（Sum）。</li>
+<li><strong>核心成果</strong>：经过 <span class="math inline">\(K -
+1\)</span> 步累加后，每个 Worker 各自获得了 1 个分块的全局累加梯度：
+<ul>
+<li>Worker 0 最终拥有第 0 块的全局梯度：<span class="math inline">\((a_0
++ b_0 + c_0 + d_0)\)</span></li>
+<li>Worker 1 最终拥有第 1 块的全局梯度：<span class="math inline">\((a_1
++ b_1 + c_1 + d_1)\)</span></li>
+<li>Worker 2 最终拥有第 2 块的全局梯度：<span class="math inline">\((a_2
++ b_2 + c_2 + d_2)\)</span></li>
+<li>Worker 3 最终拥有第 3 块的全局梯度：<span class="math inline">\((a_3
++ b_3 + c_3 + d_3)\)</span></li>
+<li>注意，课程 slides 示意图实际上 Worker <span
+class="math inline">\(i\)</span> 最终拥有第 <span
+class="math inline">\(i + 1\)</span>
+个块的全局梯度，这取决于实现，不影响 Ring AllReduce
+核心思想与流程。</li>
+</ul></li>
+</ul>
+<p><strong>AllGather</strong></p>
+<ul>
+<li><strong>执行过程</strong>：同样经历 <span class="math inline">\(K -
+1\)</span> 次传输迭代。在此阶段，无需再进行加法计算，各个 GPU
+仅需将自己上一阶段计算好的全局梯度分块顺着环向后顺传给下一个节点。</li>
+<li><strong>核心成果</strong>：经过 <span class="math inline">\(K -
+1\)</span> 步分发后，所有 Worker 都收集齐了其余 <span
+class="math inline">\(K-1\)</span> 个分块的全局梯度，最终所有 GPU
+都获得了<strong>完整全局累加梯度数组</strong> <span
+class="math inline">\([a_0..d_0, a_1..d_1, a_2..d_2,
+a_3..d_3]\)</span>。</li>
+</ul>
+<h4 id="implementation">3.1.2 Implementation</h4>
+<p><strong>Ring all-reduce: Implementing Scatter-reduce</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; size - <span class="hljs-number">1</span>; i++) &#123;<br>	<span class="hljs-type">int</span> recv_chunk = (rank - i - <span class="hljs-number">1</span> + size) % size;<br>	<span class="hljs-type">int</span> send_chunk = (rank - i + size) % size;<br>	<span class="hljs-type">float</span>* segment_send = &amp;(output[segment_ends[send_chunk] -<br>							segment_sizes[send_chunk]]);<br>	<br>	<span class="hljs-built_in">MPI_Irecv</span>(buffer, segment_sizes[recv_chunk],<br>				datatype, recv_from, <span class="hljs-number">0</span>, MPI_COMM_WORLD, &amp;recv_req);<br>	<br>	<span class="hljs-built_in">MPI_Send</span>(segment_send, segment_sizes[send_chunk],<br>				MPI_FLOAT, send_to, <span class="hljs-number">0</span>, MPI_COMM_WORLD);<br>	<br>	<span class="hljs-type">float</span> *segment_update = &amp;(output[segment_ends[recv_chunk] -<br>	segment_sizes[recv_chunk]]);<br>	<br>	<span class="hljs-comment">// Wait for recv to complete before reduction</span><br>	<span class="hljs-built_in">MPI_Wait</span>(&amp;recv_req, &amp;recv_status);<br>	<br>	<span class="hljs-built_in">reduce</span>(segment_update, buffer, segment_sizes[recv_chunk]);<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><strong>Ring all-reduce: Implementing All-gather</strong></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-keyword">for</span> (<span class="hljs-type">size_t</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-built_in">size_t</span>(size - <span class="hljs-number">1</span>); ++i) &#123;<br>	<span class="hljs-type">int</span> send_chunk = (rank - i + <span class="hljs-number">1</span> + size) % size;<br>	<span class="hljs-type">int</span> recv_chunk = (rank - i + size) % size;<br><br>	<span class="hljs-comment">// Segment to send - at every iteration we send segment (r+1-i)</span><br>	<span class="hljs-type">float</span>* segment_send = &amp;(output[segment_ends[send_chunk] -<br>							segment_sizes[send_chunk]]);<br><br>	<span class="hljs-comment">// Segment to recv - at every iteration we receive segment (r-i)</span><br>	<span class="hljs-type">float</span>* segment_recv = &amp;(output[segment_ends[recv_chunk] -<br>							segment_sizes[recv_chunk]]);<br>	<br>	<span class="hljs-built_in">MPI_Sendrecv</span>(segment_send, segment_sizes[send_chunk],<br>				datatype, send_to, <span class="hljs-number">0</span>, segment_recv,<br>				segment_sizes[recv_chunk], datatype, recv_from,<br>				<span class="hljs-number">0</span>, MPI_COMM_WORLD, &amp;recv_status);<br>&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="parameter-server-vs-allreduce-data-parallel">3.2 Parameter
+Server vs AllReduce Data Parallel</h3>
+<ul>
+<li>Parameter Server
+<ul>
+<li>needs to synchronize twice (parameters and local gradients)</li>
+</ul></li>
+<li>AllReduce Data Parallel
+<ul>
+<li>each local worker needs to update parameters</li>
+<li>redundant?
+<ul>
+<li>指每个 worker
+都需要进行参数更新，存在冗余计算。但是相比多一次通信代价可以忽略。</li>
+</ul></li>
+<li>local updating is much faster than transferring data across
+gpus</li>
+</ul></li>
+</ul>
+<h2 id="summary">4. Summary</h2>
+<ul>
+<li>Overall idea: partition the data, distribute the
+forward/backward</li>
+<li>Parameter Server
+<ul>
+<li>server to update and distribute parameters, worker to get local
+grad</li>
+</ul></li>
+<li>NCCL Multi-GPU communication
+<ul>
+<li>using ring and batching to reduce the latency for Broadcast</li>
+</ul></li>
+<li>Data Parallel Training via All Reduce
+<ul>
+<li>Efficient Ring AllReduce (ScatterReduce+AllGather</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/Distributed-Training/">#Distributed Training</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems 14: Distributed Training</div>
+      <div>https://arcsin2.cloud/posts/2026/10/3321773915/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/3021269970/" title="LLM Systems 15: Distributed Data Parallel Training">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems 15: Distributed Data Parallel Training</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1546113425/" title="LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference">
+                        <span class="hidden-mobile">LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

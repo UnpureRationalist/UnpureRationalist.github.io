@@ -1,0 +1,1259 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="PyTorch Distributed: Experiences on Accelerating Data Parallel Training 代码：PyTorch DDP arXiv 提交日期：28 Jun 2020 （发表于 VLDB 2020） 作者：    摘要：  本文介绍了 PyTorch 分布式数据并行（Distributed Data Parallel, D">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDP: PyTorch Distributed-Experiences on Accelerating Data Parallel Training">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/1729875790/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="PyTorch Distributed: Experiences on Accelerating Data Parallel Training 代码：PyTorch DDP arXiv 提交日期：28 Jun 2020 （发表于 VLDB 2020） 作者：    摘要：  本文介绍了 PyTorch 分布式数据并行（Distributed Data Parallel, D">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017225928968.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017225941865.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017225954627.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017230016016.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017230028538.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017230040852.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017230053192.png">
+<meta property="article:published_time" content="2026-10-17T14:25:53.000Z">
+<meta property="article:modified_time" content="2026-10-17T15:01:38.090Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="DDP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/1729875790/image-20261017225928968.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>DDP: PyTorch Distributed-Experiences on Accelerating Data Parallel Training - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="DDP: PyTorch Distributed-Experiences on Accelerating Data Parallel Training"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-17 22:25" pubdate>
+          2026年10月17日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          7.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          27 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">DDP: PyTorch Distributed-Experiences on Accelerating Data Parallel Training</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2006.15704">PyTorch Distributed:
+Experiences on Accelerating Data Parallel Training</a></li>
+<li>代码：<a
+target="_blank" rel="noopener" href="https://github.com/pytorch/pytorch/blob/1d65c9a1bbc2e0ca245729500c1c77396576c3fd/torch/nn/parallel/distributed.py#L465">PyTorch
+DDP</a></li>
+<li>arXiv 提交日期：28 Jun 2020 （发表于 VLDB 2020）</li>
+<li>作者： <img src="/posts/2026/10/1729875790/image-20261017225928968.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017225928968"> <br></li>
+</ul>
+<p><strong>摘要：</strong></p>
+<blockquote>
+<p><strong>本文介绍了 PyTorch 分布式数据并行（Distributed Data Parallel,
+DDP）模块的设计、实现与评估。</strong> PyTorch
+是一套在深度学习研究与应用中被广泛采用的科学计算包。深度学习领域的最新进展强调了大数据集和大模型的价值，这使得将模型训练扩展到更多计算资源成为必要。得益于其直观的原理和广泛的适用性，数据并行已成为分布式训练的一种主流解决方案。</p>
+<p>通常，分布式数据并行技术会在每个计算资源上复制模型副本以独立生成梯度，并在每次迭代时对这些梯度进行同步通信，以保持各模型副本的一致性。<strong>尽管该技术在概念上很简单，但计算与通信之间微妙的依赖关系使得优化分布式训练效率绝非易事。</strong></p>
+<p>截至 v1.5 版本，PyTorch
+原生提供了几种加速分布式数据并行的技术，包括<strong>梯度分桶（Bucketing
+Gradients）</strong>、<strong>计算与通信重叠（Overlapping Computation
+with Communication）</strong> 以及 <strong>跳过梯度同步（Skipping
+Gradient
+Synchronization，即：梯度累积）</strong>。评估结果表明，在配置得当的情况下，PyTorch
+分布式数据并行模块在扩展至 <strong>256 块 GPU
+时能够实现接近线性的可扩展性</strong>。</p>
+</blockquote>
+<h2 id="introduction">1. Introduction</h2>
+<p><strong>问题与背景：</strong></p>
+<p>深度学习在许多任务上验证了有效性，许多应用使用更大的模型与数据集以取得更好的效果，随之带来了对分布式训练的需求，其中最广泛使用的分布式训练策略就是本文关注的：DDP（Distributed
+Data Parallel）。</p>
+<p>实现 DDP 的主要挑战：</p>
+<ul>
+<li>数学等价性（Mathematical equivalence）：
+<ul>
+<li>DDP 目的：加速在大规模数据集上的模型训练（切分数据维度）。</li>
+<li>核心约束：DDP
+分布式训练得到的结果模型应该与单节点训练得到的模型相同。</li>
+</ul></li>
+<li>非侵入式 API（Non-intrusive and interceptive API）：
+<ul>
+<li>DDP API 必须不侵入用户代码，方便用户从 local
+模式实现开始，仅需要少量修改就扩展到 DDP。</li>
+<li>同时，API
+设计又必须能够及时感知/拦截信号，以进行通信与系统性能优化。</li>
+</ul></li>
+<li>高性能（High performance）：
+<ul>
+<li>DDP 本身有计算与通信的依赖。</li>
+<li>设计与实现必须高效利用不同资源，实现更高的训练吞吐。</li>
+</ul></li>
+</ul>
+<p><strong>Solution：</strong></p>
+<p>PyTorch DDP（<code>DistributedDataParallel</code>）：</p>
+<ul>
+<li><code>torch.nn.Module</code> 的子类，用户构造时传入实现的模型，作为
+DDP 的子模块。</li>
+<li>解决上述三个挑战的方法：
+<ul>
+<li>数学等价性：
+<ul>
+<li>初始化时模型权重同步（Broadcast）；</li>
+<li>每个训练迭代同步梯度（AllReduce）；</li>
+<li>目的：初始化和训练过程中，保持不同模型 replica 参数始终相同。</li>
+</ul></li>
+<li>非侵入式 API：
+<ul>
+<li>DDP 提供与用户模型相同的 <code>forward</code> 接口；</li>
+<li>用户使用 DDP 时无需修改其他代码；</li>
+</ul></li>
+<li>高性能：
+<ul>
+<li>梯度分桶（bucketing gradients）；</li>
+<li>通信计算 overlap（overlapping communication with
+computation）；</li>
+<li>跳过梯度同步（skipping synchronization）；</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>一些实验经验与结论：</strong></p>
+<ul>
+<li>通信是 DDP
+训练时延的主要因素，且通信对时延影响随着模型规则增加同步增加；</li>
+<li>桶大小对通信效率影响很大，正确配置时能带来 2+ 倍速度提升；</li>
+<li>跳过梯度同步能显著减小均摊通信开销，同时对模型收敛速度无显著影响。</li>
+</ul>
+<h2 id="system-design">2. System Design</h2>
+<p><strong>Overview:</strong></p>
+<img src="/posts/2026/10/1729875790/image-20261017225941865.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017225941865">
+<p><br></p>
+<ul>
+<li>Python API frontend</li>
+<li>C++ gradient reduction core algorithm
+<ul>
+<li>the <code>c10d</code> collective communication library</li>
+<li>different communication backend
+<ul>
+<li>NCCL</li>
+<li>Gloo</li>
+<li>MPI</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="api">2.1 API</h3>
+<p>DDP Module，作为 <code>torch.nn</code>
+下模块，传入用户自定义模型后，透明地在 backward
+时进行梯度通信与同步。</p>
+<p>示例代码：</p>
+<img src="/posts/2026/10/1729875790/image-20261017225954627.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017225954627">
+<p><br></p>
+<ul>
+<li>仅需要第 11 行 DDP 包装自定义模型。</li>
+</ul>
+<h3 id="gradient-reduction">2.2 Gradient Reduction</h3>
+<h4 id="a-native-solution">2.2.1 A Native Solution</h4>
+<p>借助 PyTorch autograd engine 支持提供自定义 backward hooks。朴素实现
+hook 流程：</p>
+<ul>
+<li>扫描 local model 的每个参数，并提取对应的梯度；</li>
+<li>使用 <code>AllReduce</code> 获取每个梯度在所有 ranks 上的均值；</li>
+<li>将均值结果梯度写回每个参数的梯度。</li>
+</ul>
+<p>朴素实现的性能问题：</p>
+<ul>
+<li>在每个参数梯度的小数据集上发起集合通信，性能很差。</li>
+<li>梯度计算与同步完全顺序进行，未充分利用计算/通信资源提供的 overlap
+机会。</li>
+</ul>
+<h4 id="gradient-bucketing">2.2.2 Gradient Bucketing</h4>
+<p>Motivation：大数据量下集合通信的性能更高。如下图所示：</p>
+<img src="/posts/2026/10/1729875790/image-20261017230016016.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017230016016">
+<p><br></p>
+<ul>
+<li>每个参数的平均 AllReduce 耗时随着一次 AllReduce
+操作的参数梳理呈减少趋势。</li>
+<li>Bucket 取值：
+<ul>
+<li>适当大，以充分利用集合通信带宽；</li>
+<li>不能等于模型全部参数，否则 backward
+计算与梯度同步完全串行进行。</li>
+</ul></li>
+</ul>
+<h4 id="overlap-computation-with-communication">2.2.3 Overlap
+Computation with Communication</h4>
+<p>Motivation：有了梯度分桶之后，通信不需要等待整个模型的 backward
+完成，而是只需要等待 bucket 内的参数 backward 完成。具体实现方式：</p>
+<ul>
+<li>DDP 为每个梯度累加器（gradient
+accumulator）都注册了一个自动求导钩子（autograd hook）。</li>
+<li>当对应的累加器更新完梯度后，该钩子就会被触发，并检查它所归属的梯度桶（bucket）。</li>
+<li>如果同一桶内所有梯度的钩子都已触发完毕，最后一个被触发的钩子就会对该桶启动异步
+AllReduce 操作。</li>
+</ul>
+<p><strong>注意点：</strong></p>
+<ul>
+<li>所有进程执行 AllReduce 的顺序必须一致，否则可能导致数据错误或进程
+crash。
+<ul>
+<li>PyTorch 解决方法：采用 <code>model.parameters()</code>
+的逆序作为分桶顺序。</li>
+<li>近似解决方法，但足够简单且多数情况下有效。</li>
+</ul></li>
+<li>可能一次训练迭代只涉及到模型全部参数的一个子集，且不同迭代间子集不同。这可能导致
+hook 等不到 backward 完成，造成 backward 执行 hang。
+<ul>
+<li>PyTorch 解决方法：DDP 在前向传播结束时，从输出张量（output
+tensors）开始遍历自动求导图（autograd
+graph），以找出所有真正参与本次计算的参数。这些参与计算的张量就绪，就足以作为判断反向传播完成的充分信号。</li>
+<li>DDP
+在前向传播结束时<strong>主动将那些未参与计算的参数标记为就绪（ready）</strong>，从而避免无效等待剩余的参数梯度。</li>
+</ul></li>
+</ul>
+<p><strong>DDP 算法流程：</strong></p>
+<img src="/posts/2026/10/1729875790/image-20261017230028538.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017230028538">
+<p><br></p>
+<ul>
+<li>初始化
+<ul>
+<li>广播权重；</li>
+<li>梯度分桶；</li>
+<li>注册 backward 结束后的 <code>autograd_hook</code> 函数。</li>
+</ul></li>
+<li>forward
+<ul>
+<li>运行 local model forward；</li>
+<li>从输出 tensor 开始遍历计算图，标记未使用参数为 ready。</li>
+</ul></li>
+<li><code>autograd_hook</code> 函数
+<ul>
+<li>根据参数 index 获取 bucket index 和 bucket 内偏移量；</li>
+<li>写参数梯度到 bucker offset；</li>
+<li>如果当前 bucket 内所有梯度都 ready 了，标记 bucket 为 ready；</li>
+<li>按照 ready bucket 顺序发起 AllReduce 通信；</li>
+<li>通信完成后写 reduce 后梯度到参数梯度。</li>
+</ul></li>
+</ul>
+<p><strong>未使用参数处理：</strong></p>
+<ul>
+<li>问题：
+<ul>
+<li>DDP 对所有参数（包括在 forward 时未使用的参数）都会拷贝 grad 并发起
+AllReduce 通信写结果到参数
+<code>.grad</code>，导致优化器无法识别一个参数是否真正参与了 forward
+计算。</li>
+<li><strong>精度退化隐患</strong>：许多现代优化器（如带动量 Momentum 的
+Adam/SGD）会根据“梯度是否存在”来决定是否更新动量值。如果某个参数本轮被跳过了（没有计算梯度），但
+DDP 依然强行去改写了它的
+<code>.grad</code>，优化器就会误以为它参与了计算并错误地更新动量状态，从而导致模型训练精度出现退化（Accuracy
+Regressions）。</li>
+</ul></li>
+<li>解决方法：<strong>全局位图（Global Bitmap）与额外 AllReduce</strong>
+<ul>
+<li><strong>本地位图记录</strong>：每个 Worker 在本地维护一个
+Bitmap（位图），记录本地有哪些参数参与了本轮计算。</li>
+<li><strong>发起额外的
+AllReduce</strong>：在梯度同步前，额外发起一次全网 Bitmap 的 AllReduce
+操作，汇聚计算出<strong>全局未使用的参数（Globally Unused
+Parameters</strong>。</li>
+<li><strong>精确避让</strong>：对于全局真正未使用的参数，DDP
+会完全不去触碰其 <code>.grad</code>
+字段，从而将“无梯度”信号原封不动地传递给优化器。</li>
+</ul></li>
+</ul>
+<p><strong>DDP 执行流程示意图：</strong></p>
+<img src="/posts/2026/10/1729875790/image-20261017230040852.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017230040852">
+<h4 id="gradient-accumulation">2.2.4 Gradient Accumulation</h4>
+<p>Motivation：减少 AllReduce 通信次数，不在每次训练迭代都发起 AllReduce
+通信，而是每 <span class="math inline">\(n\)</span>
+次本地梯度累加后，发起一次全局梯度同步。</p>
+<p>实现方式：引入专门的显式控制接口——<strong>no_sync</strong>
+上下文管理器</p>
+<ul>
+<li><strong>开关标志置位</strong>：当进入
+<code>with ddp.no_sync():</code> 作用域时，DDP
+会在内部置位一个开关标志，并在 <code>forward()</code>
+方法中读取该标志。</li>
+<li><strong>禁用 DDP 钩子</strong>：在 <code>no_sync</code> 模式下，DDP
+挂载到 Autograd Engine 上的所有 C++ 钩子（即触发异步 AllReduce 的
+<code>autograd_hook</code>）均被暂时禁用。反向传播仅在本地将梯度累加到
+<code>.grad</code> 中，不触发任何网络通信。</li>
+<li><strong>未用参数位图累积</strong>：全局未使用参数的信息会继续在
+Bitmap 中进行累积，留到下一次真实发起通信时统一结算。</li>
+<li><strong>走出作用域同步</strong>：当走出 <code>no_sync</code>
+作用域后执行下一次 <code>backward()</code> 时，DDP
+钩子重新恢复生效，将之前所有微批次累积的总梯度一次性发起全局 AllReduce
+操作。</li>
+</ul>
+<p>示例代码：</p>
+<img src="/posts/2026/10/1729875790/image-20261017230053192.png" srcset="/img/loading.gif" lazyload class="" title="image-20261017230053192">
+<p><br></p>
+<ul>
+<li>前 <span class="math inline">\(n-1\)</span> 次迭代，使用
+<code>no_sync()</code> 上下文管理器封装，禁止
+AllReduce，仅本地梯度累积；</li>
+<li>第 <span class="math inline">\(n\)</span>
+次迭代，在上下文管理器之外，进行梯度 AllReduce。</li>
+</ul>
+<h3 id="collective-communication">2.3 Collective Communication</h3>
+<p>DDP 需要使用 AllReduce 通信原语。PyTorch 基于 NCCL、Gloo
+等通信库，封装统一的 ProcessGroup 接口。DDP 基于 ProcessGroup
+实现，允许底层通信实现方式的替换。</p>
+<p>一些实现细节：</p>
+<ul>
+<li>ProcessGroup 初始化：
+<ul>
+<li><strong>Rendezvous 服务</strong>：分布式集群启动时，各个 Worker
+的启动时间存在微小差异。Rendezvous（如基于 TCP
+或共享文件系统的注册中心）扮演了“集合点”的角色。只有当所有
+<code>WORLD_SIZE</code> 个进程都向 Rendezvous
+报到完毕后，<code>ProcessGroup</code> 的通信拓扑和 Ring
+环才会被正式构建建立。</li>
+</ul></li>
+<li>NCCL backend 实现细节：
+<ul>
+<li><strong>默认流 vs 通信流</strong>：PyTorch 前向/反向传播的 CUDA
+Kernel 默认提交给 CUDA 的 <strong>Default Stream（主流）</strong>
+执行。</li>
+<li><strong>计算与通信解耦</strong>：NCCL <code>ProcessGroup</code>
+内部维护了<strong>独立的通信 CUDA Stream</strong>。当反向传播在 Default
+Stream 计算完梯度的瞬间，通信命令被异步提交到通信 Stream。由于两个
+Stream 在硬件级别由不同的 CUDA
+硬件队列调度，通信与下一个算子的计算可以在 GPU
+上并行重叠（Overlap）执行，完全不会阻塞主流计算。</li>
+</ul></li>
+</ul>
+<h2 id="implementation">3. Implementation</h2>
+<p>基于 PyTorch v1.5.0 版本介绍。</p>
+<h3 id="python-front-end">3.1 Python Front-end</h3>
+<p>几个实现细节：</p>
+<ul>
+<li>可配置参数（Configurable Knobs）：
+<ul>
+<li><code>process_group</code>：允许用户指定特定的进程组实例来运行
+AllReduce，避免与全局默认进程组（Default Process
+Group）产生混淆或冲突。</li>
+<li><code>bucket_cap_mb</code>：控制 AllReduce
+梯度分桶的大小上限（默认值为
+25MB），开发者可根据具体模型规模与网络带宽微调该参数以优化训练速度。</li>
+<li><code>find_unused_parameters</code>：布尔开关，用于控制 DDP
+是否需要在前向传播中遍历 Autograd
+图来自动检测并标记未参与计算的参数。</li>
+</ul></li>
+<li>模型设备亲和性（Model Device Affinity）：
+<ul>
+<li>对于单块 GPU
+装不下的超大模型，开发者通常会将模型的不同层切分放置在同一个节点内的不同
+GPU 上（即单进程多设备模型）。</li>
+<li>DDP 对这种多设备放置（Multi-device Model）提供了原生兼容。</li>
+<li>当传入的 <code>device_ids</code> 参数为 <code>None</code> 或空列表
+<code>[]</code> 时，DDP
+会自动检查模型的设备分布并完成配置，将这个跨多卡的模型视作一个统一的整体来进行管理与梯度同步。</li>
+</ul></li>
+<li>模型缓冲区（Model Buﬀers）：
+<ul>
+<li>除了模型参数外，许多网络层（如
+<code>BatchNorm</code>）还需要维护一些不参与求导但随训练更新的内部状态（称为
+Buffer，如 <code>running_mean</code> 和
+<code>running_var</code>）。</li>
+<li><strong>Rank 0 广播</strong>：为了保证各节点间的 Buffer
+严格一致，DDP 以 <strong>Rank 0
+进程为权威（Authority）</strong>。在前向传播（<code>forward</code>）开始前，DDP
+会自动将 Rank 0 的 Buffer 值广播给所有其他进程。</li>
+<li><strong>与</strong> <strong>no_sync</strong>
+<strong>的协同</strong>：在开启
+<code>no_sync</code>（梯度累积）模式时，DDP 会通过标志位控制 Buffer
+广播的时机，<strong>仅在下一次即将真正发起全局通信的前向传播前</strong>才执行
+Buffer 广播，从而避免在本地累积阶段产生不必要的广播开销。</li>
+</ul></li>
+</ul>
+<h3 id="core-gradient-reduction">3.2 Core Gradient Reduction</h3>
+<p>核心代码：<a
+target="_blank" rel="noopener" href="https://github.com/pytorch/pytorch/blob/main/torch/csrc/distributed/c10d/reducer.cpp"><code>reducer.cpp</code></a>
+，主要由 4 个组件构成：</p>
+<ul>
+<li>参数到桶映射（Parameter-to-Bucket Mapping）：
+<ul>
+<li><strong>设备亲和性 (Device
+Affinity)</strong>：在每次反向传播中，梯度张量需要先从参数拷贝到对应的桶内存区，AllReduce
+完成后再将平均梯度拷贝回 <code>.grad</code>。为了极大化显存内拷贝（D2D
+Memcpy）速度，<strong>梯度桶总是建立在与其关联参数相同的设备上</strong>。如果模型横跨多块
+GPU，DDP 会严格按设备亲和性分组，确保同一个桶内的所有参数都在同一块 GPU
+上。</li>
+<li><strong>通信发射逆序</strong>：按照 <code>model.parameters()</code>
+的<strong>逆序</strong>将参数指派给各个桶，并以此顺序发射通信。这一逆序尽可能逼近反向传播求导的真实顺序，从而最大化计算与通信的重叠效率。</li>
+</ul></li>
+<li>自动求导钩子（Autograd Hook）：
+<ul>
+<li><strong>入口点与安装</strong>：Autograd Hook 是 DDP
+介入反向传播的物理入口。在构造函数中，DDP
+会遍历模型中的所有参数，获取每个参数对应的<strong>梯度累加器（Gradient
+Accumulator）</strong>，并向其注册相同的 post-hook 回调函数。</li>
+<li><strong>待处理计数器 (Pending
+Count)</strong>：由于梯度求导就绪的实际顺序存在不确定性，DDP
+为每个梯度桶维护了一个待处理梯度计数器（Pending Count）。</li>
+<li><strong>递减与复位</strong>：每当某个参数的梯度算完并累加完成后，对应
+post-hook 被触发并递减该桶的 Pending
+计数；当计数归零时，说明该桶内所有梯度均已就绪，DDP 随即标记该桶 ready
+并准备触发 AllReduce。在前向传播开始时，DDP 会重置每个桶的 Pending
+计数。</li>
+</ul></li>
+<li>桶 AllReduce（Bucket AllReduce）：
+<ul>
+<li><strong>性能瓶颈与折衷</strong>：Bucket AllReduce 是 DDP
+中最主要的通信开销来源。
+<ul>
+<li>一方面，将更多梯度打包进同一个桶可以显著摊销通信开销；</li>
+<li>另一方面，过大的桶会导致等待首个通信启动的前置时间（Lead
+Time）变长。</li>
+</ul></li>
+<li><strong>默认阈值</strong>：PyTorch 将默认的桶上限设为
+<strong>25MB</strong>，开发者可以根据具体模型的参数量与物理网络带宽进行调整。</li>
+</ul></li>
+<li>全局未使用参数（Globally Unused Parameters）：
+<ul>
+<li><strong>共享 CPU 位图 (CPU Bitmap)</strong>：DDP
+在本地维护一个记录参数参与状态的位图（Bitmap）。为了避免为每个更新都单独发射
+CUDA Kernel，整个模型的所有参数构成一个位图，并且该位图保存在 CPU
+内存中。</li>
+<li><strong>GPU 异步拷贝与通信</strong>：由于某些通信后端（如
+<code>ProcessGroupNCCL</code>）不支持在 CPU 张量上直接运行
+AllReduce，DDP 会在首个模型参数所在的 GPU 上额外维护一份设备位图（Device
+Bitmap）。通信前，通过非阻塞拷贝将 CPU 位图异步传输到 GPU
+上，随后发起一次额外的 AllReduce 来搜集全局位图。</li>
+</ul></li>
+</ul>
+<h2 id="discussion">4. Discussion</h2>
+<h3 id="lessons-learned">4.1 Lessons Learned</h3>
+<p>提升 DDP 训练/通信速度的一些经验：</p>
+<ul>
+<li><strong>通信后端优先选择 NCCL</strong>：在绝大多数 GPU
+分布式场景下，NCCL 的传输吞吐和性能均显著优于
+Gloo，应作为优先考虑的底层通信后端。</li>
+<li><strong>梯度分桶大小（Bucket
+Size）需折衷调优</strong>：过小或过大的分桶都会损害通信性能。最优桶大小通常介于两者之间，且随模型规模的增长呈<strong>亚线性（Sub-linear）增长</strong>。</li>
+<li><strong>跨节点/跨机器资源分配避坑</strong>：当跨节点（Inter-node）的网络带宽远低于节点内（Intra-node，如
+NVLink）的带宽时，跨机器扩展会导致显著的性能衰减。建议将单 DDP
+进程组尽量控制在同一台机器内；若确实需要超大规模扩展，可结合
+<code>no_sync</code>（跳过同步）来缓解跨节点带宽瓶颈。</li>
+</ul>
+<h3 id="future-improvements">4.2 Future Improvements</h3>
+<ul>
+<li>动态梯度顺序预测 (Gradient Order Prediction)
+<ul>
+<li><strong>现状与局限</strong>：DDP 目前在构造函数中通过
+<code>model.parameters()</code>
+的静态逆序来确定分桶策略，但在复杂动态图中可能产生顺序错位。</li>
+<li><strong>优化思路</strong>：利用 Autograd Hook
+在运行时动态追踪反向传播的实际求导顺序，并据此定期/低频地重新调整参数到桶的映射。</li>
+</ul></li>
+<li>跨节点层丢弃/随机深度兼容 (Layer Dropping)
+<ul>
+<li><strong>现状与局限</strong>：在 Transformer
+等模型中使用层丢弃（Layer Dropping/Structured Dropout）时，由于 DDP
+的分桶是静态预先分配的，即使前向传播跳过了某些层，网络上依然传输着相同大小的固定桶，无法节省通信带宽。</li>
+<li><strong>优化思路</strong>：
+<ol type="1">
+<li>动态修改参数到桶的映射；</li>
+<li>或者将分桶粒度提升至“层级（Layer-level）”，使所有 Worker
+通过相同随机种子或主节点广播，实现整个桶级别的同步跳过。</li>
+</ol></li>
+</ul></li>
+<li>梯度自适应压缩 (Gradient Compression)
+<ul>
+<li><strong>现状与局限</strong>：DDP 始终使用与参数相同的精度（如
+FP32/FP64）传输梯度，在模型接近收敛时显得较为冗余。</li>
+<li><strong>优化思路</strong>：引入自适应梯度压缩机制，根据训练阶段动态降低梯度传输精度（如量化为
+INT8），甚至采用更激进的 1-bit SGD
+方案，在几乎不损失模型精度的前提下大幅削减网络通信量。</li>
+</ul></li>
+</ul>
+<h2 id="conclusion">5. Conclusion</h2>
+<p>DDP 实现要点：</p>
+<ul>
+<li>gradient bucket
+<ul>
+<li>优点：
+<ul>
+<li>更高的通信吞吐。</li>
+<li>允许 backward 计算与 AllReduce 梯度同步 overlap。</li>
+</ul></li>
+<li>实现：
+<ul>
+<li>按 <code>model.parameters()</code>
+逆序分桶，匹配反向传播求导顺序。</li>
+</ul></li>
+</ul></li>
+<li>梯度累积：除了多卡/跨机 DDP
+训练，通过本地梯度累积减少通信开销。</li>
+<li>autograd hook 实现：
+<ul>
+<li>forward 检测参数是否参与。</li>
+<li>backward 完成调用 hook 标记梯度 ready，bucket 内 ready 后，按 bucket
+顺序发起通信。</li>
+<li>全局位图（Global Bitmap）：准确识别未参与参数，避免改写
+<code>.grad</code> 破坏优化器动量状态。</li>
+</ul></li>
+<li>一些细节：
+<ul>
+<li>独立 CUDA Stream：通信与计算在不同硬件队列并行，互不阻塞。</li>
+<li>轮询进程组（Round-Robin）：多 ProcessGroup
+轮询发射通信，打破单进程组带宽瓶颈。</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/DDP/">#DDP</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>DDP: PyTorch Distributed-Experiences on Accelerating Data Parallel Training</div>
+      <div>https://arcsin2.cloud/posts/2026/10/1729875790/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1691777268/" title="LLM Systems Assignment 4: Transformer CUDA Acceleration">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems Assignment 4: Transformer CUDA Acceleration</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/2402940747/" title="LightSeq2: Accelerated Training for Transformer-based Models on GPUs">
+                        <span class="hidden-mobile">LightSeq2: Accelerated Training for Transformer-based Models on GPUs</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

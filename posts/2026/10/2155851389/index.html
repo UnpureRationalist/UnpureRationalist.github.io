@@ -1,0 +1,1316 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity arXiv 发布日期：11 Jan 2021（发表于：Journal of Machine Learning Research 2022） 代码：t5x 作者：    摘要  在深度学习中，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/2155851389/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity arXiv 发布日期：11 Jan 2021（发表于：Journal of Machine Learning Research 2022） 代码：t5x 作者：    摘要  在深度学习中，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2155851389/image-20261103005314180.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2155851389/image-20261103005336021.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2155851389/image-20261103005351987.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2155851389/image-20261103005445004.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2155851389/image-20261103005501377.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2155851389/image-20261103005518704.png">
+<meta property="article:published_time" content="2026-10-31T15:55:58.000Z">
+<meta property="article:modified_time" content="2026-11-02T16:55:49.802Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="Distributed Training">
+<meta property="article:tag" content="MoE">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/2155851389/image-20261103005314180.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-31 23:55" pubdate>
+          2026年10月31日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          8.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          28 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2101.03961">Switch Transformers:
+Scaling to Trillion Parameter Models with Simple and Efficient
+Sparsity</a></li>
+<li>arXiv 发布日期：11 Jan 2021（发表于：Journal of Machine Learning
+Research 2022）</li>
+<li>代码：<a target="_blank" rel="noopener" href="https://github.com/google-research/t5x">t5x</a></li>
+<li>作者： <img src="/posts/2026/10/2155851389/image-20261103005314180.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103005314180"> <br></li>
+</ul>
+<p><strong>摘要</strong></p>
+<blockquote>
+<p>在深度学习中，模型通常对所有输入重复使用相同的参数。混合专家（Mixture
+of Experts,
+MoE）模型打破了这一范式，转而为每一个传入的样本选择不同的参数。其结果是一个稀疏激活的模型——虽然拥有极其庞大的参数量，却能保持恒定的计算成本。然而，尽管
+MoE
+取得了几项显著的成功，但其广泛应用一直受到架构复杂性、通信成本以及训练不稳定性的阻碍。</p>
+<p>我们通过引入 Switch Transformer 解决了这些问题。我们简化了 MoE
+的路由算法，设计了更直观的改进模型，降低了通信和计算成本。我们提出的训练技术缓解了训练不稳定性，并且首次证明了大型稀疏模型可以使用低精度（bfloat16）格式进行训练。</p>
+<p>基于 T5-Base 和 T5-Large 架构，我们在相同计算资源下实现了高达 7
+倍的预训练速度提升。这些改进同样延伸到了多语言场景，在全部 101
+种语言中均取得了超越 mT5-Base 的性能增益。最后，我们在 C4
+数据集（Colossal Clean Crawled
+Corpus）上预训练了高达万亿参数规模的模型，进一步推进了当前语言模型的极限，并实现了相比
+T5-XXL 模型 4 倍的速度提升。</p>
+</blockquote>
+<h2 id="introduction">1. Introduction</h2>
+<ul>
+<li>已有 MoE 范式存在的问题：复杂性 + 通信成本 + 训练不稳定；</li>
+<li>本文提出的 Solution：Switch Transformer，简化 MoE
+并提高其性能。</li>
+</ul>
+<h2 id="switch-transformer">2. Switch Transformer</h2>
+<ul>
+<li>Motivation：以简单和计算高效的方式，扩展 Transformer 模型参数量。
+<ul>
+<li>提升模型参数量，但保持每 token 计算 FLOPs 不变；</li>
+</ul></li>
+</ul>
+<p>模型结构：</p>
+<img src="/posts/2026/10/2155851389/image-20261103005336021.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103005336021">
+<p><br></p>
+<ul>
+<li>FFN -&gt; MoE</li>
+<li>Top-K 取值为 1</li>
+</ul>
+<h3 id="simplifying-sparse-routing">2.1 Simplifying Sparse Routing</h3>
+<p><strong>Mixture of Expert Routing</strong></p>
+<p>传统实现：输入 token 特征 <span class="math inline">\(x\)</span> 经过
+Router 权重 <span class="math inline">\(W_r\)</span> 得到 logits：<span
+class="math inline">\(h(x) = W_r \cdot x\)</span> ，然后经过 Softmax
+得到概率，从 <span class="math inline">\(N\)</span> 个专家 <span
+class="math inline">\(\{E_i(x)\}_{i=1}^{N}\)</span> 中选择概率最高的
+Top-K 个。每个专家 <span class="math inline">\(i\)</span>
+的路由权重为：</p>
+<p><span class="math display">\[
+p_i(x) = \frac{e^{h(x)_i}}{ \sum_j^N{e^{h(x)_j}} }
+\]</span></p>
+<p>令集合 <span class="math inline">\(\mathcal{T}\)</span> 表示 Top-K
+个专家的索引集合，即 MoE 层最终输出为：</p>
+<p><span class="math display">\[
+y = \sum_{i \in \mathcal{T}}{ p_i(x)E_i(x) }
+\]</span></p>
+<p><strong>Switch Routing: Rethinking Mixture-of-Experts</strong></p>
+<ul>
+<li>已有观点：
+<ul>
+<li><span class="math inline">\(k &gt; 1\)</span> 以让 Router
+更容易梯度更新；</li>
+<li>最前面几层 <span class="math inline">\(k\)</span> 要更大；</li>
+</ul></li>
+<li>本文观点：
+<ul>
+<li><span class="math inline">\(k = 1\)</span> ，即：Switch layer；</li>
+<li>简化了 Routing 计算（但是不能简单取 logits 做 Route，还需要计算
+Softmax 得到 probs，以让反向传播时梯度可以传播给 Router 权重）；</li>
+<li>优点：
+<ul>
+<li>由于只选一个 Expert，减少了 Router 的计算量；</li>
+<li>每个 expert 的 batch size (expert capacity) 可以更大，即：减少了
+Expert 的计算量；</li>
+<li>Routing 实现更简单且通信量减小；</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>不同 Capacity Factor 取值 Router 示意图：</strong></p>
+<img src="/posts/2026/10/2155851389/image-20261103005351987.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103005351987">
+<p><br></p>
+<ul>
+<li>overflow 时不进行 expert FFN 计算；</li>
+<li>capacity factor 增大可以缓解 overflow
+现象，但是由于负载不均衡增加了整体计算和通信成本；</li>
+</ul>
+<h3 id="efficient-sparse-routing">2.2 Efficient Sparse Routing</h3>
+<p><strong>Distributed Switch Implementation</strong></p>
+<ul>
+<li><strong>Expert Capacity</strong>：每个专家计算的 token
+数量上限，计算方式：</li>
+</ul>
+<p><span class="math display">\[
+\text{expert capacity} = \frac{\text{tokens per batch}}{\text{number of
+experts}} \times \text{capacity factor}
+\]</span></p>
+<ul>
+<li>设置 expert capacity 大于
+1，则额外提供了一定的缓冲区，允许某些专家临时接收超过平均数量的
+Token；</li>
+<li>当路由给某个专家的 Token 数量超过了其声明的 Expert
+Capacity（即专家溢出），超出的 Token 不会进行专家 FFN
+计算，而是通过残差连接（Residual Connection）直接透传到下一层；</li>
+<li>trade-off：
+<ul>
+<li>增大 Capacity Factor 会减少 Token 丢弃率，但空白的槽位（Padded
+slots）会造成计算与显存浪费。</li>
+<li>实验表明，将 Token 丢弃率维持在较低水平（通常小于
+1%）对稀疏模型的扩展至关重要。</li>
+</ul></li>
+</ul>
+<p><strong>A Diﬀerentiable Load Balancing Loss</strong></p>
+<p>对于包含 <span class="math inline">\(T\)</span> 个 Token 的 Batch
+<span class="math inline">\(\mathcal{B}\)</span> 和 <span
+class="math inline">\(N\)</span> 个专家：</p>
+<ul>
+<li><strong>实际分发比例（离散，不可导）</strong>： 表示实际被分配给专家
+<span class="math inline">\(i\)</span> 的 Token 占总 Token 数的比例</li>
+</ul>
+<p><span class="math display">\[
+f_i = \frac{1}{T} \sum_{x \in B} \mathbf{1}\{\text{argmax } p(x) = i\}
+\]</span></p>
+<ul>
+<li><strong>软路由概率质量（连续，可导）</strong>： 表示 Router
+分配给专家 <span class="math inline">\(i\)</span> 的概率累加均值</li>
+</ul>
+<p><span class="math display">\[
+P_i = \frac{1}{T} \sum_{x \in B} p_i(x)
+\]</span></p>
+<ul>
+<li><strong>辅助 Loss 公式</strong>：</li>
+</ul>
+<p><span class="math display">\[
+\text{Loss}_{\text{aux}} = \alpha \cdot N \cdot \sum_{i=1}^N f_i \cdot
+P_i
+\]</span></p>
+<ul>
+<li><strong>系数放缩</strong>：
+<ul>
+<li>乘以 <span class="math inline">\(N\)</span>
+使得当路由达到完全均匀平衡时，<span class="math inline">\(\sum_{i=1}^N
+(f_i \cdot P_i) = \frac{1}{N}\)</span>，此时 <span
+class="math inline">\(\text{Loss}_{\text{aux}}\)</span> 的计算值固定为
+1，不会随着专家数量 <span class="math inline">\(N\)</span>
+的增减而发生量级漂移。</li>
+<li>乘以超参数 <span class="math inline">\(\alpha = 10^{-2}\)</span>
+可以迅速拉平负载，同时不会干扰主任务（交叉熵）的梯度方向。</li>
+</ul></li>
+</ul>
+<h3 id="putting-it-all-together-the-switch-transformer">2.3 Putting It
+All Together: The Switch Transformer</h3>
+<img src="/posts/2026/10/2155851389/image-20261103005445004.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103005445004">
+<p><br></p>
+<ul>
+<li>三类模型：
+<ul>
+<li>T5-base：Dense；</li>
+<li>MoE-Base：GShard 模型，Top-K 取值为 2；</li>
+<li>Switch-Base/Switch-Base+：本文模型；</li>
+</ul></li>
+<li>实验设置：
+<ul>
+<li><strong>Switch-Base</strong> 与标准的 <strong>T5-Base</strong> 在单
+Token 计算量（FLOPs）上完全对齐。</li>
+<li>传统的 <strong>MoE-Base</strong> 由于采用 Top-2 路由（每个 Token
+激活 2 个专家），其单 Token 计算量比 Switch-Base 和 T5-Base 更高。</li>
+<li>所有 MoE 和 Switch 模型均设置 <strong>128 个专家</strong>，每隔一层
+FFN 替换为专家层，并在相同的 32 核 TPUv3 硬件上训练相同步数。</li>
+</ul></li>
+<li>结果：
+<ul>
+<li>Switch Transformers outperform both carefully tuned dense models and
+MoE Transformers on a speed-quality basis.
+<ul>
+<li>在相同的计算资源和训练时间下，Switch Transformer
+获得了最佳的综合表现。</li>
+</ul></li>
+<li>The Switch Transformer has a smaller computational footprint than
+the MoE counterpart.
+<ul>
+<li>由于 Switch 仅激活 1 个专家，其计算与通信开销显著低于 Top-2
+MoE。</li>
+</ul></li>
+<li>Switch Transformers perform better at lower capacity factors (1.0,
+1.25).
+<ul>
+<li>Switch Transformer 在 CF = 1.0（完全无额外的容量
+Buffer）时，吞吐量升至 1000 examples/sec，达到 -1.50
+阈值的时间进一步缩短至 62.8 小时。这证明了 Top-1
+路由在极端显存约束下依然具有极高的稳定性与高吞吐优势。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="improved-training-and-fine-tuning-techniques">2.4 Improved
+Training and Fine-Tuning Techniques</h3>
+<p><strong>Selective precision with large sparse models</strong></p>
+<ul>
+<li>GShard 采用 fp32 训练 MoE 模型，以克服稀疏模型训练稳定性问题；</li>
+<li>本文提出的方法：
+<ul>
+<li><strong>选择性高精度（Selective Precision）</strong>：只在 Router
+函数内部将输入 Tensor 临时转为 fp32 计算（包括计算 Logits、Softmax
+和派发/组合矩阵）；完成 Top-1 路由决策与概率乘积后，立即将输出转回
+bf16。</li>
+<li>All2All 通信数据类型仍为 bf16，节省通信带宽。</li>
+</ul></li>
+</ul>
+<p><strong>Smaller parameter initialization for stability</strong></p>
+<ul>
+<li><strong>问题</strong>： 标准 Transformer
+习惯使用截断正态分布初始化权重（均值 <span
+class="math inline">\(\mu=0\)</span>，方差 <span
+class="math inline">\(\sigma = \sqrt{s/n}\)</span>，其中默认 Scale <span
+class="math inline">\(s=1.0\)</span>）。但在包含了数十甚至数百个专家的巨型稀疏模型中，这种标准的初始化
+scale 会在训练初始阶段产生过大的激活值，导致 Router
+门控梯度剧烈抖动甚至冲垮网络。</li>
+<li><strong>Solution</strong>： 将默认的初始化 Scale 直接缩小 10
+倍（即设定 <span class="math inline">\(s=0.1\)</span>）。</li>
+<li><strong>效果</strong>：实验表明，缩小初始化 Scale
+显著降低了训练早期的不稳定性与不同随机种子间的方差。</li>
+</ul>
+<p><strong>Regularizing large sparse models</strong></p>
+<ul>
+<li><strong>问题</strong>：Switch Transformer 虽然单 Token 的 FLOPs 与
+Dense 模型对齐，但其总参数量大出数倍至数十倍。在下游任务（如
+GLUE、SQuAD、SuperGLUE）微调时，小数据集极易导致庞大的专家层陷入严重的过拟合。若盲目将所有层的
+Dropout 统一调大，又会伤害非专家层（Self-Attention 等）的表征能力。</li>
+<li><strong>Solution</strong>：提出 Expert Dropout
+策略：在微调时分层施加差异化的 Dropout。
+<ul>
+<li>非专家层（Non-Expert Layers，如 Self-Attention 和普通 Dense
+层）：保持较低的 Dropout（如 <code>0.1</code>）；</li>
+<li>专家层内部（Expert FFN Layers）：大幅提高中间隐层的 Dropout 比例（如
+<code>0.4</code>）。</li>
+</ul></li>
+</ul>
+<h2 id="scaling-properties">3. Scaling Properties</h2>
+<ul>
+<li>实验证明 Switch Transformer 的优势：
+<ul>
+<li>保持 FLOPs 不变前提下，增加 Experts
+数量（参数量），能够提升模型性能（达到相同性能，需要的训练 step
+数更少）；</li>
+<li>即使 Switch Transformer MoE 引入了 All2All
+通信，在相同训练耗时下，性能更好（即：在
+<strong>固定训练时长与算力预算（Wall-clock Time）</strong> 的前提下，MoE
+模型仍比 Dense 模型更具性能优势）；</li>
+<li>如果将算力分配给一个单 Token FLOPs 膨胀 3.5 倍的更大 Dense
+模型（739M 参数的 T5-Large），情况会怎样？
+<ul>
+<li>FLOPs 劣势下的反超：
+<ul>
+<li>样本效率：Switch-Base（每个 Token 仅用 T5-Base
+级别的计算量）在步数上依然比单 Token 计算量高出 3.5 倍的 T5-Large
+更早收敛。</li>
+<li>墙上时间：在真实训练时间上，Switch-Base 相比 T5-Large 依然取得了 2.5
+倍的加速比。</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="designing-models-with-data-model-and-expert-parallelism">4.
+Designing Models with Data, Model, and Expert-Parallelism</h2>
+<ul>
+<li>随意增加专家数量会导致边际收益递减；</li>
+<li>增加 <span class="math inline">\(d_{model}\)</span> 或 <span
+class="math inline">\(d_{ff}\)</span> 则同时增加了参数量与
+FLOPs，并可能需要引入模型并行。</li>
+</ul>
+<p>相关符号定义：</p>
+<table>
+
+<thead>
+<tr class="header">
+<th>符号 (Term)</th>
+<th>说明 (Description)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(B\)</span></td>
+<td>Batch 中的 Token 总数 (<em>Number of tokens in the batch</em>)</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(N\)</span></td>
+<td>计算核心/卡数总数 (<em>Number of total cores</em>)</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(n\)</span></td>
+<td>数据并行分片数 / 数据并行度 (<em>Number of ways for data-parallelism
+sharding</em>)</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(m\)</span></td>
+<td>模型并行分片数 / 模型并行度 (<em>Number of ways for
+model-parallelism sharding</em>)</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(E\)</span></td>
+<td>Switch 层中的专家总数 (<em>Number of experts in Switch
+layers</em>)</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(C\)</span></td>
+<td>专家容量，即单个专家可处理的 Batch 大小 (<em>Expert capacity, the
+batch size of each expert</em>)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Data &amp; Model Parallel 切分示意图：</strong></p>
+<img src="/posts/2026/10/2155851389/image-20261103005501377.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103005501377">
+<p><br></p>
+<h3 id="data-parallelism">4.1 Data Parallelism</h3>
+<p>只设置 DP 时，<span class="math inline">\(n = N, m = 1\)</span>
+，对应上图最左列：</p>
+<ul>
+<li>第一行（模型权重切分）：在多个 cores 上复制（权重完全相同）；</li>
+<li>第二行（数据切分）：不同 core 输入 tokens 不同。</li>
+</ul>
+<h3 id="model-parallelism">4.2 Model Parallelism</h3>
+<p>只设置模型并行 MP，即 <span class="math inline">\(n = 1, m =
+N\)</span> ，每个 core
+输入相同，但是保有模型权重的不同切片。forward/backward
+时都需要通信。</p>
+<h3 id="model-and-data-parallelism">4.3 Model and Data Parallelism</h3>
+<p>同时设置 DP 和 MP，即：<span class="math inline">\(N = n \times
+m\)</span> 。此时每个 core 负责 <span
+class="math inline">\(\frac{B}{n}\)</span> 个 tokens
+输入；权重和中间激活值的 <span
+class="math inline">\(\frac{d_{ff}}{m}\)</span>
+部分。在前向和反向传播过程中，每个核心都会在 All-Reduce
+操作中通信一个形状为 <span class="math inline">\([B/n,
+d_{model}]\)</span> 的张量。</p>
+<h3 id="expert-and-data-parallelism">4.4 Expert and Data
+Parallelism</h3>
+<p>DP + EP，不同 core 的 Expert 权重不同（Router 权重在不同 core
+上相同），输入数据也不同。</p>
+<p><strong>MoE forward/backward All2All 通信示例说明</strong></p>
+<ul>
+<li><strong>Setting</strong>：
+<ul>
+<li>拓扑：
+<ul>
+<li>Rank 0：持有 Expert 0 和本地 Batch 数据 Token <span
+class="math inline">\(T_1, T_2\)</span></li>
+<li>Rank 1：持有 Expert 1 和本地 Batch 数据 Token <span
+class="math inline">\(T_3, T_4\)</span></li>
+</ul></li>
+<li>前向路由结果（Router 决策）：
+<ul>
+<li><span class="math inline">\(T_1 \to \text{Expert
+0}\)</span>（本地计算）</li>
+<li><span class="math inline">\(T_2 \to \text{Expert
+1}\)</span>（需要跨卡发往 Rank 1）</li>
+<li><span class="math inline">\(T_3 \to \text{Expert
+0}\)</span>（需要跨卡发往 Rank 0）</li>
+<li><span class="math inline">\(T_4 \to \text{Expert
+1}\)</span>（本地计算）</li>
+</ul></li>
+</ul></li>
+<li><strong>forward 过程</strong>：
+<ul>
+<li><strong>本地 Router 计算</strong>：Rank 0 算出 <span
+class="math inline">\(T_1, T_2\)</span> 的门控概率；Rank 1 算出 <span
+class="math inline">\(T_3, T_4\)</span> 的门控概率。</li>
+<li><strong>FWD 通信 1（All-to-All Dispatch）</strong>：
+<ul>
+<li>Rank 0 将 <span class="math inline">\(T_2\)</span> 发给 Rank 1；Rank
+1 将 <span class="math inline">\(T_3\)</span> 发给 Rank 0。</li>
+</ul></li>
+<li><strong>本地 Expert FFN 计算</strong>：
+<ul>
+<li><strong>Rank 0 (Expert 0)</strong>：计算 <span
+class="math inline">\(T_1, T_3\)</span> 的 FFN 输出。</li>
+<li><strong>Rank 1 (Expert 1)</strong>：计算 <span
+class="math inline">\(T_2, T_4\)</span> 的 FFN 输出。</li>
+</ul></li>
+<li><strong>FWD 通信 2（All-to-All Combine）</strong>：
+<ul>
+<li>Rank 1 将 <span class="math inline">\(T_2\)</span> 的计算结果发还给
+Rank 0；Rank 0 将 <span class="math inline">\(T_3\)</span>
+的计算结果发还给 Rank 1。</li>
+</ul></li>
+<li><strong>本地融合与门控点乘</strong>：Rank 0 融合 <span
+class="math inline">\(T_1, T_2\)</span> 输出；Rank 1 融合 <span
+class="math inline">\(T_3, T_4\)</span> 输出，进入下一层。</li>
+</ul></li>
+<li><strong>backward 过程</strong>：当梯度从 Loss 一路传回到 MoE
+层的输出端时，Rank 0 拿到针对 <span class="math inline">\(T_1,
+T_2\)</span> 的输出梯度 <span class="math inline">\(\nabla Y_1, \nabla
+Y_2\)</span>；Rank 1 拿到针对 <span class="math inline">\(T_3,
+T_4\)</span> 的输出梯度 <span class="math inline">\(\nabla Y_3, \nabla
+Y_4\)</span>。
+<ul>
+<li><strong>链式求导与局部门控梯度计算（Local Rank Compute）</strong>：
+<ul>
+<li>在 Rank 0 上，<span class="math inline">\(\nabla Y\)</span> 乘以本地
+Router 的概率标量，同时求出 Router 概率本身的梯度分支 <span
+class="math inline">\(\nabla P_{\text{router}}\)</span>。</li>
+</ul></li>
+<li><strong>BWD 通信 1（All-to-All - 逆演 FWD Combine）</strong>：
+<ul>
+<li><strong>目的</strong>：将 FFN 节点的输出梯度发还给真正执行该计算的
+Expert 所在 Rank。</li>
+<li><strong>动作</strong>：Rank 0 将 <span
+class="math inline">\(T_2\)</span> 的梯度 <span
+class="math inline">\(\nabla Y_2\)</span> 发往 Rank 1；Rank 1 将 <span
+class="math inline">\(T_3\)</span> 的梯度 <span
+class="math inline">\(\nabla Y_3\)</span> 发往 Rank 0。</li>
+</ul></li>
+<li><strong>Expert FFN 梯度计算（Local Expert FFN Bwd）</strong>：
+<ul>
+<li><strong>Rank 0 (Expert 0)</strong> 收到 <span
+class="math inline">\(T_1, T_3\)</span> 的梯度：
+<ul>
+<li><strong>计算权重梯度</strong>：算出 <span
+class="math inline">\(\nabla W_{\text{Expert 0}}\)</span>（更新本地
+Expert 0 权重，仅本地累加，无需跨卡 All-Reduce）。</li>
+<li><strong>计算输入激活梯度</strong>：算出针对输入特征的梯度 <span
+class="math inline">\(\nabla X_1^{\text{in}}, \nabla
+X_3^{\text{in}}\)</span>。</li>
+</ul></li>
+<li><strong>Rank 1 (Expert 1)</strong> 收到 <span
+class="math inline">\(T_2, T_4\)</span> 的梯度：
+<ul>
+<li><strong>计算权重梯度</strong>：算出 <span
+class="math inline">\(\nabla W_{\text{Expert 1}}\)</span>。</li>
+<li><strong>计算输入激活梯度</strong>：算出 <span
+class="math inline">\(\nabla X_2^{\text{in}}, \nabla
+X_4^{\text{in}}\)</span>。</li>
+</ul></li>
+</ul></li>
+<li><strong>BWD 通信 2（All-to-All - 逆演 FWD Dispatch）</strong>：
+<ul>
+<li><strong>目的</strong>：将计算好的特征激活梯度送回 Token 原始所属的
+Rank。</li>
+<li><strong>动作</strong>：Rank 1 将 <span class="math inline">\(\nabla
+X_2^{\text{in}}\)</span> 发回给 Rank 0；Rank 0 将 <span
+class="math inline">\(\nabla X_3^{\text{in}}\)</span> 发回给 Rank
+1。</li>
+</ul></li>
+<li><strong>Router 与 Attention 梯度计算（Local Router &amp; Pre-Layers
+Bwd）</strong>：
+<ul>
+<li>Rank 0 拿到了属于本地 Token <span class="math inline">\(T_1,
+T_2\)</span> 的完整激活梯度，结合第一步算出的 Router
+分支梯度，求出对本地 Router 权重 <span
+class="math inline">\(W_r\)</span> 的梯度分量 <span
+class="math inline">\(\nabla W_r^{(0)}\)</span>。</li>
+<li>激活梯度继续向后传递给本地的 Self-Attention 和 LayerNorm。</li>
+</ul></li>
+<li><strong>参数同步（All-Reduce for DP / Router）</strong>：
+<ul>
+<li>在 Step 结束更新参数前，全局对 DP 复制的参数（如 Router 权重 <span
+class="math inline">\(W_r\)</span> 和 Self-Attention 权重）执行
+<strong>All-Reduce</strong> 求和同步，而 Expert 权重 <span
+class="math inline">\(\nabla W_{\text{Expert}}\)</span>
+保持本地更新。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="expert-model-and-data-parallelism">4.5 Expert, Model and Data
+Parallelism</h3>
+<p>当同时混用三种并行范式（DP + EP + 每个 Expert 的
+MP）时，系统会面临极度复杂的<strong>双重通信叠加</strong>：</p>
+<ul>
+<li><strong>专家路由通信（All-to-All）</strong>：来自专家并行（EP），负责将
+Token 跨设备分发给对应的专家 Core。</li>
+<li><strong>隐层特征规约通信（All-Reduce）</strong>：来自模型并行（MP），在每层
+FFN 前向和反向传播中，需要对被切分的 <span
+class="math inline">\(d_{ff}\)</span> 隐层求和。</li>
+</ul>
+<p>在单 Core 显存上限、单 Token FLOPs、All-to-All 网络带宽以及
+All-Reduce
+延迟之间寻找最佳平衡点变得极其困难，最匹配的切分映射通常需要通过工程实测（Empirically
+determined）来确定。</p>
+<h3 id="towards-trillion-parameter-models">4.6 Towards Trillion
+Parameter Models</h3>
+<p>两个大规模模型：395B 和 1571B 模型超参数和实验结果：</p>
+<img src="/posts/2026/10/2155851389/image-20261103005518704.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103005518704">
+<p><br></p>
+<ul>
+<li>Switch-C（纯专家并行路线）：
+<ul>
+<li><strong>设计</strong>：放弃模型并行（MP=1），完全依赖专家并行（EP+DP）。因此其骨架维度较窄（<span
+class="math inline">\(d_{model}=2080\)</span>），单 Token FLOPs 仅为
+T5-XXL 的 14%。</li>
+<li><strong>优势</strong>：避开了模型并行的跨卡 All-Reduce 通信，在训练
+2048 个专家、1.6
+万亿参数的全过程中展现出极佳的稳定性，未出现任何训练发散崩溃。</li>
+</ul></li>
+<li><strong>Switch-XXL（高 FLOPs 混合路线）</strong>：
+<ul>
+<li><strong>设计</strong>：单 Token FLOPs 与 T5-XXL
+完全对齐（6.3T），采用了专家并行 + 模型并行 +
+数据并行（EP+MP+DP）的三维混合切分。</li>
+<li><strong>权衡</strong>：拥有极高的计算密度与单步收敛效率，但受限于超高
+FLOPs、大维度与低精度（<code>bfloat16</code>）的叠加，训练过程中偶发稳定性问题。</li>
+</ul></li>
+</ul>
+<h2 id="conclusion">5. Conclusion</h2>
+<ul>
+<li>Switch Transformer
+<ul>
+<li>简化 MoE Top-K 取值 1；</li>
+<li>bf16 训练（Selective Precision）；</li>
+<li>训练并行策略（DP + EP + MP）；</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/Distributed-Training/">#Distributed Training</a>
+      
+        <a href="/tags/MoE/">#MoE</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity</div>
+      <div>https://arcsin2.cloud/posts/2026/10/2155851389/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月31日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1842912647/" title="DeepSpeed-MoE: Advancing Mixture-of-Experts Inference and Training to Power Next-Generation AI Scale">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">DeepSpeed-MoE: Advancing Mixture-of-Experts Inference and Training to Power Next-Generation AI Scale</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/4164788123/" title="GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding">
+                        <span class="hidden-mobile">GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

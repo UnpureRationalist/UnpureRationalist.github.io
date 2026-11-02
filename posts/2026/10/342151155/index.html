@@ -1,0 +1,1463 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="ZeRO: Memory Optimizations Toward Training Trillion Parameter Models arXiv 提交日期：4 Oct 2019（Megatron-LM v1 paper 提交约 2 周后，即：17 Sep 2019 -&gt; 4 Oct 2019） 代码：DeepSpeed ZeRO 作者：    摘要  大型深度">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ZeRO: Memory Optimizations Toward Training Trillion Parameter Models">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/342151155/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="ZeRO: Memory Optimizations Toward Training Trillion Parameter Models arXiv 提交日期：4 Oct 2019（Megatron-LM v1 paper 提交约 2 周后，即：17 Sep 2019 -&gt; 4 Oct 2019） 代码：DeepSpeed ZeRO 作者：    摘要  大型深度">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/342151155/image-20261103010727029.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/342151155/image-20261103010739545.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/342151155/image-20261103010804130.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/342151155/image-20261103010817124.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/342151155/image-20261103010842581.png">
+<meta property="article:published_time" content="2026-10-31T15:56:51.000Z">
+<meta property="article:modified_time" content="2026-11-02T17:09:23.097Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="Distributed Training">
+<meta property="article:tag" content="ZeRO">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/342151155/image-20261103010727029.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>ZeRO: Memory Optimizations Toward Training Trillion Parameter Models - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="ZeRO: Memory Optimizations Toward Training Trillion Parameter Models"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-31 23:56" pubdate>
+          2026年10月31日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          12k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          40 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">ZeRO: Memory Optimizations Toward Training Trillion Parameter Models</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/1910.02054">ZeRO: Memory
+Optimizations Toward Training Trillion Parameter Models</a></li>
+<li>arXiv 提交日期：4 Oct 2019（Megatron-LM v1 paper 提交约 2
+周后，即：17 Sep 2019 -&gt; 4 Oct 2019）</li>
+<li>代码：<a
+target="_blank" rel="noopener" href="https://github.com/deepspeedai/DeepSpeed/tree/master/deepspeed/runtime/zero">DeepSpeed
+ZeRO</a></li>
+<li>作者：</li>
+</ul>
+<img src="/posts/2026/10/342151155/image-20261103010727029.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103010727029">
+<p><br></p>
+<p><strong>摘要</strong></p>
+<blockquote>
+<p>大型深度学习模型能够带来显著的准确率提升，但训练数十亿至万亿参数量的模型极具挑战。现有的解决方案（如数据并行和模型并行）在将这些模型装入有限的设备显存中时存在根本局限，难以同时兼顾计算效率、通信效率和开发效率。为此，我们开发了一种全新的解决方案——<strong>零冗余优化器（Zero
+Redundancy Optimizer，简称 ZeRO）</strong>。通过优化显存占用，ZeRO
+在大幅提升训练速度的同时，极大地扩展了可高效训练的模型规模。ZeRO
+消除了数据并行和模型并行训练中的显存冗余，同时保持了低通信量与高计算粒度，使我们能够以持续的高效率将模型规模与设备数量成正比地扩展。我们对显存需求和通信量的分析表明：借助当今的硬件，ZeRO
+具备扩展至超过 <strong>1 万亿参数</strong>的潜力。</p>
+<p>我们实现并评估了 ZeRO：在 400 张 GPU 上，它以超线性加速训练了超过
+1000 亿（100B）参数的大模型，实现了 15 Petaflops
+的吞吐量。与当时最先进的技术（SOTA）相比，这代表着模型规模扩大了 8
+倍，可达到的性能提升了 10 倍。在易用性方面，ZeRO
+可以在不需要模型并行（这对科学家来说更难应用）的情况下，训练高达 130
+亿（13B）参数的大模型（例如，大于 Megatron GPT 8.3B 和 T5
+11B）。最后但也同样重要的是，研究人员利用 ZeRO
+的系统性突破创建了当时全球最大的语言模型（170
+亿参数），并取得了创纪录的准确率。</p>
+</blockquote>
+<h2 id="introduction">1. Introduction</h2>
+<ul>
+<li>已有并行策略的问题
+<ul>
+<li>DP：模型规模被单 device 内存大小限制（内存效率低）。</li>
+<li>MP（TP）：需要机内高带宽互联，扩展到多机效率下降严重（通信效率低）。</li>
+<li>PP：流水线气泡影响效率，增大 batch size
+虽然能够减少气泡比例，但是训练效果可能变差（相同 FLOPs step
+数变少，参数更新次数变少）（计算效率低）。</li>
+</ul></li>
+<li>训练时内存占用分析：
+<ul>
+<li>模型状态（model states）：
+<ul>
+<li>优化器状态（如 Adam 的 momentum and variances）</li>
+<li>梯度</li>
+<li>参数</li>
+</ul></li>
+<li>其他状态（residual states）：
+<ul>
+<li>激活值</li>
+<li>临时 buffer</li>
+<li>未使用的内存碎片</li>
+</ul></li>
+</ul></li>
+<li>本文提出的方法：ZeRO—Zero Redundancy Optimizer</li>
+</ul>
+<p><strong>Optimizing Model State Memory</strong></p>
+<ul>
+<li>DP 本身在不同 device 的模型状态都是重复的；</li>
+<li>ZeRO-DP 通过切分 DP
+的模型状态，同时实现高内存效率和高计算/通信效率；</li>
+<li>ZeRO-DP 三个优化级别，如下图所示：</li>
+</ul>
+<img src="/posts/2026/10/342151155/image-20261103010739545.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103010739545">
+<p><br></p>
+<ul>
+<li>仅切分优化器状态：4x 内存减少，通信量与 DP 相同；</li>
+<li>额外切分梯度：8x 内存减少，通信量与 DP 相同；</li>
+<li>额外切分模型参数：内存减少与 DP 大小 <span
+class="math inline">\(N_d\)</span> 相同，通信量对比 DP 增加 50%；</li>
+</ul>
+<p><strong>Optimizing Residual State Memory</strong></p>
+<ul>
+<li>提出 ZeRO-R 优化 activations, temporary buﬀers, and unusable memory
+fragments 的内存占用；
+<ul>
+<li>activations：梯度检查点 &amp; 开启 MP 时进行激活值切分 &amp; CPU
+Offload；</li>
+<li>temporary
+buﬀers：设置一个合适的大小，以达到内存和计算效率的平衡；</li>
+<li>memory
+fragments：根据张量的生命周期特征进行主动显存管理，预分配连续内存；</li>
+</ul></li>
+</ul>
+<p><strong>ZeRO and MP</strong></p>
+<ul>
+<li>如果使用 MP 的唯一目的是为了在单卡上放下一个大模型，那么在 ZeRO
+出现后，MP 的吸引力大幅下降；</li>
+<li>需要结合 MP 的场景：
+<ul>
+<li>对于超大规模模型，激活值内存占用很大时，可以使用 MP 结合 ZeRO-R
+减少激活值内存占用；</li>
+<li>如果在数千张 GPU 的大规模集群上完全使用纯数据并行（DP），全局 Batch
+Size（单卡 Batch Size <span class="math inline">\(\times\)</span> 卡数
+<span
+class="math inline">\(N_d\)</span>）会被拉得非常庞大。但深度学习训练存在临界
+Batch Size（Critical Batch Size）——一旦 Batch Size
+超过临界值，梯度的噪声信息会严重缺失，多算的数据无法换来等比例的收敛速度，甚至会导致模型不收敛。引入
+MP 可以在保持集群总 GPU 数量不变的前提下，降低数据并行度 <span
+class="math inline">\(N_d\)</span>，从而将全局 Batch Size
+控制在对算法收敛最友好的合理区间内。</li>
+</ul></li>
+</ul>
+<p><strong>Implementation &amp; Evaluation</strong></p>
+<img src="/posts/2026/10/342151155/image-20261103010804130.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103010804130">
+<p><br></p>
+<img src="/posts/2026/10/342151155/image-20261103010817124.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103010817124">
+<p><br></p>
+<ul>
+<li><strong>模型规模与吞吐量突破</strong>：结合 16
+路机内模型并行，ZeRO-100B 成功驱动了 <strong>170B 参数</strong>
+的模型，而纯 Megatron-LM 在超过 40B 参数后性能急剧崩溃。在 8B 到 100B
+模型区间，集群保持了 <strong>15 PetaFlops</strong>
+的总吞吐（平均单卡超过 38 TFLOPS，算力利用率超过硬件峰值的 30%），比
+Megatron-LM 提升了最高 <strong>10 倍</strong>
+的训练速度。性能崩塌的根本原因在于，Megatron-LM 跨节点时通信带宽从
+NVLink 的 300 GB/s 骤降到 InfiniBand 的 12.5 GB/s2；而 ZeRO-100B
+保持机内 MP、机间 DP，回避了跨节点细粒度通信。</li>
+<li><strong>超线性扩展性（Super-Linear Scalability）</strong>：针对 60B
+模型，当 GPU 卡数从 64 扩展到 400
+张时，整体吞吐量展现出了<strong>超线性加速</strong>。这是因为随着卡数
+<span class="math inline">\(N_d\)</span> 增加，ZeRO-DP
+进一步摊薄了单卡显存；省出来的显存允许单卡运行更大的 Batch
+Size，进而提高了算术强度（Arithmetic Intensity）和 GPU 算力利用率。</li>
+</ul>
+<h2 id="where-did-all-the-memory-go">2. Where Did All the Memory
+Go?</h2>
+<p>训练时内存分布情况：</p>
+<ul>
+<li>模型状态：
+<ul>
+<li>优化器状态</li>
+<li>梯度</li>
+<li>参数</li>
+</ul></li>
+<li>其他状态：
+<ul>
+<li>激活值</li>
+<li>临时 buffers</li>
+<li>内存碎片</li>
+</ul></li>
+</ul>
+<h3 id="model-states-optimizer-states-gradients-and-parameters">2.1
+Model States: Optimizer States, Gradients and Parameters</h3>
+<p>以 Adam 优化器为例，需要保存以下状态：</p>
+<ul>
+<li>动量：the time averaged momentum</li>
+<li>方差：variance of the gradients</li>
+</ul>
+<p><strong>Mixed-Precision Training</strong></p>
+<ul>
+<li>混合精度训练：
+<ul>
+<li>模型权重和激活值以 16 位（fp16） 存储，以在 forward/backward
+计算时利用 GPU Tensor Core 加速；</li>
+<li>优化器以 fp32
+格式保存一份模型参数复制，以及优化器状态，以防止浮点数下溢和数值更新失效；</li>
+</ul></li>
+</ul>
+<p>假设模型参数量为 <span
+class="math inline">\(\Psi\)</span>，各部分占用的显存空间如下：</p>
+<ol type="1">
+<li><strong>FP16 参数（Parameters）</strong>：占用 <span
+class="math inline">\(2\Psi\)</span> 字节。</li>
+<li><strong>FP16 梯度（Gradients）</strong>：占用 <span
+class="math inline">\(2\Psi\)</span> 字节。</li>
+<li><strong>FP32 Adam 优化器状态（Optimizer States）</strong>：
+<ul>
+<li><strong>FP32 主权重副本（Master Weights）</strong>：占用 <span
+class="math inline">\(4\Psi\)</span> 字节。</li>
+<li><strong>FP32 一阶动量（Momentum）</strong>：占用 <span
+class="math inline">\(4\Psi\)</span> 字节。</li>
+<li><strong>FP32 二阶方差（Variance）</strong>：占用 <span
+class="math inline">\(4\Psi\)</span> 字节。</li>
+</ul></li>
+</ol>
+<p>用系数 <span class="math inline">\(K\)</span>
+表示优化器状态相对于参数量的显存倍数，对于混合精度 Adam 优化器，<span
+class="math inline">\(K = 12\)</span>。</p>
+<p>将上述三部分相加，训练一个参数量为 <span
+class="math inline">\(\Psi\)</span>
+的模型，其模型状态所需的<strong>最小显存总开销</strong>为：</p>
+<p><span class="math display">\[
+\text{Memory}_{\text{Model States}} = 2\Psi + 2\Psi + K\Psi = 2\Psi +
+2\Psi + 12\Psi = 16\Psi \text{ 字节}
+\]</span></p>
+<p>以 <strong>1.5B 参数的 GPT-2 模型</strong> 为例（<span
+class="math inline">\(\Psi = 1.5 \times 10^9\)</span>）：</p>
+<ul>
+<li><strong>FP16 权重本身</strong>：<span class="math inline">\(1.5
+\times 10^9 \times 2 \text{ Bytes} = \mathbf{3\text{
+GB}}\)</span>。</li>
+<li><strong>FP16 梯度</strong>：<span class="math inline">\(1.5 \times
+10^9 \times 2 \text{ Bytes} = \mathbf{3\text{ GB}}\)</span>。</li>
+<li><strong>FP32 优化器状态</strong>：<span class="math inline">\(1.5
+\times 10^9 \times 12 \text{ Bytes} = \mathbf{18\text{
+GB}}\)</span>。</li>
+<li><strong>模型状态显存总计</strong>：<span class="math inline">\(1.5
+\times 10^9 \times 16 \text{ Bytes} = \mathbf{24\text{
+GB}}\)</span>。</li>
+</ul>
+<h3 id="residual-memory-consumption">2.2 Residual Memory
+Consumption</h3>
+<ul>
+<li><strong>Activations</strong>：
+<ul>
+<li><strong>生成原因与体积</strong>：前向传播过程中，神经网络每一层的中间输出（激活值）都需要被保留在显存中，以便在反向传播时用于计算梯度。激活值显存的大小与模型层数、隐藏层维度、序列长度（Sequence
+Length）以及 Batch Size 呈正比例关系。</li>
+<li><strong>定量示例</strong>：以 1.5B 参数的 GPT-2 为例（序列长度为
+1K，Batch Size 为 32），如果不做任何优化，仅保存激活值就需要消耗高达
+<strong>60 GB</strong> 的显存。</li>
+<li><strong>传统解法及其局限</strong>：常规的优化手段是使用<strong>激活重计算（Activation
+Checkpointing）</strong>，即只保留少量的检查点（Checkpoints），其余激活值在反向传播需要时重新计算。这虽然能以增加约
+33% 的重计算开销为代价，将 1.5B GPT-2 的激活显存压低至 <strong>8
+GB</strong>；但对于百亿/千亿参数规模的模型来说依然不够。例如，一个 100B
+参数的 GPT 类模型，即便开启了激活重计算，在 Batch Size 为 32
+时，激活显存依然高达 <strong>60 GB</strong>。</li>
+</ul></li>
+<li><strong>Temporary buﬀers</strong>：
+<ul>
+<li><strong>生成原因与体积</strong>：在分布式训练中，为了跑满硬件通信带宽（消息越大通信吞吐越高），类似梯度
+All-Reduce 或梯度范数（Gradient
+Norm）计算等操作，通常需要先将离散的张量打平（Flatten）并融合（Fuse）进一个连续的临时
+Buffer 中。</li>
+<li><strong>定量示例</strong>：虽然 FP16 训练时的梯度本身是 FP16
+格式，但为了保持数值精度，这些融合缓冲区通常必须分配为 FP32
+格式。对于一个 1.5B 参数的模型，仅单次融合所需的一个 FP32 缓冲区就会占据
+<strong>6 GB</strong>
+的显存；当模型规模达到数百亿或上千亿时，这类临时缓冲区的显存开销将非常庞大。</li>
+</ul></li>
+<li><strong>Memory Fragmentation</strong>：
+<ul>
+<li><strong>生成原因</strong>：训练过程中存在不同生命周期的张量交错申请与释放。例如，前向传播中保留的激活检查点是长生命周期的，而临时重算出的激活值是短生命周期的。这种交错分配会导致连续的显存空间被割裂成大量微小的闲置碎片。</li>
+<li><strong>致命后果</strong>：当系统试图申请一块较大的连续显存时，即便剩余的总闲置显存大于请求量，也会因为找不到足够的<strong>连续空间</strong>而直接抛出
+OOM 错误。</li>
+<li><strong>极端观察</strong>：作者在训练超大模型时观察到，在某些极端情况下，即便<strong>系统剩余可用显存高达
+30% 以上</strong>，也会因为严重碎片化而遭遇 OOM 崩塌。</li>
+</ul></li>
+</ul>
+<h2 id="zero-insights-and-overview">3. ZeRO: Insights and Overview</h2>
+<p>ZeRO 优化点：</p>
+<ul>
+<li>ZeRO-DP：ZeRO-DP aimed at reducing the memory footprint of the model
+states.</li>
+<li>ZeRO-R：ZeRO-R targeted towards reducing the residual memory
+consumption.</li>
+</ul>
+<h3 id="insights-and-overview-zero-dp">3.1 Insights and Overview:
+ZeRO-DP</h3>
+<p>提出 ZeRO-DP 基于以下三项关键洞察：</p>
+<ul>
+<li>DP 比 MP 具有更好的扩展效率，因为 MP
+减小了计算粒度，同时增加了通信负担；而 DP
+通信量更小，且计算粒度更大。</li>
+<li>DP 内存效率低，因为模型状态在所有 DP 进程间复制；MP
+那些效率高，因为其切分了模型状态；</li>
+<li>DP 和 MP
+都会在整个训练过程中静态保留所需的所有模型状态，但实际上并非所有状态在任何时刻都是必需的。例如，每一层对应的模型参数，仅在该层的前向传播和反向传播计算期间才被需要。</li>
+</ul>
+<p><strong>Solution: ZeRO-DP</strong></p>
+<ul>
+<li>既保留了数据并行（DP）的高训练效率，又获得了模型并行（MP）的高显存利用效率；</li>
+<li>切分（Partitioning）代替复制（Replication）
+<ul>
+<li>优化器状态、梯度和参数不再在所有卡上静态复制。</li>
+<li>只要集群包含 <span class="math inline">\(N_d\)</span>
+张卡，模型状态就被切成 <span class="math inline">\(N_d\)</span>
+份分管，从而实现：单卡显存占用随着卡数 <span
+class="math inline">\(N_d\)</span> 的增加呈严格的线性下降（Linear
+Scaling）。</li>
+</ul></li>
+<li>动态通信调度：ZeRO-Stage 3
+不再将所有参数静态保存在每张卡上，而是采用了动态通信调度（Dynamic
+Communication Schedule）
+<ul>
+<li><strong>平时切分保存</strong>：每张 GPU 只需要永久保存全模型参数的
+<span class="math inline">\(\frac{1}{N_d}\)</span> 切片。</li>
+<li><strong>用时动态拉取</strong>：前向计算到第 <span
+class="math inline">\(L\)</span> 层前，后台异步发起
+<code>All-Gather</code>，从其他 GPU 拉取第 <span
+class="math inline">\(L\)</span> 层的完整参数。</li>
+<li><strong>算完立即释放</strong>：第 <span
+class="math inline">\(L\)</span>
+层前向计算一结束，立即将临时收集到的全量参数<strong>从显存中丢弃（Discard）</strong>，只保留本地切片。</li>
+<li><strong>反向重复此过程</strong>：反向传播计算到第 <span
+class="math inline">\(L\)</span> 层时，再次拉取第 <span
+class="math inline">\(L\)</span> 层参数计算梯度，算完再次丢弃。</li>
+</ul></li>
+</ul>
+<h3 id="insights-and-overview-zero-r">3.2 Insights and Overview:
+ZeRO-R</h3>
+<h4 id="reducing-activation-memory">3.2.1 Reducing Activation
+Memory</h4>
+<p>两项洞察：</p>
+<ul>
+<li><strong>模型并行导致了激活值的盲目复制</strong>：在使用传统模型并行时，虽然网络层的参数被切分到了不同
+GPU 上，但为了保证计算对齐，激活值却在各个 MP
+进程间被完全复制保存了。例如，在并行计算一个 Linear 层时，每张 GPU
+都必须各自保存一份完整的输入激活值才能完成本地矩阵乘法。</li>
+<li><strong>超大模型拥有极高的“算术强度”</strong>：对于 GPT-2
+规模及更大的模型，其算术强度非常高（<span class="math inline">\(\ge
+10\text{K}\)</span>），并且随着隐藏层维度 <span
+class="math inline">\(h\)</span>
+线性增加。这意味着矩阵计算消耗的时间远远长于数据传输的时间，即便在较窄的网络带宽下，激活值搬运的通信开销也能被前向/反向的
+GEMM 计算完全掩盖。</li>
+</ul>
+<p><strong>Solution</strong></p>
+<ul>
+<li><strong>激活切分（</strong><span
+class="math inline">\(P_a\)</span><strong>）</strong>：ZeRO-R 消除了 MP
+中的激活值复制，将激活检查点按 MP 维度切分分摊保存（每张 GPU 仅存 <span
+class="math inline">\(\frac{1}{N_m}\)</span>），在反向传播计算前夕再通过一次
+<code>All-Gather</code> 动态重构。</li>
+<li><strong>CPU 卸载（</strong><span
+class="math inline">\(P_{a+cpu}\)</span><strong>）</strong>：得益于极高的算术强度，对于超大模型，甚至可以把切分后的激活检查点顺畅地<strong>卸载到
+CPU 内存</strong>中，将 GPU
+上的激活显存占用逼近至零，而整体训练吞吐几乎不受损。</li>
+</ul>
+<h4 id="managing-temporary-buﬀers">3.2.2 Managing Temporary buﬀers</h4>
+<ul>
+<li>引入固定大小缓冲区，强制将融合 Buffer
+的容量上限设定为一个常数（例如几十兆字节），使其既能维持高硬件通信吞吐，又完全不随模型参数量的膨胀而增长。</li>
+</ul>
+<h4 id="managing-fragmented-memory">3.2.3 Managing fragmented
+Memory</h4>
+<ul>
+<li><strong>痛点与洞察：长/短生命周期张量的交错申请</strong>
+显存碎片的产生，根源在于训练过程中长生命周期张量与短生命周期张量在显存中的交错申请与释放：
+<ul>
+<li><strong>前向传播</strong>：保存的激活检查点是_长生命周期_对象，而随算随丢的临时中间激活值是_短生命周期_对象。</li>
+<li><strong>反向传播</strong>：积累的参数梯度是_长生命周期_对象，而计算过程中产生的临时激活梯度是短生命周期对象。
+这种频繁的交错割裂了连续显存空间，导致 PyTorch
+显存分配器需要花费大量时间去寻找合适块，甚至出现剩余 30%
+总显存却因找不到连续块而惨遭 OOM 崩溃的极极端情况。</li>
+</ul></li>
+<li><strong>解法机制（</strong><span
+class="math inline">\(M_D\)</span><strong>）</strong>：ZeRO-R
+执行在线去碎片化（On-the-fly Memory
+Defragmentation）。它为激活检查点和梯度提前预分配连续的显存大块，张量一经生成就直接复制存入该连续区域。这不仅从源头上阻止了显存碎片的产生，还省去了分配器反复搜索闲置块的时间。</li>
+</ul>
+<h2 id="deep-dive-into-zero-dp">4. Deep Dive into ZeRO-DP</h2>
+<h3 id="p_os-optimizer-state-partitioning">4.1 <span
+class="math inline">\(P_{os}\)</span> : Optimizer State
+Partitioning</h3>
+<ul>
+<li>设 DP 大小为 <span class="math inline">\(N_d\)</span>
+，将优化器状态切分为 <span class="math inline">\(N_d\)</span> 等份，每个
+rank 保存各自 partition，每个 DP 进程仅更新自己对应 partition 的 <span
+class="math inline">\(\frac{1}{N_d}\)</span> 优化器状态和 <span
+class="math inline">\(\frac{1}{N_d}\)</span> 的模型参数。
+<ul>
+<li>每个 step 解释需要进行 <code>AllGather</code>
+获取所有更新后的参数。</li>
+</ul></li>
+<li>通信分析：ReduceScatter 梯度 + AllGather 更新后参数
+<ul>
+<li><strong>显存预分配</strong>：在反向传播开始前，每张 GPU
+上就已经静态分配好了全量梯度（<span class="math inline">\(2\Psi\)</span>
+字节）的显存空间。</li>
+<li><strong>按 Bucket 异步
+AllReduce</strong>：反向传播倒序计算时，每当算满一个梯度
+Bucket，立刻在后台发起异步
+<code>ReduceScatter</code>。此时前台继续计算下一层的反向梯度——计算与通信
+overlap。</li>
+<li><strong>持久存储不释放</strong>：<code>ReduceScatter</code>
+归约完成后，得到的梯度依然保存在显存中（每个 Rank
+都持久持有所有参数的梯度，或者各 Rank 均保留完整梯度 Buffer）。</li>
+<li><strong>优化器更新</strong>：直到整个反向传播结束，进入
+<code>optimizer.step()</code> 时，Rank <span
+class="math inline">\(i\)</span> 只需要去读取全量梯度中属于它分管的那
+<span class="math inline">\(\frac{1}{N_d}\)</span> 切片，来更新它分管的
+<span class="math inline">\(\frac{1}{N_d}\)</span>
+优化器状态。更新完成后做一次 <code>AllGather</code> 恢复全量 FP16
+参数。</li>
+<li>梯度累积不需要额外通信量。</li>
+</ul></li>
+<li>内存分析：
+<ul>
+<li>单卡模型状态显存从标准 DP 的 <span class="math inline">\(4\Psi +
+K\Psi\)</span>（即 <span class="math inline">\(16\Psi\)</span>）降至
+<span class="math inline">\(4\Psi + \frac{K\Psi}{N_d}\)</span>。</li>
+</ul></li>
+</ul>
+<h3 id="p_g-gradient-partitioning">4.2 <span
+class="math inline">\(P_g\)</span> : Gradient Partitioning</h3>
+<ul>
+<li>既然第 <span class="math inline">\(i\)</span> 张 GPU 只负责更新第
+<span class="math inline">\(i\)</span>
+个切片的参数，那么它在反向传播中就只需要属于该切片的归约梯度。在反向传播逐层算出梯度时，系统直接触发
+<code>Reduce-Scatter</code> ，仅将梯度聚合并发送给对应的分管
+GPU。一旦归约完成，非本卡分管的梯度显存立即释放。</li>
+<li>通信分析：
+<ul>
+<li><strong>无全量梯度常驻显存</strong>：不再分配全量 <span
+class="math inline">\(2\Psi\)</span> 梯度的常驻显存，仅分配局部切片
+Buffer（<span class="math inline">\(\frac{2\Psi}{N_d}\)</span>）以及 1~2
+个固定大小的临时 Bucket 显存用于通信。</li>
+<li><strong>按 Bucket 异步
+Reduce-Scatter</strong>：反向传播计算梯度时，使用
+<code>ReduceScatter</code> 通信原语，同样按 Bucket 与计算异步重叠。</li>
+<li><strong>即时销毁（Discard on-the-fly）</strong>：一旦某个 Bucket 的
+<code>ReduceScatter</code> 通信完成，当前 Rank 把属于自己的 <span
+class="math inline">\(\frac{1}{N_d}\)</span> 梯度切片存入局部 Buffer
+后，立刻把这个 Bucket 里非本 Rank 负责的其他梯度显存清空/释放。</li>
+<li>每个 step 完成后进行 <code>AllGather</code>
+获取所有更新后参数。</li>
+<li>梯度累积需要额外通信量：每个 micro-batch backward 时就要触发
+<code>ReduceScatter</code> 通信。</li>
+</ul></li>
+<li>内存分析：
+<ul>
+<li>梯度显存从 <span class="math inline">\(2\Psi\)</span> 降至 <span
+class="math inline">\(\frac{2\Psi}{N_d}\)</span>。结合 <span
+class="math inline">\(P_{os}\)</span>，总模型状态显存开销降至 <span
+class="math inline">\(2\Psi + \frac{14\Psi}{N_d}\)</span>。</li>
+</ul></li>
+</ul>
+<h3 id="p_p-parameter-partitioning">4.3 <span
+class="math inline">\(P_p\)</span>: Parameter Partitioning</h3>
+<ul>
+<li>连 FP16 参数本身也切分 <span class="math inline">\(N_d\)</span>
+份，每张 GPU 仅永久存储分管的 <span
+class="math inline">\(\frac{1}{N_d}\)</span>
+参数切片。在前向传播和反向传播逐层计算时，利用神经网络的时间局部性，在前向/反向算到某一层之前，通过广播（<code>All-Gather</code>）按需动态拉取全量参数，计算完成后立即丢弃非本地切片。</li>
+<li>通信分析：
+<ul>
+<li><strong>参数按层动态拉取与释放（FWD &amp;
+BWD）</strong>：在前向和反向传播中，算到某一层/Bucket 前通过
+<code>pre_hook</code> 动态发起 <code>AllGather</code> 拉取该层全量 FP16
+参数；计算完成后通过 <code>post_hook</code> 立即销毁临时参数
+Buffer。</li>
+<li><strong>按 Layer 异步预取与 Overlap</strong>：前台计算当前 Layer
+的同时，后台异步 Comm Stream 提前发起下一层（或反向上一层）参数的
+<code>AllGather</code> 预取，将参数拉取通信与计算完全 overlap。</li>
+<li><strong>梯度的 Reduce-Scatter
+与即时销毁</strong>：反向传播算出的梯度填入临时 Bucket 后触发
+<code>Reduce-Scatter</code>，通信完成后仅将本 Rank 负责的 <span
+class="math inline">\(\frac{1}{N_d}\)</span> 梯度切片存入本地常驻
+Buffer，其余非本地梯度立刻清空/释放。</li>
+<li><strong>取消 step 结尾的全局
+AllGather</strong>：<code>optimizer.step()</code> 更新完本地 <span
+class="math inline">\(\frac{1}{N_d}\)</span>
+参数切片后<strong>无需</strong>在 step 结尾做全局参数
+<code>AllGather</code>，下一个 step 前向传播会自动按层重新拉取。</li>
+<li><strong>总通信量</strong>：单步总通信量为 <span
+class="math inline">\(3\Psi\)</span>（前向拉取参数 <span
+class="math inline">\(1\Psi\)</span> + 反向拉取参数 <span
+class="math inline">\(1\Psi\)</span> + 梯度散列归约 <span
+class="math inline">\(1\Psi\)</span>），相比标准 DP（<span
+class="math inline">\(2\Psi\)</span>）仅增加 50% 通信量。</li>
+<li>梯度累积需要额外通信量：每个 micro-batch backward 时就要触发
+<code>AllGather</code> 和 <code>ReduceScatter</code> 通信。</li>
+</ul></li>
+<li>内存分析：
+<ul>
+<li>单卡模型状态显存直接降至 <span
+class="math inline">\(\frac{16\Psi}{N_d}\)</span>，与数据并行度 <span
+class="math inline">\(N_d\)</span> 呈严格的线性反比关系。</li>
+</ul></li>
+</ul>
+<h3 id="implication-on-model-size">4.4 Implication on Model Size</h3>
+<img src="/posts/2026/10/342151155/image-20261103010842581.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103010842581">
+<p><br></p>
+<ul>
+<li>不同模型规模在不同 ZeRO/DP 设置下单 device 内存需求。</li>
+</ul>
+<h2 id="deep-dive-into-zero-r">5. Deep Dive into ZeRO-R</h2>
+<h3 id="p_a-partitioned-activation-checkpointing">5.1 <span
+class="math inline">\(P_a\)</span>: Partitioned Activation
+Checkpointing</h3>
+<ul>
+<li>在 MP 中，激活值在不同 device 间有重复。<span
+class="math inline">\(P_a\)</span>
+消除了这种冗余，在算完一层前向传播后，将激活检查点按照 MP 维度（度数为
+<span class="math inline">\(N_m\)</span>）切分存储，每张 GPU 仅保存
+<span class="math inline">\(\frac{1}{N_m}\)</span>
+的切片；在反向传播需要重计算时，通过 <code>AllGather</code>
+动态恢复全量激活值。</li>
+<li><span class="math inline">\(P_{a+cpu}\)</span><strong>（CPU
+卸载）</strong>：对于极端超大模型，可进一步将切分后的激活检查点推送到
+CPU 内存中存储，反向传播前夕再异步拉回 GPU。</li>
+<li>通信分析：
+<ul>
+<li>反向重计算前增加了一次激活值的 <code>AllGather</code> 通信，但对于
+Transformer 架构，其算术强度大，增加的通信量仅占 MP 原生通信量的不足
+10%。</li>
+<li>节省出的显存允许开大 Batch
+Size，从而将数据并行的通信量降低，总体效率反而显著提升。</li>
+</ul></li>
+<li>内存分析：
+<ul>
+<li>单卡激活检查点显存占用降低 <span class="math inline">\(N_m\)</span>
+倍。</li>
+</ul></li>
+</ul>
+<h3 id="c_b-constant-size-buﬀers">5.2 <span
+class="math inline">\(C_B\)</span> : Constant Size Buﬀers</h3>
+<ul>
+<li><strong>机制</strong>：高性能分布式库（如 NVIDIA Apex 或
+Megatron）为了提升通信吞吐，会在执行 <code>AllReduce</code>
+或计算梯度范数（Gradient Norm）时，将离散张量打平并融合进一个连续的临时
+Buffer 中。在传统实现中，该 Buffer 的大小与模型参数量成正比（例如 3B
+参数模型的 FP32 融合 Buffer 会独占 12 GB 显存）。</li>
+<li><strong>优化</strong>：<span class="math inline">\(C_B\)</span>
+强制使用高性能的常数大小缓冲区，其容量上限被锁死在固定数值（如几十
+MB），完全不随模型参数量的膨胀而增长。</li>
+</ul>
+<h3 id="m_d-memory-defragmentation">5.3 <span
+class="math inline">\(M_D\)</span>: Memory Defragmentation</h3>
+<ul>
+<li><strong>机制</strong>：显存碎片产生于训练过程中<strong>长生命周期张量与短生命周期张量的频繁交错申请与释放</strong>：
+<ul>
+<li><strong>前向传播</strong>：长生命周期的激活检查点与短生命周期的重算中间激活值交错。</li>
+<li><strong>反向传播</strong>：长生命周期的参数梯度与短生命周期的激活梯度交错。
+这种割裂会导致系统即便拥有 30%
+以上的空闲显存，也可能因找不到足够的连续空间而触发
+OOM，或导致分配器耗费大量 CPU 时间检索连续块。</li>
+</ul></li>
+<li><strong>优化</strong>：<span class="math inline">\(M_D\)</span>
+采用在线去碎片策略，为激活检查点和梯度提前预分配连续内存大块（Pre-allocated
+Contiguous Buffers）。张量一经生成便直接拷贝存入该连续区域。</li>
+</ul>
+<h2 id="communication-analysis-of-zero-dp">6. Communication Analysis of
+ZeRO-DP</h2>
+<h3 id="data-parallel-communication-volume">6.1 Data Parallel
+Communication Volume</h3>
+<ul>
+<li>backward 时需要进行梯度的 AllReduce 操作，具体由以下两个步骤组成：
+<ul>
+<li>ReduceScatter</li>
+<li>AllGather</li>
+</ul></li>
+<li>两步通信量都是 <span class="math inline">\(\Psi\)</span>
+，总通信量为 <span class="math inline">\(2\Psi\)</span> 。</li>
+</ul>
+<h3 id="zero-dp-communication-volume">6.2 ZeRO-DP Communication
+Volume</h3>
+<h4 id="communication-volume-with-p_osg">6.2.1 Communication Volume with
+<span class="math inline">\(P_{os+g}\)</span></h4>
+<ul>
+<li>backward 时进行 ReduceScatter 通信，获取每个进程对应分片梯度 reduce
+后结果。</li>
+<li>每个进程更新完自己负责参数后，进行 AllGather
+通信，获取全量更新后参数。</li>
+<li>总通信量 <span class="math inline">\(2\Psi\)</span> 与 DP
+完全相同。</li>
+</ul>
+<h4 id="communication-volume-with-p_osgp">6.2.2 Communication Volume
+with <span class="math inline">\(P_{os+g+p}\)</span></h4>
+<ul>
+<li>通信过程如下：
+<ul>
+<li><strong>前向传播（FWD）</strong>：按层/Bucket 动态通过
+<code>AllGather</code> 拉取全量 FP16 参数，传输量为 <span
+class="math inline">\(\Psi\)</span>。</li>
+<li><strong>反向传播（BWD）</strong>：再次按层/Bucket 动态通过
+<code>AllGather</code> 拉取全量 FP16 参数，传输量为 <span
+class="math inline">\(\Psi\)</span>。</li>
+<li><strong>梯度归约</strong>：反向传播算出的梯度通过
+<code>ReduceScatter</code> 归约散列至分管 Rank，传输量为 <span
+class="math inline">\(\Psi\)</span>。</li>
+</ul></li>
+<li><span class="math inline">\(P_p\)</span> 单步总通信量为 <span
+class="math inline">\(3\Psi\)</span>，仅为标准 DP 通信量的 1.5 倍。</li>
+</ul>
+<h2 id="communication-analysis-of-zero-r">7. Communication Analysis of
+ZeRO-R</h2>
+<p><strong><span
+class="math inline">\(P_a\)</span>（激活检查点切分）对模型并行（MP）通信的影响</strong></p>
+<ul>
+<li><strong>通信增加量分析</strong>：在标准的 Megatron-LM
+模型并行中，每个 Transformer 模块（包含 FWD、FWD 重计算、BWD）共触发 6
+次 <code>AllReduce</code>，总通信量为 <span class="math inline">\(12
+\times \text{seq\_len} \times \text{hidden\_dim}\)</span>。开启 <span
+class="math inline">\(P_a\)</span>
+后，仅需在反向传播重计算前对激活检查点发起 1 次
+<code>AllGather</code>，通信量仅为 <span class="math inline">\(1 \times
+\text{seq\_len} \times \text{hidden\_dim}\)</span>。</li>
+<li><strong>结论</strong>：<span class="math inline">\(P_a\)</span>
+带来的额外通信开销<strong>不足原生 MP 通信量的 10%</strong>。</li>
+</ul>
+<p><strong><span class="math inline">\(P_a\)</span>
+对数据并行（DP）通信的间接优化（MP + DP 混合场景）</strong></p>
+<ul>
+<li><strong>显存与 Batch Size 联动</strong>：<span
+class="math inline">\(P_a\)</span> 将激活检查点显存压减 <span
+class="math inline">\(N_m\)</span> 倍（MP 度数，例如在 DGX-2 节点上
+<span class="math inline">\(N_m = 16\)</span>），允许单卡 Batch Size
+提升高达 <span class="math inline">\(N_m\)</span> 倍。</li>
+<li><strong>DP 通信量大幅降低</strong>：由于数据并行（DP）的通信开销与
+Batch Size 呈反比，通过 <span class="math inline">\(P_a\)</span> 扩大的
+Batch Size 可以使 DP 通信量降低一个数量级。</li>
+<li><strong>Trade-off 收益</strong>：仅以增加小于 10% 的
+MP（节点内/高带宽）通信量为代价，换取了
+DP（跨节点/低带宽）通信量降低一个数量级，大幅提升了系统的整体吞吐。</li>
+</ul>
+<p><strong><span class="math inline">\(P_{a+cpu}\)</span>（激活 CPU
+卸载）的通信 Trade-off</strong></p>
+<ul>
+<li><strong>PCIe 数据搬运代价</strong>：将切分后的激活检查点卸载至 CPU
+内存，相比 <span class="math inline">\(P_a\)</span> 增加了 2 倍的 PCIe
+双向数据传输（GPU 到 CPU 写入，CPU 到 GPU 读回）。</li>
+<li><strong>适用条件</strong>：当单卡显存极度紧张导致 Batch Size
+过小、DP 通信成为严重性能瓶颈时开启。只要 PCIe 搬运延迟小于 DP
+通信被压缩节省出的时间，系统就能实现吞吐的净提升。</li>
+</ul>
+<h2 id="step-towards-1-trillion-parameters">8. Step Towards 1 Trillion
+Parameters</h2>
+<ul>
+<li>MP 存在的问题与 ZeRO 解决方法：
+<ul>
+<li>传统 SOTA 框架（如 Megatron-LM）仅能在单个 DGX-2 节点内高效扩展
+16~20B 参数的模型；一旦跨节点扩展模型并行（MP），会因节点间带宽限制（从
+NVLink 300 GB/s 降至 InfiniBand 12.5 GB/s）导致吞吐剧烈下降。</li>
+<li>ZeRO 彻底打破了这一瓶颈：开启全部优化（<span
+class="math inline">\(P_{os+g+p}\)</span>）时，<strong>仅靠纯数据并行（DP）即可在
+1024 张 GPU 上训练 1 万亿（1 Trillion）参数的模型</strong>；若结合节点内
+16 路模型并行（MP=16）与跨节点 64 路数据并行（DP=64），同样能在 1024 张
+GPU 上高效装下并训练万亿参数模型。</li>
+</ul></li>
+<li>算力差距与资源挑战：
+<ul>
+<li>虽然 ZeRO
+从系统架构和显存层面解决了万亿参数模型“装得下、跑得动”的问题，但当前硬件集群的算力（FLOPs）不允许在合理时间内训练
+1T 参数量模型。</li>
+</ul></li>
+</ul>
+<h2 id="conclusion">9. Conclusion</h2>
+<ul>
+<li>ZeRO
+<ul>
+<li>ZeRO 1：
+<ul>
+<li>切分优化器状态；</li>
+<li>backward 时 <code>ReduceScatter</code> 获取梯度 Reduce
+后结果分片，更新本 rank 负责的参数切片；</li>
+<li>step 末尾：<code>AllGather</code> 获取全部更新后的参数；</li>
+</ul></li>
+<li>ZeRO 2：
+<ul>
+<li>切分优化器状态+梯度；</li>
+<li>backward 时 <code>ReduceScatter</code> 获取梯度 Reduce
+后结果分片；每个 micro-batch backward 时都需要触发
+<code>ReduceScatter</code> 通信；</li>
+<li>每个 step 完成后 <code>AllGather</code>
+通信获取全部更新后参数。</li>
+</ul></li>
+<li>ZeRO 3：
+<ul>
+<li>切分优化器状态+梯度+参数；</li>
+<li>forward/backward 时都需要先 <code>AllGather</code>
+获取本层全量参数；backward 时每个 micro-batch 都需要
+<code>ReduceScatter</code> 通信获取梯度 Reduce 后的结果分片；</li>
+<li>通信量对比普通 DP 增加 50%。</li>
+</ul></li>
+</ul></li>
+<li>其他内存优化方法：
+<ul>
+<li>结合 MP 切分激活值 &amp; offload 激活值到 CPU。</li>
+<li>固定常量 buffer 大小，兼顾内存效率与计算/通信效率。</li>
+<li>预先分配连续内存，消除内存碎片。</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/Distributed-Training/">#Distributed Training</a>
+      
+        <a href="/tags/ZeRO/">#ZeRO</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>ZeRO: Memory Optimizations Toward Training Trillion Parameter Models</div>
+      <div>https://arcsin2.cloud/posts/2026/10/342151155/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月31日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1893709119/" title="LLM Systems Assignment 5: Distributed Training and Fine-Tuning">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems Assignment 5: Distributed Training and Fine-Tuning</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/3658107705/" title="DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models">
+                        <span class="hidden-mobile">DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

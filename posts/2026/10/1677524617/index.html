@@ -1,0 +1,1849 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="0.Recap  Data Parallel via All Reduce Distributed Data Parallel Training  gradient bucketing overlay backward and AllReduce communication   1. Model Parallel Training Motivation： 模型规模呈指数增长，单">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems 16: Model Parallel Training">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/1677524617/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="0.Recap  Data Parallel via All Reduce Distributed Data Parallel Training  gradient bucketing overlay backward and AllReduce communication   1. Model Parallel Training Motivation： 模型规模呈指数增长，单">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001700931.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001726163.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001805723.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001821974.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001913807.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001937693.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001951213.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103002010594.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103002057500.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103002110934.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103002129561.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103002143494.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103002157880.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103002305039.png">
+<meta property="article:published_time" content="2026-10-31T15:52:17.000Z">
+<meta property="article:modified_time" content="2026-11-02T16:24:33.044Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="Distributed Training">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/1677524617/image-20261103001700931.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems 16: Model Parallel Training - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems 16: Model Parallel Training"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-31 23:52" pubdate>
+          2026年10月31日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          25k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          82 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems 16: Model Parallel Training</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="recap">0.Recap</h2>
+<ul>
+<li>Data Parallel via All Reduce</li>
+<li>Distributed Data Parallel Training
+<ul>
+<li>gradient bucketing</li>
+<li>overlay backward and AllReduce communication</li>
+</ul></li>
+</ul>
+<h2 id="model-parallel-training">1. Model Parallel Training</h2>
+<p>Motivation： 模型规模呈指数增长，单个 GPU
+的显存无法放置完整模型。模型并行就是将模型的计算（forward/backward/update）切分到多个训练进程。</p>
+<p><strong>Distributed layer-wise computation（PP）示意图：</strong></p>
+<img src="/posts/2026/10/1677524617/image-20261103001700931.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103001700931">
+<p><br></p>
+<ul>
+<li>按层切分模型。</li>
+</ul>
+<p><strong>Distributed tensor computation（TP）示意图：</strong></p>
+<img src="/posts/2026/10/1677524617/image-20261103001726163.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103001726163">
+<p><br></p>
+<ul>
+<li>切分参与 GEMM 计算的模型权重。</li>
+</ul>
+<h2 id="pipeline-parallelism">2. Pipeline Parallelism</h2>
+<h3 id="naive-pipeline-parallel">2.1 Naive Pipeline Parallel</h3>
+<p>实现：按层将模型切分放置在不同 GPU。</p>
+<p>问题：在任意时刻，只有一个 GPU 进行计算，其他都空闲。如下图所示：</p>
+<img src="/posts/2026/10/1677524617/image-20261103001805723.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103001805723">
+<p><br></p>
+<p><strong>计算与显存分析：</strong></p>
+<p>下图来源：<a
+target="_blank" rel="noopener" href="https://siboehm.com/articles/22/pipeline-parallel-training">blog</a></p>
+<img src="/posts/2026/10/1677524617/image-20261103001821974.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103001821974">
+<p><br></p>
+<ul>
+<li>从上面左侧开始看，input 在 GPU 1 进行
+forward，产生中间激活值需要缓存下来；</li>
+<li>通过 P2P 通信 API，发生 GPU 1 forward 得到的激活值到 GPU 2；</li>
+<li>GPU 2 运行 forward，产生中间激活值；</li>
+<li>GPU 2 计算 loss 并进行
+backward，自动求导引擎根据缓存激活值计算模型参数梯度；</li>
+<li>GPU 2 将 GPU 1 发送过来的激活值对应梯度通过 P2P 发送给 GPU 1；</li>
+<li>GPU 1 执行 backward，得到本 device 内参数梯度。</li>
+</ul>
+<p><strong>示例代码：</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn<br><span class="hljs-keyword">from</span> torchvision.models.resnet <span class="hljs-keyword">import</span> ResNet, Bottleneck<br><br><span class="hljs-comment"># 定义朴素模型并行的 ResNet50 模型，继承自 torchvision 的 ResNet 基类 [1]</span><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ModelParallelResNet50</span>(<span class="hljs-title class_ inherited__">ResNet</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, *args, **kwargs</span>):<br>        <span class="hljs-comment"># 调用父类初始化函数，传入 ResNet50 的结构配置（Bottleneck 模块与 [1-3] 层数）</span><br>        <span class="hljs-built_in">super</span>(ModelParallelResNet50, self).__init__(<br>            Bottleneck, [<span class="hljs-number">1</span>-<span class="hljs-number">3</span>], num_classes=num_classes, *args, **kwargs)<br><br>        <span class="hljs-comment"># 【第一阶段】：将模型的前半部分网络层打包，并部署到第一张 GPU (&#x27;cuda:0&#x27;) [1]</span><br>        self.seq1 = nn.Sequential(<br>            self.conv1,<br>            self.bn1,<br>            self.relu,<br>            self.maxpool,<br><br>            self.layer1,<br>            self.layer2,<br>        ).to(<span class="hljs-string">&#x27;cuda:0&#x27;</span>)  <span class="hljs-comment"># 显式将前半部分子模块转移到 GPU 0</span><br><br>        <span class="hljs-comment"># 【第二阶段】：将模型的后半部分网络层打包，并部署到第二张 GPU (&#x27;cuda:1&#x27;) [1]</span><br>        self.seq2 = nn.Sequential(<br>            self.layer3,<br>            self.layer4,<br>            self.avgpool,<br>        ).to(<span class="hljs-string">&#x27;cuda:1&#x27;</span>)  <span class="hljs-comment"># 显式将后半部分子模块转移到 GPU 1</span><br><br>        <span class="hljs-comment"># 将最终的全连接分类层（fc）同样部署到第二张 GPU (&#x27;cuda:1&#x27;) [1]</span><br>        self.fc.to(<span class="hljs-string">&#x27;cuda:1&#x27;</span>)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x</span>):<br>        <span class="hljs-comment"># 1. 假设输入 x 在 cuda:0 上，首先通过 self.seq1 完成前半部分计算</span><br>        <span class="hljs-comment"># 2. 调用 .to(&#x27;cuda:1&#x27;) 将中间激活值张量（Activations）跨卡传输到 GPU 1 [1]</span><br>        <span class="hljs-comment"># 3. 激活值到达 GPU 1 后，继续通过 self.seq2 完成后半部分计算</span><br>        x = self.seq2(self.seq1(x).to(<span class="hljs-string">&#x27;cuda:1&#x27;</span>))<br>        <br>        <span class="hljs-comment"># 4. 将池化层输出打平为二维形状 (batch_size, -1)，并在 GPU 1 上通过全连接层计算最终输出结果</span><br>        <span class="hljs-keyword">return</span> self.fc(x.view(x.size(<span class="hljs-number">0</span>), -<span class="hljs-number">1</span>))<br></code></pre></td></tr></table></figure>
+<p><strong>朴素 PP 实现的问题：</strong></p>
+<ul>
+<li>低 GPU 利用率
+<ul>
+<li>任意时刻仅有一个 GPU 工作，其他空闲。</li>
+</ul></li>
+<li>没有计算与通信的重叠
+<ul>
+<li>设备在通过网络（如 NCCL
+send/recv）向下一个设备传输中间激活值或梯度时，GPU
+处于闲置状态，无法做到边计算边传输，通信开销无法被掩盖。</li>
+</ul></li>
+<li>高显存需求
+<ul>
+<li>前向传播必须等整个 Mini-batch
+完全通过所有设备后才能开启反向传播，靠前的设备（如第一张
+GPU）必须长时间暂存整个 Batch
+的所有中间激活值（Activations），直到反向传播计算结束。</li>
+</ul></li>
+</ul>
+<h3 id="improving-pipeline-parallel-gpipe">2.2 Improving Pipeline
+Parallel: GPipe</h3>
+<h4 id="overview">2.2.1 Overview</h4>
+<ul>
+<li>核心思想：将输入的一个 batch （mini-batch）数据切分为多个小
+batch（micro-batch），使用 micro-batches 进行流水线并行。</li>
+<li>batch 大小
+<ul>
+<li>决定因素：
+<ul>
+<li>GPU memory 大小</li>
+<li>每个样本 forward/backward 需要的显存大小</li>
+</ul></li>
+<li>batch 需要尽量大，以充分利用 GPU 显存；同时允许切分为更多
+micro-batch 降低流水线 bubble。</li>
+</ul></li>
+<li>micro-batch 可以比 batch 小很多。</li>
+</ul>
+<h4 id="gpipe">2.2.2 GPipe</h4>
+<ul>
+<li>相关符号及含义：
+<ul>
+<li>设模型有 <span class="math inline">\(L\)</span> 层；</li>
+<li>模型被切分为 <span class="math inline">\(K\)</span>
+个分区（即：device 数量）；</li>
+<li>每个 mini-batch 被切分为 <span class="math inline">\(M\)</span> 个
+micro-batch；</li>
+<li>mini-batch 大小为 <span class="math inline">\(N\)</span> 。</li>
+</ul></li>
+<li>GPipe 整体流程：
+<ul>
+<li>切分为 micro-batch；</li>
+<li>每个 micro-batch forward 完成后，立即将结果发送给下一个
+device；</li>
+<li>所有 micro-batches forward 完成后，再进行 backward；</li>
+<li>在 backward 过程中，进行 forward 重计算，完成后立即将 micro-batches
+梯度发送给上一个 device；</li>
+</ul></li>
+<li>示意图如下：</li>
+</ul>
+<img src="/posts/2026/10/1677524617/image-20261103001913807.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103001913807">
+<p><br></p>
+<ul>
+<li>气泡比例：
+<ul>
+<li><span class="math inline">\(K\)</span> 个 device 完成 <span
+class="math inline">\(M\)</span> 个 micro-batches fwd/bwd
+共需要时间面积为：<span class="math inline">\(K \times (M + K - 1)
+\times (t + 2t)\)</span>，其中 <span class="math inline">\(t\)</span>
+表示每个 device 完成一个 micro-batch forward 耗时；bwd 耗时认为是 fwd
+两倍；<span class="math inline">\(M + K - 1\)</span> 表示 <span
+class="math inline">\(K - 1\)</span> 步用来建立完整流水线，<span
+class="math inline">\(M\)</span> 步用来清空流水线（全部执行完成）；</li>
+<li>其中 bubble 面积为 <span class="math inline">\(K \times (K-1) \times
+(t + 2t)\)</span> ；</li>
+<li>整体 bubble 比例为：<span class="math inline">\(\frac{K \times (K-1)
+\times (t + 2t)}{K \times (M + K - 1) \times (t + 2t)} = \frac{K - 1}{M
++ K - 1}\)</span> ；当 <span class="math inline">\(M &gt; 4 \times
+K\)</span> 时，气泡比例可忽略（<span class="math inline">\(M &gt;
+4K\)</span> 时，实际气泡比例范围为：<span
+class="math inline">\((\frac{1}{9}, \frac{1}{5})\)</span>）。</li>
+</ul></li>
+<li>通信开销：相邻 device 间需要进行 P2P 通信传输激活值。</li>
+<li>激活值内存占用峰值：
+<ul>
+<li>朴素实现：<span class="math inline">\(O(N \times L)\)</span>
+<ul>
+<li><strong>单个 Micro-batch</strong> 在单张 GPU（含 <span
+class="math inline">\(\frac{L}{K}\)</span>
+层）上产生的所有激活值大小为：<span
+class="math inline">\(\text{单微批次激活值} = O\left(\frac{N}{M} \times
+\frac{L}{K}\right)\)</span></li>
+<li>由于 GPipe 的调度特点是<strong>必须把所有</strong> <span
+class="math inline">\(M\)</span>
+<strong>个微批次的前向传播全部做完</strong>，才能开始反向传播，因此显存里会同时积压
+<span class="math inline">\(M\)</span> 个微批次的所有激活值： <span
+class="math inline">\(\text{峰值显存} = M \times O\left(\frac{N}{M}
+\times \frac{L}{K}\right) = O\left(N \times
+\frac{L}{K}\right)\)</span></li>
+<li>忽略设备常数 <span class="math inline">\(K\)</span>，即可简写为
+<span class="math inline">\(O(N \times L)\)</span>。</li>
+</ul></li>
+<li>gradient checkpoint：<span class="math inline">\(O(N + \frac{L}{K}
+\times \frac{N}{M})\)</span>
+<ul>
+<li>第一项 <span class="math inline">\(N\)</span>（常驻显存，即 <span
+class="math inline">\(M\)</span> 个微批次的边界激活值）：
+在前向传播过程中，每张 GPU 不再保存这 <span
+class="math inline">\(\frac{L}{K}\)</span>
+层内部所有的中间激活值，而只保存每个 Micro-batch
+在设备输入/输出边界处的激活值（Boundary Checkpoints）。
+<ul>
+<li>单个 Micro-batch 的边界激活值大小为 <span
+class="math inline">\(O(\frac{N}{M})\)</span>；</li>
+<li>全部 <span class="math inline">\(M\)</span> 个 Micro-batch
+的边界激活值总和为： <span class="math inline">\(M \times
+O\left(\frac{N}{M}\right) = O(N)\)</span></li>
+</ul></li>
+<li>第二项（反向传播时的临时局部重算显存）： 当反向传播计算到某个
+Micro-batch 时，GPU 会利用该 Micro-batch
+留下的边界激活值，临时重新计算该 Micro-batch 在单卡内 <span
+class="math inline">\(\frac{L}{K}\)</span> 层的内部激活值。
+<ul>
+<li>同一时刻只需要重算 1 个 Micro-batch，所以这部分临时激活值开销仅为：
+<span class="math inline">\(O\left(\frac{N}{M} \times
+\frac{L}{K}\right)\)</span> 。算完这个 Micro-batch
+的梯度后，这部分临时激活值就会被立即释放，供下一个 Micro-batch
+使用。</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Gradient Checkpointing</strong></p>
+<ul>
+<li>思想：
+<ul>
+<li>forward：每个 device 只保存输入和输出激活值；</li>
+<li>backward：利用输入重新进行 forward 构建计算图，然后基于计算图进行
+backward。</li>
+</ul></li>
+<li>三种变体：<span class="math inline">\(n\)</span> 表示模型层数
+<ul>
+<li>传统反向传播（Vanilla backprop）：
+<ul>
+<li>激活值显存：<span class="math inline">\(O(n)\)</span> —— 保存所有
+<span class="math inline">\(n\)</span> 层的中间激活值。</li>
+<li>计算量：<span class="math inline">\(O(n)\)</span> 。</li>
+</ul></li>
+<li>极限省显存/完全重算（Memory poor backprop）：
+<ul>
+<li>激活值显存：<span class="math inline">\(O(1)\)</span> ——
+几乎不保留中间激活值，只留输入。</li>
+<li>计算量：<span class="math inline">\(O(n^2)\)</span> —— 计算第 <span
+class="math inline">\(k\)</span> 层梯度时，必须从第 1
+层开始重新前向推演到第 <span class="math inline">\(k\)</span>
+层，导致计算量暴涨到二次方级。</li>
+</ul></li>
+<li>梯度检查点（Gradient Checkpointing）：
+<ul>
+<li><strong>策略</strong>：每隔 <span
+class="math inline">\(\sqrt{n}\)</span> 层保存一个
+Checkpoint（检查点）。</li>
+<li>激活值显存：<span class="math inline">\(O(\sqrt{n})\)</span> ——
+只需保留约 <span class="math inline">\(\sqrt{n}\)</span>
+个检查点处的激活值，实现亚线性（Sublinear）显存开销。</li>
+<li>计算量：<span class="math inline">\(O(\sqrt{n} \times \sqrt{n}) =
+O(n)\)</span> ——
+反向传播时只在相邻检查点之间做局部重算，整体计算复杂度依然保持在 <span
+class="math inline">\(O(n)\)</span>（选择适当 layer 做 gradient
+checkpoint 可以实现仅增加约 20%~30% 的前向重算耗时）。</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>GPipe PP 缺点：</strong></p>
+<img src="/posts/2026/10/1677524617/image-20261103001937693.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103001937693">
+<p><br></p>
+<ul>
+<li>由于在全部 micro-batches forward 完成后才进行 backward，需要保存全部
+micro-batches 的激活值，显存占用大。</li>
+</ul>
+<p><strong>Improving Pipeline Parallel with 1F1B flush</strong></p>
+<img src="/posts/2026/10/1677524617/image-20261103001951213.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103001951213">
+<p><br></p>
+<ul>
+<li>核心思想：尽早开始进行 backward 以减少中间激活值显存占用。</li>
+<li>优点：减少激活值显存占用。
+<ul>
+<li><strong>GPipe</strong> 的激活值显存随着微批次总数 <span
+class="math inline">\(M\)</span> 线性增长（<span
+class="math inline">\(O(M)\)</span>）。</li>
+<li><strong>1F1B</strong> 的激活值显存只与流水线深度/设备数 <span
+class="math inline">\(K\)</span> 相关（<span
+class="math inline">\(O(K)\)</span>），与微批次总数 <span
+class="math inline">\(M\)</span> 无关。</li>
+</ul></li>
+<li>在途（即已完成前向传播、但尚未完成反向传播）的 micro-batch
+数量：最多为 4 个（假设一次反向传播耗时等于两次前向传播耗时，即
+1B=2F），而在 GPipe 中则高达 8 个。</li>
+</ul>
+<p><strong>1F1B 实现：</strong></p>
+<p>流水线三个阶段：</p>
+<ul>
+<li><strong>预热期（Warmup）</strong>：只做 Forward，把流水线灌满。</li>
+<li><strong>稳态期（Steady State）</strong>：1F1B
+交替（一前一后）。</li>
+<li><strong>收尾/冷却期（Cooldown / Drain）</strong>：只做
+Backward，清空流水线。</li>
+</ul>
+<p>不同 GPU 在预热期和收尾期的步数不同。</p>
+<p><strong>Further Improving Pipeline Parallel by Chunking Model Layers
+and Interleaving Stages</strong></p>
+<img src="/posts/2026/10/1677524617/image-20261103002010594.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103002010594">
+<p><br></p>
+<ul>
+<li>核心思想：把模型层切得更细，并在 GPU 之间“交错”分配
+<ul>
+<li><strong>传统 1F1B（非交错式）</strong>： 每张 GPU
+只分配<strong>一段连续</strong>的模型层</li>
+<li><strong>交错式 1F1B（Slide 中的 Chunking 方案）</strong>： 每张 GPU
+不再只吃“一大块”连续层，而是分配多个较小且不连续的层切块（Chunks）。上图将
+16 层切为了 2 个 Chunk（即切块数 <span class="math inline">\(v =
+2\)</span>）
+<ul>
+<li>Device 1 负责 Chunk 1（第 1, 2 层）和 Chunk 2（第 9, 10 层）</li>
+<li>...</li>
+</ul></li>
+</ul></li>
+<li>优点：气泡更少
+<ul>
+<li><strong>气泡被切碎并压缩了</strong> <span
+class="math inline">\(v\)</span> <strong>倍</strong>：
+在流水线建立和清空的过程中，卡与卡之间等待的时间取决于<strong>单次计算的耗时</strong>。
+<ul>
+<li>传统 1F1B 单次计算需要跑 4 个层，等待时间较长。</li>
+<li>交错式 1F1B 单次计算只需要跑 2
+个层（耗时减半），因此首尾等待的气泡碎片时间也缩小到了原来的 <span
+class="math inline">\(\frac{1}{v}\)</span>。</li>
+</ul></li>
+<li>气泡占比：
+<ul>
+<li><strong>GPipe / 传统 1F1B</strong>：<span
+class="math inline">\(\text{Bubble 比例} \approx O\left(\frac{K - 1}{M +
+K - 1}\right)\)</span> 。</li>
+<li><strong>Interleaved 1F1B</strong>：<span
+class="math inline">\(\text{Bubble 比例} \approx
+O\left(\mathbf{\frac{1}{v}} \cdot \frac{K - 1}{M + K -
+1}\right)\)</span> 。</li>
+</ul></li>
+<li>如果取 <span class="math inline">\(v =
+2\)</span>，气泡占比直接<strong>折半</strong>；如果取 <span
+class="math inline">\(v = 4\)</span>，气泡占比可以缩小到原来的 <span
+class="math inline">\(\frac{1}{4}\)</span>，直接将原本 10%~15%
+的算力浪费压缩到了 <strong>2%~5%</strong>
+这种工程上几乎可以忽略不计的水平。</li>
+</ul></li>
+<li>代价：
+<ul>
+<li><strong>P2P 通信频次与流量翻倍</strong>： 因为一个 Micro-batch
+需要在设备链上完整跑 <span class="math inline">\(v\)</span>
+圈，网络通信（<code>send</code>/<code>recv</code>）的触发次数和数据传输总量直接乘以了
+<span class="math inline">\(v\)</span>（上述示例图片中通信量翻了 2
+倍）。</li>
+<li><strong>显存与调度逻辑更复杂</strong>： 每张 GPU
+需要在显存中同时维护多个 Chunk
+的激活值队列和状态转换，代码实现门槛大幅提高。</li>
+</ul></li>
+</ul>
+<p><strong>PP 演进总结：</strong></p>
+<table>
+
+<thead>
+<tr class="header">
+<th>演进阶段</th>
+<th>代表技术</th>
+<th>核心机制</th>
+<th>气泡占比 (Bubble)</th>
+<th>激活值显存峰值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>第一代</strong></td>
+<td>Naïve PP</td>
+<td>朴素纵向切分，无微批次</td>
+<td>极大 (<span class="math inline">\(\frac{K-1}{K}\)</span>)</td>
+<td><span class="math inline">\(O(\text{Batch Size})\)</span></td>
+</tr>
+<tr class="even">
+<td><strong>第二代</strong></td>
+<td>GPipe</td>
+<td>微批次化 + 重算（全前向后全反向）</td>
+<td><span class="math inline">\(O\left(\frac{K-1}{M + K -
+1}\right)\)</span></td>
+<td><span class="math inline">\(O(M)\)</span>（随微批次线性暴涨）</td>
+</tr>
+<tr class="odd">
+<td><strong>第三代</strong></td>
+<td>1F1B Flush</td>
+<td>预热后交替执行 1F/1B</td>
+<td><span class="math inline">\(O\left(\frac{K-1}{M + K -
+1}\right)\)</span></td>
+<td><span class="math inline">\(O(K)\)</span>（锁定上限，解绑 <span
+class="math inline">\(M\)</span>）</td>
+</tr>
+<tr class="even">
+<td><strong>第四代</strong></td>
+<td>Interleaved 1F1B</td>
+<td>模型切块交错（Chunking）</td>
+<td><span class="math inline">\(O\left(\frac{1}{v} \cdot \frac{K-1}{M +
+K - 1}\right)\)</span></td>
+<td><span class="math inline">\(O(K)\)</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>GPipe Implementation:</strong></p>
+<p>代码来源：<a
+target="_blank" rel="noopener" href="https://github.com/siboehm/ShallowSpeed/blob/master/shallowspeed/pipe.py">link</a></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">GPipeSchedule</span>(<span class="hljs-title class_ inherited__">Schedule</span>):<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">steps</span>(<span class="hljs-params">self</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;生成一个完整 Mini-batch 训练周期的调度指令流&quot;&quot;&quot;</span><br>        <span class="hljs-comment"># [步骤 1]: 训练步开始，清空上一次迭代的梯度</span><br>        <span class="hljs-keyword">yield</span> [ZeroGrad()]<br><br>        <span class="hljs-comment"># [步骤 2]: 阶段 1 - 按序对所有微批次 (μBatch) 执行前向传播</span><br>        <span class="hljs-keyword">for</span> mubatch_id <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(self.num_micro_batches):<br>            <span class="hljs-keyword">yield</span> self.steps_FWD_mubatch(mubatch_id)<br><br>        <span class="hljs-comment"># ----------------------------------------------------------------------</span><br>        <span class="hljs-comment"># 【显存峰值节点】：此时所有 μBatch 前向计算均已完成且处于在途 (In-flight) 状态，</span><br>        <span class="hljs-comment"># 中间激活值全部积压在显存中，开销达到最高峰</span><br>        <span class="hljs-comment"># ----------------------------------------------------------------------</span><br><br>        <span class="hljs-comment"># [步骤 3]: 阶段 2 - 采用 LIFO (后进先出) 倒序对所有 μBatch 执行反向传播</span><br>        <span class="hljs-comment"># 最后一个到达流水线末端的 μBatch 最先算出 Loss 并开启反向</span><br>        <span class="hljs-keyword">for</span> mubatch_id <span class="hljs-keyword">in</span> <span class="hljs-built_in">reversed</span>(<span class="hljs-built_in">range</span>(self.num_micro_batches)):<br>            <span class="hljs-keyword">yield</span> <span class="hljs-keyword">from</span> self.steps_BWD_mubatch(mubatch_id)<br><br>        <span class="hljs-comment"># [步骤 4]: 阶段 3 - 所有 μBatch 处理完毕后，统一更新权重参数</span><br>        <span class="hljs-keyword">yield</span> [OptimizerStep()]<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">steps_BWD_mubatch</span>(<span class="hljs-params">self, mubatch_id</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;生成单个微批次的反向传播指令序列&quot;&quot;&quot;</span><br>        cmds = []<br><br>        <span class="hljs-comment"># ① 准备反向传播的起始输入（目标标签或上游传来的梯度）</span><br>        <span class="hljs-keyword">if</span> self.is_last_stage:<br>            <span class="hljs-comment"># 流水线最后阶段：加载该 μBatch 的 Target 标签以计算 Loss</span><br>            cmds.append(LoadMuBatchTarget(mubatch_id=mubatch_id, buffer_id=<span class="hljs-number">0</span>))<br>        <span class="hljs-keyword">else</span>:<br>            <span class="hljs-comment"># 流水线中间/前置阶段：接收下游 GPU 倒传回来的输出梯度</span><br>            cmds.append(RecvOutputGrad(buffer_id=<span class="hljs-number">0</span>))<br><br>        <span class="hljs-comment"># ② 反向计算与数据并行 (DP) 通信重叠优化</span><br>        <span class="hljs-keyword">if</span> self.is_first_mubatch(mubatch_id):<br>            <span class="hljs-comment"># 最后一个反向 μBatch（即前向的第 0 个 μBatch）：在计算梯度的同时触发 DP 组间的 AllReduce 同步</span><br>            cmds.append(BackwardGradAllReduce(buffer_id=<span class="hljs-number">0</span>, mubatch_id=mubatch_id))<br>        <span class="hljs-keyword">else</span>:<br>            <span class="hljs-comment"># 其他 μBatch：仅在本地做梯度累加 (Accumulation)，暂不触发跨节点 AllReduce</span><br>            cmds.append(BackwardGradAcc(buffer_id=<span class="hljs-number">0</span>, mubatch_id=mubatch_id))<br><br>        <span class="hljs-comment"># ③ 梯度回传</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> self.is_first_stage:<br>            <span class="hljs-comment"># 非第一阶段：将计算出的输入梯度点对点发送给上一张 GPU</span><br>            cmds.append(SendInputGrad(buffer_id=<span class="hljs-number">0</span>))<br><br>        <span class="hljs-keyword">yield</span> cmds<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">steps_FWD_mubatch</span>(<span class="hljs-params">self, mubatch_id</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;生成单个微批次的前向传播指令序列&quot;&quot;&quot;</span><br>        cmds = []<br><br>        <span class="hljs-comment"># ① 输入准备</span><br>        <span class="hljs-keyword">if</span> self.is_first_stage:<br>            <span class="hljs-comment"># 第一阶段：从 DataLoader 加载该 μBatch 的输入数据</span><br>            cmds.append(LoadMuBatchInput(buffer_id=<span class="hljs-number">0</span>, mubatch_id=mubatch_id))<br>        <span class="hljs-keyword">else</span>:<br>            <span class="hljs-comment"># 中间/后置阶段：接收上一张 GPU 传来的激活值 (Activations)</span><br>            cmds.append(RecvActivations(buffer_id=<span class="hljs-number">0</span>))<br><br>        <span class="hljs-comment"># ② 执行本地模型层的前向传播计算</span><br>        cmds.append(Forward(buffer_id=<span class="hljs-number">0</span>, mubatch_id=mubatch_id))<br><br>        <span class="hljs-comment"># ③ 激活值发送</span><br>        <span class="hljs-comment"># 最后阶段不发送：末尾阶段只需 Target 标签和 Module 内部缓存的激活值即可算 BWD，无需再向下发送</span><br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> self.is_last_stage:<br>            cmds.append(SendActivations(buffer_id=<span class="hljs-number">0</span>))<br><br>        <span class="hljs-keyword">return</span> cmds<br></code></pre></td></tr></table></figure>
+<p><strong>Pipeline Parallelism in PyTorch</strong></p>
+<p><code>torch.distributed.pipelining</code> 模块</p>
+<ul>
+<li>两阶段
+<ul>
+<li>build PipelineStage
+<ul>
+<li>manually splitting the model</li>
+<li>splitting model automatically</li>
+</ul></li>
+<li>use PipelineSchedule for execution</li>
+</ul></li>
+</ul>
+<p>示例代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-comment"># Step 1: 定义与手动切分模型 (PipelineStage)</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">Transformer</span>(nn.Module):<br><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, model_args: ModelArgs</span>):<br>    <span class="hljs-built_in">super</span>().__init__()<br>    self.tok_embeddings = nn.Embedding(...)<br>    <span class="hljs-comment"># 使用 ModuleDict 保存层，方便删除时不会影响权重 key 映射（保障 Checkpoint 加载）</span><br>    self.layers = torch.nn.ModuleDict()<br>    <span class="hljs-keyword">for</span> layer_id <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(model_args.n_layers):<br>      self.layers[<span class="hljs-built_in">str</span>(layer_id)] = TransformerBlock(...)<br>    self.norm = LayerNorm(...)<br>    self.output = nn.Linear(...)<br><br>  <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, tokens: torch.Tensor</span>):<br>    <span class="hljs-comment"># 通过判断子模块是否为 None，轻松适应运行时任意切分后的子模型路径</span><br>    h = self.tok_embeddings(tokens) <span class="hljs-keyword">if</span> self.tok_embeddings <span class="hljs-keyword">else</span> tokens<br>    <span class="hljs-keyword">for</span> layer <span class="hljs-keyword">in</span> self.layers.values():<br>      h = layer(h, self.freqs_cis)<br>    h = self.norm(h) <span class="hljs-keyword">if</span> self.norm <span class="hljs-keyword">else</span> h<br>    output = self.output(h).<span class="hljs-built_in">float</span>() <span class="hljs-keyword">if</span> self.output <span class="hljs-keyword">else</span> h<br>    <span class="hljs-keyword">return</span> output<br><br><br><br><br><span class="hljs-comment"># Step 2: 根据 stage_index 裁切并封装 Stage</span><br><br><span class="hljs-keyword">from</span> torch.distributed.pipelining <span class="hljs-keyword">import</span> PipelineStage<br><br><span class="hljs-comment"># 使用 &quot;meta&quot; 设备构建全量模型（不占用实际 GPU 物理显存）</span><br><span class="hljs-keyword">with</span> torch.device(<span class="hljs-string">&quot;meta&quot;</span>):<br>  model = Transformer()<br><br><span class="hljs-comment"># 示例：假设拆分为 2 个 Stage (2 张 GPU)</span><br><span class="hljs-keyword">if</span> stage_index == <span class="hljs-number">0</span>:  <span class="hljs-comment"># 第一张卡 (Stage 0)：保留 Embedding + Layer 0</span><br>  <span class="hljs-keyword">del</span> model.layers[<span class="hljs-string">&quot;1&quot;</span>]<br>  model.norm = <span class="hljs-literal">None</span><br>  model.output = <span class="hljs-literal">None</span><br><br><span class="hljs-keyword">elif</span> stage_index == <span class="hljs-number">1</span>:  <span class="hljs-comment"># 第二张卡 (Stage 1)：保留 Layer 1 + Norm + Output</span><br>  model.tok_embeddings = <span class="hljs-literal">None</span><br>  <span class="hljs-keyword">del</span> model.layers[<span class="hljs-string">&quot;0&quot;</span>]<br><br><span class="hljs-comment"># 将裁切好的子模型封装为 PipelineStage 对象</span><br>stage = PipelineStage(model, stage_index, num_stages, device)<br><br><br><br><br><span class="hljs-comment"># Step 3</span><br><br><span class="hljs-keyword">from</span> torch.distributed.pipelining <span class="hljs-keyword">import</span> ScheduleGPipe<br><br><span class="hljs-comment"># 1. 实例化 GPipe 调度器，传入当前 Stage 和微批次数 (n_microbatches)</span><br>schedule = ScheduleGPipe(stage, n_microbatches)<br><br><span class="hljs-comment"># 2. 准备输入数据（完整的 Mini-batch，无需手动切分）</span><br>x = torch.randn(batch_size, in_dim, device=device)<br><br><span class="hljs-comment"># 3. 运行流水线</span><br><span class="hljs-keyword">if</span> rank == <span class="hljs-number">0</span>:<br>  <span class="hljs-comment"># 第一张卡传入输入 x，Schedule 会自动将其切分为 n_microbatches 个微批次并推送入流水线</span><br>  schedule.step(x)<br><span class="hljs-keyword">else</span>:<br>  <span class="hljs-comment"># 后续卡无需显式传参，内部自动通过 P2P 接收上游激活值并传出最终 Output</span><br>  output = schedule.step()<br><br></code></pre></td></tr></table></figure>
+<h2 id="tensor-parallelism">3. Tensor Parallelism</h2>
+<h3 id="overview-1">3.1 Overview</h3>
+<img src="/posts/2026/10/1677524617/image-20261103002057500.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103002057500">
+<p><br></p>
+<ul>
+<li>将参与 GEMM 的矩阵（模型参数）划分到多个 device 上，在各自 device
+独立计算完成后，使用集合通信获取最终结果。</li>
+</ul>
+<h3 id="tp-for-ffn">3.2 TP for FFN</h3>
+<p>考虑 FFN 输入为 <span class="math inline">\(X\)</span>；FFN
+的第一个参数为 <span class="math inline">\(A\)</span>，第二个参数为
+<span class="math inline">\(B\)</span> 。</p>
+<p><strong><span class="math inline">\(X\)</span> 列切分 <span
+class="math inline">\(A\)</span> 行切分：不可行</strong></p>
+<img src="/posts/2026/10/1677524617/image-20261103002110934.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103002110934">
+<p><br></p>
+<ul>
+<li>输入 <span class="math inline">\(X\)</span> 按列切分，权重 <span
+class="math inline">\(A\)</span> 按行切分方式如上图所示。</li>
+<li>中间计算结果 <span class="math inline">\(Y\)</span> 需要先经过
+AllReduce 再进入 GeLU 激活函数，否则计算不等价：<span
+class="math inline">\(\text{GeLU}(X_1A_1 + X_2A_2) \neq
+\text{GeLU}(X_1A_1) + \text{GeLU}(X_2A_2)\)</span>。</li>
+</ul>
+<p><strong>正确方式：<span class="math inline">\(A\)</span> 列切分 <span
+class="math inline">\(B\)</span> 行切分</strong></p>
+<img src="/posts/2026/10/1677524617/image-20261103002129561.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103002129561">
+<p><br></p>
+<ul>
+<li>输入 <span class="math inline">\(X\)</span> 不切分，重复输入两个
+GPU；权重 <span class="math inline">\(A\)</span> 按列切分；权重 <span
+class="math inline">\(B\)</span> 按行切分；</li>
+<li>中间计算结果 <span class="math inline">\(Y_{1,2} = XA_{1,2}\)</span>
+不需要通信，在各自 device 上独立经过 GeLU 激活函数即可；</li>
+<li>最后计算结果 <span class="math inline">\(Z = Y_1B_1 +
+Y_2B_2\)</span> 需要进行 AllReduce 求和。</li>
+</ul>
+<h3 id="tp-for-self-attention">3.3 TP for Self-Attention</h3>
+<img src="/posts/2026/10/1677524617/image-20261103002143494.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103002143494">
+<p><br></p>
+<ul>
+<li>MHA 回顾：
+<ul>
+<li>输入 tensor shape 为 <span class="math inline">\([B, S, H]\)</span>
+，分别表示 batch_size、序列长度、隐藏层维度。</li>
+<li>模型参数包括：
+<ul>
+<li>QKV 投影权重：<span class="math inline">\(Q\)</span>、<span
+class="math inline">\(K\)</span>、<span
+class="math inline">\(V\)</span>，shape 一般为 <span
+class="math inline">\([H, H]\)</span>。设 MHA head 数量为 <span
+class="math inline">\(h\)</span> ，则单个 head 对应权重维度为 <span
+class="math inline">\(\frac{H}{h}\)</span> ，则 QKV
+三个权重矩阵也可以看作 shape 为 <span class="math inline">\([H, h \cdot
+\frac{H}{h}]\)</span> 。</li>
+<li>O 投影权重：<span class="math inline">\(O\)</span> ，shape 一般为
+<span class="math inline">\([H, H]\)</span> 。</li>
+</ul></li>
+<li>forward 计算过程：
+<ul>
+<li>输入经过 QKV 投影权重，得到 QKV，shape 为 <span
+class="math inline">\([B, S, H]\)</span> ；</li>
+<li>reshape/permute 输出，得到新 tensor shape 为 <span
+class="math inline">\([B, h, S, \frac{H}{h}]\)</span> 。</li>
+<li>计算 SelfAttention：<span class="math inline">\(\text{SelfAttention}
+= \text{Softmax}\left(\frac{QK^{T}}{\sqrt{d_k}} \right) V\)</span>
+，输出 shape 为：<span class="math inline">\([B, S, H]\)</span>。</li>
+<li>经过 <span class="math inline">\(O\)</span>
+投影权重，得到输出，shape 为 <span class="math inline">\([B, S,
+H]\)</span> 。</li>
+</ul></li>
+</ul></li>
+<li>TP for MHA 切分及计算/通信过程：
+<ul>
+<li><strong>切分原则：</strong>
+<ul>
+<li>QKV 投影权重按 <strong>列</strong> 切分（相当于按 head
+维度切分）</li>
+<li>输出 O 投影权重按 <strong>行</strong> 切分</li>
+</ul></li>
+<li>设有 <span class="math inline">\(P\)</span> 个 device，则切分后每个
+device 有 <span class="math inline">\(h_{local} = \frac{h}{P}\)</span>
+个 head，切分后 shape 情况：
+<ul>
+<li>QKV 权重 shape 可以看作 <span class="math inline">\([H, \frac{h}{P}
+\cdot \frac{H}{h}]\)</span> ；</li>
+<li>O 权重 shape 为 <span class="math inline">\([\frac{H}{P},
+H]\)</span> ；</li>
+</ul></li>
+<li><strong>TP 切分后 forward 计算过程：</strong>
+<ul>
+<li>输入仍为全量 tensor，shape 为 <span class="math inline">\([B, S,
+H]\)</span> ；</li>
+<li>经过 local QKV 投影权重后，输出 tensor shape 为 <span
+class="math inline">\([B, S, \frac{H}{P}]\)</span> ，等价于 <span
+class="math inline">\([B, S, \frac{h}{P} \cdot \frac{H}{h}]\)</span>
+；</li>
+<li>reshape/permute 后，QKV 输出 shape 可以看作 <span
+class="math inline">\([B, \frac{h}{P}, S, \frac{H}{h}]\)</span> ；</li>
+<li>计算 SelfAttention，输出 shape 为 <span class="math inline">\([B, S,
+\frac{H}{P}]\)</span> ；</li>
+<li>经过 local O 投影权重，得到输出 shape 为 <span
+class="math inline">\([B, S, H]\)</span> ；</li>
+<li>TP group 进行 AllReduce 通信求和，得到最终输出结果。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="tp-for-embedding">3.4 TP for Embedding</h3>
+<img src="/posts/2026/10/1677524617/image-20261103002157880.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103002157880">
+<p><br></p>
+<ul>
+<li>Embedding 层
+<ul>
+<li>原始 shape （无 TP） 为 <span class="math inline">\([V, H]\)</span>
+，用来将每个 Embedding 映射为 <span class="math inline">\(H\)</span>
+维的 embedding。</li>
+<li>按 <strong>行</strong> 切分，即词表中不同 token 对应的 embedding
+被切分到不同 GPU 上；</li>
+<li>切分后 forward 流程：
+<ul>
+<li>本地 local Embedding 查找，本地不存在的 token 返回全 0
+embedding；</li>
+<li>进行 AllReduce 通信求和，得到正确的 embeddings 输入。</li>
+</ul></li>
+</ul></li>
+<li>LM Head 层
+<ul>
+<li>原始 shape （无 TP）为 <span class="math inline">\([H, V]\)</span>
+，用来将隐藏层特征映射到词表 <span class="math inline">\(V\)</span> 个
+token。</li>
+<li>按 <strong>列</strong> 切分，即每个 device 上切分后权重 shape 为
+<span class="math inline">\([H, \frac{V}{P}]\)</span>；</li>
+<li>切分后 forward 流程：
+<ul>
+<li>本地计算出自己负责的那部分词表 Logits，输出形状为 <span
+class="math inline">\([B, S, \frac{V}{P}]\)</span> ；</li>
+<li>朴素实现：通过 AllGather 获取全量 Logits，shape 为 <span
+class="math inline">\([B, S, V]\)</span> ；</li>
+<li>通信优化：通常会将输出与 Cross-Entropy Loss
+进行算子融合，各卡只需跨卡规约局部最大值与指数和，避免传输海量
+Logits，极大地削减通信开销。
+<ul>
+<li>第一次 AllReduce 获取全局 Logits 最大值 <span
+class="math inline">\(m\)</span>；</li>
+<li>各卡基于全局最大值，计算本地 <span
+class="math inline">\(\sum{\exp{\left( x_{i}-m \right) } }\)</span>
+，然后进行第二次 AllReduce 通信获取全局和 <span
+class="math inline">\(S\)</span>；</li>
+<li>只有包含目标 Token <span class="math inline">\(t\)</span> 的那张 GPU
+持有该 token 对应位置的 Logits，基于该 logit 计算出 loss。</li>
+</ul></li>
+<li><strong>通信量对比</strong>：原本需要传输形状为 <span
+class="math inline">\([B, S, V]\)</span> 的庞大 Logits
+张量，优化后压缩为了两个形状仅为 <span class="math inline">\([B,
+S]\)</span> 的标量张量（<span class="math inline">\(m\)</span> 与 <span
+class="math inline">\(S\)</span>），<strong>通信体积直接缩小了数万倍（</strong><span
+class="math inline">\(V/2\)</span> <strong>数量级）</strong>。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="other-layers-in-tensor-parallel">3.5 Other Layers in Tensor
+Parallel</h3>
+<ul>
+<li>Layer normalization, dropout, residual connections
+<ul>
+<li>Duplicate across GPUs</li>
+<li>即：MHA/FFN 内部的残差连接计算，在每个 TP worker 内重复进行。
+<ul>
+<li>TP Group 内有完全相同的 input tensor；</li>
+<li>local forward 完成后，进行 AllReduce 通信得到完全相同的 output
+tensor；</li>
+<li>TP Group 内所有 worker 都进行残差计算，得到 result = input
++output，然后进入下一个模块计算；</li>
+<li>然后所有 worker 独立计算可能的 LayerNorm/Dropout。
+<ul>
+<li>为了确保各卡独立做 Dropout 时算出的结果依然完全一致，TP Group 内部的
+GPU 在执行这些重复层时，必须 <strong>共享相同的随机数种子（RNG
+Seed）</strong> （Megatron-LM 内部通过
+<code>tensor_parallel.random</code> 模块专门维护了一套跨 TP 卡同步的
+CUDA RNG State）。</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>Each model parallel worker optimizes its own set of parameters
+<ul>
+<li>即：不同 worker 只负责 TP 切分后的 local
+参数的梯度计算与参数更新。</li>
+</ul></li>
+</ul>
+<h3 id="backward-of-tensor-parallel">3.6 Backward of Tensor
+Parallel</h3>
+<p>张量并行在反向传播中遵循严格的
+<strong>正反向对偶性（Duality）</strong>：</p>
+<ul>
+<li><strong>列并行（Column Parallel, 前向 <span
+class="math inline">\(f\)</span>
+算子）</strong>：前向输入<strong>恒等/广播</strong> <span
+class="math inline">\(\rightarrow\)</span> <strong>反向梯度做 All-Reduce
+(Sum)</strong>。</li>
+<li><strong>行并行（Row Parallel, 前向 <span
+class="math inline">\(g\)</span> 算子）</strong>：前向输出做
+<strong>All-Reduce (Sum)</strong> <span
+class="math inline">\(\rightarrow\)</span>
+<strong>反向梯度恒等/广播（无通信）</strong>。</li>
+</ul>
+<p>核心对偶规律总结：</p>
+<table>
+
+<thead>
+<tr class="header">
+<th>正向行为 (Forward)</th>
+<th>语义</th>
+<th>反向行为 (Backward)</th>
+<th>语义</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Broadcast / Replicate</strong></td>
+<td>输入 <span class="math inline">\(X\)</span>
+被复制给多卡独立计算</td>
+<td><strong>All-Reduce (Sum)</strong></td>
+<td>梯度从多卡分支汇总累加</td>
+</tr>
+<tr class="even">
+<td><strong>All-Reduce (Sum)</strong></td>
+<td>输出 <span class="math inline">\(Y\)</span> 由多卡结果相加聚合</td>
+<td><strong>Identity / Split</strong></td>
+<td>梯度直接原样回传（无需通信）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ffn-mlp-模块的反向传播">3.6.1 FFN (MLP) 模块的反向传播</h4>
+<ul>
+<li><strong>升维层</strong> <span
+class="math inline">\(W_{\text{in}}\)</span><strong>（列并行 Column
+Parallel）</strong>：
+<ul>
+<li><strong>计算</strong>：各卡根据本地激活值计算本地权重的梯度 <span
+class="math inline">\(\frac{\partial \mathcal{L}}{\partial
+W_{\text{in}}^{(k)}}\)</span>。</li>
+<li><strong>通信</strong>：由于前向传播时输入 <span
+class="math inline">\(X\)</span> 是广播给所有卡的，因此向主干 <span
+class="math inline">\(X\)</span> 传回梯度时，需要对各卡算出的 <span
+class="math inline">\(\frac{\partial \mathcal{L}}{\partial
+X^{(k)}}\)</span> 执行 <strong>All-Reduce (Sum)</strong>。</li>
+</ul></li>
+<li><strong>降维层</strong> <span
+class="math inline">\(W_{\text{out}}\)</span><strong>（行并行 Row
+Parallel）</strong>：
+<ul>
+<li><strong>计算</strong>：上游回传的梯度 <span
+class="math inline">\(\frac{\partial \mathcal{L}}{\partial Z}\)</span>
+直接分发给各卡，本地计算 <span class="math inline">\(\frac{\partial
+\mathcal{L}}{\partial W_{\text{out}}^{(k)}}\)</span>
+和对中间激活值的梯度。</li>
+<li><strong>通信</strong>：<strong>无通信</strong>（前向的 All-Reduce
+在反向变成了恒等分发）。</li>
+</ul></li>
+</ul>
+<h4 id="mha-self-attention-模块的反向传播">3.6.2 MHA (Self-Attention)
+模块的反向传播</h4>
+<ul>
+<li><strong>QKV 投影层</strong> <span
+class="math inline">\(W_{qkv}\)</span><strong>（列并行 Column
+Parallel）</strong>：
+<ul>
+<li><strong>计算</strong>：本地各 Head 计算各自 <span
+class="math inline">\(Q, K, V\)</span> 的梯度。</li>
+<li><strong>通信</strong>：将梯度传回输入的 Hidden State <span
+class="math inline">\(X\)</span> 时，执行 <strong>All-Reduce
+(Sum)</strong>。</li>
+</ul></li>
+<li><strong>Output 投影层</strong> <span
+class="math inline">\(W_O\)</span><strong>（行并行 Row
+Parallel）</strong>：
+<ul>
+<li><strong>计算</strong>：接收上游梯度，本地计算注意力 Context
+的梯度。</li>
+<li><strong>通信</strong>：<strong>无通信</strong>。</li>
+</ul></li>
+</ul>
+<h4 id="input-embedding-模块的反向传播按-vocab-行切分">3.6.3 Input
+Embedding 模块的反向传播（按 Vocab 行切分）</h4>
+<ul>
+<li><strong>正向复习</strong>：各卡查表后做 <strong>All-Reduce
+(Sum)</strong> 得到全量特征。</li>
+<li><strong>反向计算</strong>：上游传回的梯度 <span
+class="math inline">\(\frac{\partial \mathcal{L}}{\partial Y}\)</span>
+直接广播给所有 GPU。</li>
+<li><strong>通信</strong>：<strong>无通信</strong>。每张 GPU
+只需根据本地保存的 Token ID
+索引，更新自己负责的那部分词表行的梯度即可。</li>
+</ul>
+<h4 id="lm-head-fused-cross-entropy-的反向传播按-vocab-列切分">3.6.4 LM
+Head + Fused Cross-Entropy 的反向传播（按 Vocab 列切分）</h4>
+<ul>
+<li><strong>第一步：本地计算 Logits 梯度</strong> Softmax +
+Cross-Entropy 的梯度公式： <span class="math display">\[\frac{\partial
+\mathcal{L}}{\partial z_i} = p_i - y_i = \frac{e^{z_i - m}}{S} -
+\mathbf{1}(i = t)\]</span> 因为正向传播时各卡已经拿到了全局的 <span
+class="math inline">\(m\)</span> 和 <span
+class="math inline">\(S\)</span>，每张 GPU
+<strong>可以在本地完全独立且精准地算出自己负责词片的 Logits
+梯度</strong> <span class="math inline">\(\frac{\partial
+\mathcal{L}}{\partial z^{(k)}}\)</span><strong>，全程不需要跨卡交换
+Logits</strong>。</li>
+<li><strong>第二步：反向传播至 Hidden State</strong> 本地 Logits
+梯度与本地 LM Head 权重做矩阵乘法： <span
+class="math display">\[\frac{\partial \mathcal{L}}{\partial X}_k =
+\frac{\partial \mathcal{L}}{\partial z^{(k)}} \cdot
+(W_{\text{head}}^{(k)})^T\]</span></li>
+<li><strong>第三步：通信</strong> 由于 LM Head 是列并行，各卡算出的
+<span class="math inline">\(\frac{\partial \mathcal{L}}{\partial
+X^{(k)}}\)</span> 需要通过 <strong>All-Reduce (Sum)</strong>
+进行聚合，将完整的梯度传回 Transformer 最后一层的输出。</li>
+</ul>
+<h4 id="总结">3.6.5 总结</h4>
+<table>
+
+<thead>
+<tr class="header">
+<th>模块</th>
+<th>前向通信 (FWD)</th>
+<th>反向通信 (BWD)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Column Parallel (<span class="math inline">\(W_{qkv}, W_{\text{in}},
+W_{\text{head}}\)</span>)</td>
+<td>无</td>
+<td>All-Reduce (Sum)</td>
+</tr>
+<tr class="even">
+<td>Row Parallel (<span class="math inline">\(W_O,
+W_{\text{out}}\)</span>)</td>
+<td>All-Reduce (Sum)</td>
+<td>无</td>
+</tr>
+<tr class="odd">
+<td>Input Embedding (Vocab 行切)</td>
+<td>All-Reduce (Sum)</td>
+<td>无</td>
+</tr>
+<tr class="even">
+<td>Fused Cross-Entropy</td>
+<td>All-Reduce (Max) + All-Reduce (Sum)（标量）</td>
+<td>无（利用 FWD 缓存标量直接本地算）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="put-all-together-example">3.7 Put All Together: Example</h3>
+<h4 id="模型结构与切分配置-setup">3.7.1 模型结构与切分配置 (Setup)</h4>
+<p>假设模型配置如下：</p>
+<ul>
+<li><strong>TP 组</strong>：GPU 0, GPU 1 (<span class="math inline">\(P
+= 2\)</span>)</li>
+<li><strong>模型结构</strong>：
+<ol type="1">
+<li><strong>Input Embedding</strong>：按词表 <span
+class="math inline">\(V\)</span> <strong>行切分</strong>（<span
+class="math inline">\(E_0, E_1\)</span>）</li>
+<li><strong>Block 1</strong>：<span class="math inline">\(MHA_1\)</span>
+(<span class="math inline">\(W_{qkv1}\)</span> 切列, <span
+class="math inline">\(W_{O1}\)</span> 切行) + <span
+class="math inline">\(FFN_1\)</span> (<span
+class="math inline">\(W_{in1}\)</span> 切列, <span
+class="math inline">\(W_{out1}\)</span> 切行)</li>
+<li><strong>Block 2</strong>：<span class="math inline">\(MHA_2\)</span>
+(<span class="math inline">\(W_{qkv2}\)</span> 切列, <span
+class="math inline">\(W_{O2}\)</span> 切行) + <span
+class="math inline">\(FFN_2\)</span> (<span
+class="math inline">\(W_{in2}\)</span> 切列, <span
+class="math inline">\(W_{out2}\)</span> 切行)</li>
+<li><strong>LM Head + Fused CE</strong>：<span
+class="math inline">\(W_{\text{head}}\)</span> 按词表 <span
+class="math inline">\(V\)</span> <strong>列切分</strong>（<span
+class="math inline">\(W_{\text{head}}^{(0)},
+W_{\text{head}}^{(1)}\)</span>）</li>
+</ol></li>
+</ul>
+<h4 id="前向传播流程-forward-pass">3.7.2 前向传播流程 (Forward
+Pass)</h4>
+<p><strong>Step 0: Input Embedding (行切分)</strong></p>
+<ol type="1">
+<li>GPU 0 / GPU 1 拿着相同的 Input Token IDs 在各自本地的词表切片 <span
+class="math inline">\(E_0, E_1\)</span> 中查表。</li>
+<li><strong>【通信 1 - FWD】</strong>：两卡执行 <strong>All-Reduce
+(Sum)</strong>，获得完全相同的隐藏状态 <span
+class="math inline">\(X_0\)</span>。</li>
+</ol>
+<hr />
+<p><strong>Step 1: Transformer Block 1</strong></p>
+<ul>
+<li><span class="math inline">\(MHA_1\)</span>：
+<ul>
+<li>两卡用 <span class="math inline">\(X_0\)</span> 分别乘以本地列切片的
+<span class="math inline">\(W_{qkv1}^{(k)}\)</span>，做本地 Attention
+计算（无通信）。</li>
+<li>经过本地行切片 <span class="math inline">\(W_{O1}^{(k)}\)</span>
+得到局部 Output。</li>
+<li><strong>【通信 2 - FWD】</strong>：两卡执行 <strong>All-Reduce
+(Sum)</strong>，加和得到 <span class="math inline">\(MHA_1\)</span>
+的完整输出 <span class="math inline">\(A_1\)</span>。</li>
+<li>各卡本地计算残差：<span class="math inline">\(X_1 = X_0 +
+A_1\)</span>。</li>
+</ul></li>
+<li><span class="math inline">\(FFN_1\)</span>：
+<ul>
+<li>两卡用 <span class="math inline">\(X_1\)</span> 乘以本地列切片 <span
+class="math inline">\(W_{in1}^{(k)}\)</span> <span
+class="math inline">\(\rightarrow\)</span> GeLU（无通信）。</li>
+<li>乘以本地行切片 <span class="math inline">\(W_{out1}^{(k)}\)</span>
+得到局部 Output。</li>
+<li><strong>【通信 3 - FWD】</strong>：两卡执行 <strong>All-Reduce
+(Sum)</strong>，得到 <span class="math inline">\(FFN_1\)</span> 完整输出
+<span class="math inline">\(F_1\)</span>。</li>
+<li>各卡本地计算残差：<span class="math inline">\(X_2 = X_1 +
+F_1\)</span>。</li>
+</ul></li>
+</ul>
+<hr />
+<p><strong>Step 2: Transformer Block 2</strong></p>
+<ul>
+<li><span class="math inline">\(MHA_2\)</span>：
+<ul>
+<li>本地列切片 <span class="math inline">\(W_{qkv2}^{(k)}\)</span>
+计算，再过行切片 <span
+class="math inline">\(W_{O2}^{(k)}\)</span>。</li>
+<li><strong>【通信 4 - FWD】</strong>：两卡执行 <strong>All-Reduce
+(Sum)</strong>，得到 <span class="math inline">\(A_2\)</span>。</li>
+<li>本地残差：<span class="math inline">\(X_3 = X_2 +
+A_2\)</span>。</li>
+</ul></li>
+<li><span class="math inline">\(FFN_2\)</span>：
+<ul>
+<li>本地列切片 <span class="math inline">\(W_{in2}^{(k)}\)</span>
+计算，再过行切片 <span
+class="math inline">\(W_{out2}^{(k)}\)</span>。</li>
+<li><strong>【通信 5 - FWD】</strong>：两卡执行 <strong>All-Reduce
+(Sum)</strong>，得到 <span class="math inline">\(F_2\)</span>。</li>
+<li>本地残差：<span class="math inline">\(X_4 = X_3 +
+F_2\)</span>。</li>
+</ul></li>
+</ul>
+<hr />
+<p><strong>Step 3: LM Head + Fused Cross-Entropy (列切分)</strong></p>
+<ol type="1">
+<li>各卡用最终隐藏状态 <span class="math inline">\(X_4\)</span>
+乘以本地列切片 <span
+class="math inline">\(W_{\text{head}}^{(k)}\)</span>，算出局部 Logits
+切片 <span class="math inline">\(z^{(k)}\)</span>。</li>
+<li><strong>【通信 6 - FWD】</strong>：两卡算本地 Max，执行
+<strong>All-Reduce (Max)</strong>，得到全局 <span
+class="math inline">\(m = \max(z)\)</span>。</li>
+<li><strong>【通信 7 - FWD】</strong>：两卡算本地 <span
+class="math inline">\(\sum e^{z^{(k)}-m}\)</span>，执行
+<strong>All-Reduce (Sum)</strong>，得到全局 <span
+class="math inline">\(S = \sum e^{z-m}\)</span>。</li>
+<li>本地根据 <span class="math inline">\(m\)</span> 和 <span
+class="math inline">\(S\)</span> 直接算出 Loss <span
+class="math inline">\(\mathcal{L}\)</span>。</li>
+</ol>
+<h4 id="反向传播流程-backward-pass">3.7.3 反向传播流程 (Backward
+Pass)</h4>
+<p><strong>Step 3: LM Head + Fused Cross-Entropy (反向)</strong></p>
+<ol type="1">
+<li><strong>本地梯度</strong>：各卡利用 FWD 缓存的全局 <span
+class="math inline">\(m\)</span> 和 <span
+class="math inline">\(S\)</span>，直接在本地算出 Logits 梯度 <span
+class="math inline">\(dz^{(k)} = p^{(k)} -
+y^{(k)}\)</span>（<strong>无通信</strong>）。</li>
+<li><strong>反向投影</strong>：本地计算对隐藏状态的梯度 <span
+class="math inline">\(dX_4^{(k)} = dz^{(k)} \cdot
+(W_{\text{head}}^{(k)})^T\)</span>。</li>
+<li><strong>【通信 1 - BWD】</strong>：因为 <span
+class="math inline">\(W_{\text{head}}\)</span>
+前向是列并行，反向传回主干 <span class="math inline">\(X_4\)</span>
+时执行 <strong>All-Reduce (Sum)</strong>，得到完整的梯度 <span
+class="math inline">\(dX_4\)</span>。</li>
+</ol>
+<hr />
+<p><strong>Step 2: Transformer Block 2 (反向)</strong></p>
+<ul>
+<li><span class="math inline">\(FFN_2\)</span> <strong>反向</strong>：
+<ul>
+<li>梯度 <span class="math inline">\(dX_4\)</span> 沿着残差分支流向
+<span class="math inline">\(FFN_2\)</span> 的输出端 <span
+class="math inline">\(dF_2 = dX_4\)</span>。</li>
+<li>经过行切片 <span class="math inline">\(W_{out2}^{(k)}\)</span>
+反向传播（行并行反向<strong>无通信</strong>），得到中间梯度。</li>
+<li>经过列切片 <span class="math inline">\(W_{in2}^{(k)}\)</span>
+反向传播，算出局部输入梯度 <span
+class="math inline">\(dX_3^{(k)}\)</span>。</li>
+<li><strong>【通信 2 - BWD】</strong>：列并行反向传给主干，执行
+<strong>All-Reduce (Sum)</strong>，得到累加后的梯度 <span
+class="math inline">\(dX_3\)</span>（包含残差分支）。</li>
+</ul></li>
+<li><span class="math inline">\(MHA_2\)</span> <strong>反向</strong>：
+<ul>
+<li>梯度 <span class="math inline">\(dX_3\)</span> 流向 <span
+class="math inline">\(MHA_2\)</span> 输出端 <span
+class="math inline">\(dA_2 = dX_3\)</span>。</li>
+<li>经过行切片 <span class="math inline">\(W_{O2}^{(k)}\)</span>
+反向（<strong>无通信</strong>）。</li>
+<li>经过列切片 <span class="math inline">\(W_{qkv2}^{(k)}\)</span>
+反向，算出局部输入梯度 <span
+class="math inline">\(dX_2^{(k)}\)</span>。</li>
+<li><strong>【通信 3 - BWD】</strong>：执行 <strong>All-Reduce
+(Sum)</strong>，得到累加后的梯度 <span
+class="math inline">\(dX_2\)</span>。</li>
+</ul></li>
+</ul>
+<hr />
+<p><strong>Step 1: Transformer Block 1 (反向)</strong></p>
+<ul>
+<li><span class="math inline">\(FFN_1\)</span> <strong>反向</strong>：
+<ul>
+<li>行切片 <span class="math inline">\(W_{out1}^{(k)}\)</span>
+反向（<strong>无通信</strong>） <span
+class="math inline">\(\rightarrow\)</span> 列切片 <span
+class="math inline">\(W_{in1}^{(k)}\)</span> 反向。</li>
+<li><strong>【通信 4 - BWD】</strong>：执行 <strong>All-Reduce
+(Sum)</strong>，得到 <span class="math inline">\(dX_1\)</span>。</li>
+</ul></li>
+<li><span class="math inline">\(MHA_1\)</span> <strong>反向</strong>：
+<ul>
+<li>行切片 <span class="math inline">\(W_{O1}^{(k)}\)</span>
+反向（<strong>无通信</strong>） <span
+class="math inline">\(\rightarrow\)</span> 列切片 <span
+class="math inline">\(W_{qkv1}^{(k)}\)</span> 反向。</li>
+<li><strong>【通信 5 - BWD】</strong>：执行 <strong>All-Reduce
+(Sum)</strong>，得到 <span class="math inline">\(dX_0\)</span>。</li>
+</ul></li>
+</ul>
+<hr />
+<p><strong>Step 0: Input Embedding (反向)</strong></p>
+<ol type="1">
+<li>梯度 <span class="math inline">\(dX_0\)</span> 回传至 Input
+Embedding 层。</li>
+<li>每张 GPU 根据本地保存的 Token IDs，用 <span
+class="math inline">\(dX_0\)</span> 直接更新各自本地行切片 <span
+class="math inline">\(E_k\)</span>
+的梯度（<strong>无通信</strong>）。</li>
+</ol>
+<h4 id="通信汇总表-communication-summary">3.7.4 通信汇总表
+(Communication Summary)</h4>
+<p>对于这个 2 层的 Transformer 模型，全流程通信次数统计如下：</p>
+<table>
+
+<thead>
+<tr class="header">
+<th>阶段</th>
+<th>通信算子及次数</th>
+<th>详细分布</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>前向传播 (FWD)</strong></td>
+<td><strong>7 次</strong></td>
+<td>1 次 Embedding (<code>All-Reduce Sum</code>) <br>+ 4 次 Block
+1&amp;2 MHA/FFN (<code>All-Reduce Sum</code>) <br>+ 2 次 Fused CE
+(<code>All-Reduce Max</code> + <code>All-Reduce Sum</code> 标量)</td>
+</tr>
+<tr class="even">
+<td><strong>反向传播 (BWD)</strong></td>
+<td><strong>5 次</strong></td>
+<td>1 次 LM Head (<code>All-Reduce Sum</code>) <br>+ 4 次 Block 1&amp;2
+MHA/FFN (<code>All-Reduce Sum</code>) <br><em>(Embedding 与 Fused CE
+均无通信)</em></td>
+</tr>
+</tbody>
+</table>
+<h3 id="example-code-ffn-tp">3.8 Example Code: FFN TP</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">import</span> math<br><span class="hljs-keyword">import</span> torch<br><span class="hljs-keyword">import</span> torch.nn <span class="hljs-keyword">as</span> nn<br><span class="hljs-keyword">import</span> torch.nn.functional <span class="hljs-keyword">as</span> F<br><span class="hljs-keyword">import</span> torch.distributed <span class="hljs-keyword">as</span> dist<br><br><span class="hljs-comment"># ==============================================================================</span><br><span class="hljs-comment"># 1. 自定义通信 Autograd 算子 (实现正反向通信对偶性)</span><br><span class="hljs-comment"># ==============================================================================</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">_CopyToModelParallelRegion</span>(torch.autograd.Function):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    用于 ColumnParallelLinear 的输入端：</span><br><span class="hljs-string">    - 前向传播 (FWD)：恒等传递 (Identity，无通信)</span><br><span class="hljs-string">    - 反向传播 (BWD)：对梯度做 All-Reduce (Sum) 聚合回传给输入 X</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, input_, group=<span class="hljs-literal">None</span></span>):<br>        ctx.group = group<br>        <span class="hljs-keyword">return</span> input_<br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, grad_output</span>):<br>        <span class="hljs-keyword">if</span> dist.is_initialized() <span class="hljs-keyword">and</span> ctx.group <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            dist.all_reduce(grad_output, op=dist.ReduceOp.SUM, group=ctx.group)<br>        <span class="hljs-keyword">return</span> grad_output, <span class="hljs-literal">None</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">_ReduceFromModelParallelRegion</span>(torch.autograd.Function):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    用于 RowParallelLinear 的输出端：</span><br><span class="hljs-string">    - 前向传播 (FWD)：对各卡部分和做 All-Reduce (Sum)，恢复全量特征维度</span><br><span class="hljs-string">    - 反向传播 (BWD)：恒等传递 (Identity，无通信)</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">ctx, input_, group=<span class="hljs-literal">None</span></span>):<br>        <span class="hljs-keyword">if</span> dist.is_initialized() <span class="hljs-keyword">and</span> group <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>            dist.all_reduce(input_, op=dist.ReduceOp.SUM, group=group)<br>        <span class="hljs-keyword">return</span> input_<br><br><span class="hljs-meta">    @staticmethod</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">backward</span>(<span class="hljs-params">ctx, grad_output</span>):<br>        <span class="hljs-keyword">return</span> grad_output, <span class="hljs-literal">None</span><br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">copy_to_tensor_model_parallel_region</span>(<span class="hljs-params">input_, group=<span class="hljs-literal">None</span></span>):<br>    <span class="hljs-keyword">return</span> _CopyToModelParallelRegion.apply(input_, group)<br><br><span class="hljs-keyword">def</span> <span class="hljs-title function_">reduce_from_tensor_model_parallel_region</span>(<span class="hljs-params">input_, group=<span class="hljs-literal">None</span></span>):<br>    <span class="hljs-keyword">return</span> _ReduceFromModelParallelRegion.apply(input_, group)<br><br><span class="hljs-comment"># ==============================================================================</span><br><span class="hljs-comment"># 2. 列并行线性层 (ColumnParallelLinear)</span><br><span class="hljs-comment"># ==============================================================================</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ColumnParallelLinear</span>(nn.Module):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    第一层升维 Linear (W_in)：按 Out_Features (列维度) 切分</span><br><span class="hljs-string">    - 输入 Shape  : [B, S, H]</span><br><span class="hljs-string">    - 权重 Shape  : [ffn_hidden / TP, H]  (W_in 切列)</span><br><span class="hljs-string">    - 输出 Shape  : [B, S, ffn_hidden / TP]</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, in_features: <span class="hljs-built_in">int</span>, out_features: <span class="hljs-built_in">int</span>, tp_group=<span class="hljs-literal">None</span></span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.in_features = in_features<br>        self.out_features = out_features<br>        self.tp_group = tp_group<br>        self.tp_size = dist.get_world_size(group=tp_group) <span class="hljs-keyword">if</span> dist.is_initialized() <span class="hljs-keyword">else</span> <span class="hljs-number">1</span><br><br>        <span class="hljs-comment"># 将 Out_Features 维度均匀切分给各个 TP Worker</span><br>        <span class="hljs-keyword">assert</span> out_features % self.tp_size == <span class="hljs-number">0</span>, <span class="hljs-string">f&quot;<span class="hljs-subst">&#123;out_features&#125;</span> 必须能被 TP 大小 <span class="hljs-subst">&#123;self.tp_size&#125;</span> 整除&quot;</span><br>        self.out_features_per_partition = out_features // self.tp_size<br><br>        <span class="hljs-comment"># 本地权重切片与偏置</span><br>        self.weight = nn.Parameter(torch.empty(self.out_features_per_partition, in_features))<br>        self.bias = nn.Parameter(torch.empty(self.out_features_per_partition))<br><br>        <span class="hljs-comment"># 初始化参数</span><br>        nn.init.kaiming_uniform_(self.weight, a=math.sqrt(<span class="hljs-number">5</span>))<br>        nn.init.zeros_(self.bias)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x: torch.Tensor</span>) -&gt; torch.Tensor:<br>        <span class="hljs-comment"># FWD: 恒等传递；BWD: 对输入梯度做 All-Reduce Sum</span><br>        input_parallel = copy_to_tensor_model_parallel_region(x, self.tp_group)<br><br>        <span class="hljs-comment"># 本地 GEMM 计算：[B, S, H] @ [H, ffn_hidden / TP]^T -&gt; [B, S, ffn_hidden / TP]</span><br>        output_parallel = F.linear(input_parallel, self.weight, self.bias)<br>        <span class="hljs-keyword">return</span> output_parallel<br><br><span class="hljs-comment"># ==============================================================================</span><br><span class="hljs-comment"># 3. 行并行线性层 (RowParallelLinear)</span><br><span class="hljs-comment"># ==============================================================================</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">RowParallelLinear</span>(nn.Module):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    第二层降维 Linear (W_out)：按 In_Features (行维度) 切分</span><br><span class="hljs-string">    - 输入 Shape  : [B, S, ffn_hidden / TP]</span><br><span class="hljs-string">    - 权重 Shape  : [H, ffn_hidden / TP]  (W_out 切行)</span><br><span class="hljs-string">    - 输出 Shape  : [B, S, H]</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, in_features: <span class="hljs-built_in">int</span>, out_features: <span class="hljs-built_in">int</span>, tp_group=<span class="hljs-literal">None</span></span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        self.in_features = in_features<br>        self.out_features = out_features<br>        self.tp_group = tp_group<br>        self.tp_size = dist.get_world_size(group=tp_group) <span class="hljs-keyword">if</span> dist.is_initialized() <span class="hljs-keyword">else</span> <span class="hljs-number">1</span><br><br>        <span class="hljs-comment"># 将 In_Features 维度均匀切分给各个 TP Worker</span><br>        <span class="hljs-keyword">assert</span> in_features % self.tp_size == <span class="hljs-number">0</span>, <span class="hljs-string">f&quot;<span class="hljs-subst">&#123;in_features&#125;</span> 必须能被 TP 大小 <span class="hljs-subst">&#123;self.tp_size&#125;</span> 整除&quot;</span><br>        self.in_features_per_partition = in_features // self.tp_size<br><br>        <span class="hljs-comment"># 本地权重切片 (偏置只需在全局输出上加一次)</span><br>        self.weight = nn.Parameter(torch.empty(out_features, self.in_features_per_partition))<br>        self.bias = nn.Parameter(torch.empty(out_features))<br><br>        nn.init.kaiming_uniform_(self.weight, a=math.sqrt(<span class="hljs-number">5</span>))<br>        nn.init.zeros_(self.bias)<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x: torch.Tensor</span>) -&gt; torch.Tensor:<br>        <span class="hljs-comment"># 1. 本地 GEMM 计算 (先不加 bias，等 All-Reduce 汇总后再加)</span><br>        <span class="hljs-comment"># [B, S, ffn_hidden / TP] @ [ffn_hidden / TP, H]^T -&gt; [B, S, H] (局部部分和)</span><br>        output_parallel = F.linear(x, self.weight, bias=<span class="hljs-literal">None</span>)<br><br>        <span class="hljs-comment"># 2. FWD: 对局部结果执行 All-Reduce (Sum) 还原全量 [B, S, H]；BWD: 恒等传递</span><br>        output_ = reduce_from_tensor_model_parallel_region(output_parallel, self.tp_group)<br><br>        <span class="hljs-comment"># 3. 加上全局 Bias</span><br>        <span class="hljs-keyword">return</span> output_ + self.bias<br><br><span class="hljs-comment"># ==============================================================================</span><br><span class="hljs-comment"># 4. FFN (MLP) 模块封装</span><br><span class="hljs-comment"># ==============================================================================</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">TensorParallelMLP</span>(nn.Module):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    张量并行 FFN 整体架构：ColumnParallelLinear -&gt; GeLU -&gt; RowParallelLinear</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, hidden_size: <span class="hljs-built_in">int</span>, ffn_hidden_size: <span class="hljs-built_in">int</span>, tp_group=<span class="hljs-literal">None</span></span>):<br>        <span class="hljs-built_in">super</span>().__init__()<br>        <span class="hljs-comment"># 第一层：升维 (Column Parallelism)</span><br>        self.dense_h_to_4h = ColumnParallelLinear(<br>            in_features=hidden_size,<br>            out_features=ffn_hidden_size,<br>            tp_group=tp_group<br>        )<br>        <span class="hljs-comment"># 非线性激活 (Element-wise 操作，完全独立计算无通信)</span><br>        self.act = F.gelu<br><br>        <span class="hljs-comment"># 第二层：降维 (Row Parallelism)</span><br>        self.dense_4h_to_h = RowParallelLinear(<br>            in_features=ffn_hidden_size,<br>            out_features=hidden_size,<br>            tp_group=tp_group<br>        )<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x: torch.Tensor</span>) -&gt; torch.Tensor:<br>        <span class="hljs-comment"># Step 1: 升维矩阵乘法 [B, S, H] -&gt; [B, S, ffn_hidden / TP] (无 FWD 通信)</span><br>        intermediate_parallel = self.dense_h_to_4h(x)<br><br>        <span class="hljs-comment"># Step 2: 逐元素 GeLU 激活 (无 FWD 通信)</span><br>        intermediate_parallel = self.act(intermediate_parallel)<br><br>        <span class="hljs-comment"># Step 3: 降维矩阵乘法 &amp; 1 次 FWD All-Reduce Sum -&gt; 全局 [B, S, H]</span><br>        output = self.dense_4h_to_h(intermediate_parallel)<br><br>        <span class="hljs-keyword">return</span> output<br></code></pre></td></tr></table></figure>
+<ol type="1">
+<li><strong><code>_CopyToModelParallelRegion</code></strong>：
+<ul>
+<li>在 ColumnParallelLinear 输入端使用。<strong>FWD
+不做通信</strong>；在 <strong>BWD</strong> 阶段时，反向传播回传给主干
+(X) 的梯度会自动触发
+<strong><code>All-Reduce (Sum)</code></strong>。</li>
+</ul></li>
+<li><strong><code>_ReduceFromModelParallelRegion</code></strong>：
+<ul>
+<li>在 RowParallelLinear 输出端使用。<strong>FWD 执行 1 次
+<code>All-Reduce (Sum)</code></strong> 把各卡算出的局部 (Z_k) 加起来；在
+<strong>BWD</strong> 阶段时为<strong>恒等分发（无通信）</strong>。</li>
+</ul></li>
+<li><strong>Bias 处理</strong>：
+<ul>
+<li>ColumnParallel 的 Bias 按列切分，直接加在本地输出上；</li>
+<li>RowParallel 的 Bias 属于全局 (H) 维度，必须放在
+<strong><code>All-Reduce</code>
+聚合之后</strong>再相加，避免重复累加。</li>
+</ul></li>
+</ol>
+<h2 id="combination-of-pptpdp">4. Combination of PP/TP/DP</h2>
+<h3 id="combination-of-pp-tp">4.1 Combination of PP &amp; TP</h3>
+<img src="/posts/2026/10/1677524617/image-20261103002305039.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103002305039">
+<p><br></p>
+<ul>
+<li>PP=2, TP=2</li>
+<li>2 层，每层 TP 划分到两个 GPU；不同层之间 PP 连接</li>
+<li>通信分析：
+<ul>
+<li>GPU 与 TP/PP Group 划分：
+<ul>
+<li><strong>TP Groups</strong>：<code>&#123;GPU 0, GPU 1&#125;</code>（Stage
+1）、<code>&#123;GPU 2, GPU 3&#125;</code>（Stage 2）</li>
+<li><strong>PP Groups</strong>：
+<ul>
+<li><code>PP Group 0</code>（TP Rank 0
+组）：<code>&#123;GPU 0, GPU 2&#125;</code></li>
+<li><code>PP Group 1</code>（TP Rank 1
+组）：<code>&#123;GPU 1, GPU 3&#125;</code></li>
+</ul></li>
+</ul></li>
+<li>TP Group 内做 AllReduce 通信；</li>
+<li>PP Group 内（TP Group 间相同 TP rank 的）做 P2P 通信；</li>
+</ul></li>
+<li>PP/TP 设置取决于模型结构与服务器配置
+<ul>
+<li>TP 设置一般最大是每个 GPU server 的 GPU 数，因为 TP
+对通信带宽要求更高，即：TP for in-node parallel computing。</li>
+</ul></li>
+</ul>
+<h3 id="model-parallel-data-parallel">4.2 Model Parallel + Data
+Parallel</h3>
+<ul>
+<li>同时使用模型并行与数据并行：一个模型进行训练需要 <span
+class="math inline">\(M = t \times p\)</span> 个 GPU 。此时可以利用 DP
+继续扩展 GPU 数量提升训练吞吐。</li>
+</ul>
+<p>工业界大模型训练的最佳并行组合优先级为：</p>
+<ol type="1">
+<li><strong>单节点内（In-node）</strong>：优先使用
+<strong>张量并行（TP）</strong>，充分利用节点内极高带宽的
+NVLink/NVSwitch。</li>
+<li><strong>跨节点模型切分（Inter-node
+MP）</strong>：当节点内显存装不下时，引入
+<strong>流水线并行（PP）</strong>
+将模型按层切分到多节点，直到显存完全够用。</li>
+<li><strong>跨节点算力扩展（Inter-node
+DP）</strong>：一旦模型能正常跑起来不 OOM，剩余的所有 GPU 节点全部用于
+<strong>数据并行（DP）</strong>，以提升吞吐量与训练速度。</li>
+</ol>
+<h2 id="conclusion">5. Conclusion</h2>
+<ul>
+<li>Pipeline Parallelism
+<ul>
+<li>split by layers (horizonal split)</li>
+<li>eliminate the bubbles (idle)</li>
+<li>interleaving forward/backward</li>
+</ul></li>
+<li>Tensor Parallelism
+<ul>
+<li>split the matrix computation over multiple GPUs</li>
+<li>usually within a single node</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/Distributed-Training/">#Distributed Training</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems 16: Model Parallel Training</div>
+      <div>https://arcsin2.cloud/posts/2026/10/1677524617/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月31日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/4071970685/" title="LLM Systems 17: System for MoE Models">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLM Systems 17: System for MoE Models</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1691777268/" title="LLM Systems Assignment 4: Transformer CUDA Acceleration">
+                        <span class="hidden-mobile">LLM Systems Assignment 4: Transformer CUDA Acceleration</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

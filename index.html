@@ -265,15 +265,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/10/1691777268/" target="_self">
-          LLM Systems Assignment 4: Transformer CUDA Acceleration
+        <a href="/posts/2026/10/1893709119/" target="_self">
+          LLM Systems Assignment 5: Distributed Training and Fine-Tuning
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1691777268/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1893709119/" target="_self">
         <div>
-          本次 homework 主要内容是：实现 softmax 与 LayerNorm kernel fusion 形式的 fwd 与 bwd，完成 CUDA kernel 编写；接入 Python 层；接入 Transformer 模型并验证训练加速。 下面对本次 homework 实现时一些注意点进行介绍。 1. Softmax 1.1 forward 课程已经提供了 block_dim
+          本次 homework 的任务是：实现 DP/PP/LoRA 的核心代码，整体代码量非常少，本文对实现要点和一些注意事项进行介绍。 1. Data Parallel DP 部分的待实现代码非常简单，唯一需要提一点的是 ranndom 的相关使用方法：作业规定了不能使用普通的 random.shuffle 而是必须手动从指定 seed 构造 gen = random.Random(seed
         </div>
       </a>
 
@@ -281,268 +281,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:26" pubdate>
-              2026-10-17
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/CMU-11868/">#CMU 11868</a>
-            
-              <a href="/tags/LLM-System/">#LLM System</a>
-            
-              <a href="/tags/kernel/">#kernel</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/posts/2026/10/1729875790/" target="_self">
-          DDP: PyTorch Distributed-Experiences on Accelerating Data Parallel Training
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1729875790/" target="_self">
-        <div>
-          PyTorch Distributed: Experiences on Accelerating Data Parallel Training 代码：PyTorch DDP arXiv 提交日期：28 Jun 2020 （发表于 VLDB 2020） 作者：    摘要：  本文介绍了 PyTorch 分布式数据并行（Distributed Data Parallel, D
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:25" pubdate>
-              2026-10-17
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/CMU-11868/">#CMU 11868</a>
-            
-              <a href="/tags/LLM-System/">#LLM System</a>
-            
-              <a href="/tags/DDP/">#DDP</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/posts/2026/10/2402940747/" target="_self">
-          LightSeq2: Accelerated Training for Transformer-based Models on GPUs
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/2402940747/" target="_self">
-        <div>
-          LightSeq2: Accelerated Training for Transformer-based Models on GPUs arXiv 提交日期：12 Oct 2021 GitHub：https://github.com/bytedance/lightseq 作者：    摘要  基于 Transformer 的神经网络模型已被广泛应用于许多人工智能领域。训练这
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:25" pubdate>
-              2026-10-17
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/CMU-11868/">#CMU 11868</a>
-            
-              <a href="/tags/LLM-System/">#LLM System</a>
-            
-              <a href="/tags/kernel/">#kernel</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/posts/2026/10/34805025/" target="_self">
-          LightSeq: A High Performance Inference Library for Transformers
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/34805025/" target="_self">
-        <div>
-          LightSeq: A High Performance Inference Library for Transformers arXiv 提交日期：23 Oct 2020 GitHub：https://github.com/bytedance/lightseq 作者：    摘要  Transformer、BERT 及其变体在自然语言处理领域取得了巨大的成功。由于 Tran
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:25" pubdate>
-              2026-10-17
-            </time>
-          </div>
-        
-        
-          <div class="post-meta mr-3 d-flex align-items-center">
-            <i class="iconfont icon-category"></i>
-            
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/CMU-11868/">#CMU 11868</a>
-            
-              <a href="/tags/LLM-System/">#LLM System</a>
-            
-              <a href="/tags/kernel/">#kernel</a>
-            
-          </div>
-        
-      </div>
-    </article>
-  </div>
-
-  <div class="row mx-auto index-card">
-    
-    
-    <article class="col-12 col-md-12 mx-auto index-info">
-      <h1 class="index-header">
-        
-        <a href="/posts/2026/10/3021269970/" target="_self">
-          LLM Systems 15: Distributed Data Parallel Training
-        </a>
-      </h1>
-
-      
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/3021269970/" target="_self">
-        <div>
-          0. Recap  Overall idea: partition the data, distribute the forward/backward Parameter Server  server to update and distribute parameters, worker to get local grad  NCCL Multi-GPU communicatio
-        </div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:24" pubdate>
-              2026-10-17
+            <time datetime="2026-10-31 23:57" pubdate>
+              2026-10-31
             </time>
           </div>
         
@@ -590,15 +330,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/10/3321773915/" target="_self">
-          LLM Systems 14: Distributed Training
+        <a href="/posts/2026/10/342151155/" target="_self">
+          ZeRO: Memory Optimizations Toward Training Trillion Parameter Models
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/3321773915/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/342151155/" target="_self">
         <div>
-          0. Recap 之前课程主线：  LLM 简介 CUDA 编程基础 深度学习框架（自动求导） Transformer/Pre-trained LLM LLM 前后两个辅助组件：Tokenizer 与 Decoding Transformer 加速：Kernel Fusion &amp; Mix-precision &amp; Memory Management Optimiza
+          ZeRO: Memory Optimizations Toward Training Trillion Parameter Models arXiv 提交日期：4 Oct 2019（Megatron-LM v1 paper 提交约 2 周后，即：17 Sep 2019 -&gt; 4 Oct 2019） 代码：DeepSpeed ZeRO 作者：    摘要  大型深度
         </div>
       </a>
 
@@ -606,8 +346,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:24" pubdate>
-              2026-10-17
+            <time datetime="2026-10-31 23:56" pubdate>
+              2026-10-31
             </time>
           </div>
         
@@ -643,6 +383,8 @@
             
               <a href="/tags/Distributed-Training/">#Distributed Training</a>
             
+              <a href="/tags/ZeRO/">#ZeRO</a>
+            
           </div>
         
       </div>
@@ -655,15 +397,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/10/1546113425/" target="_self">
-          LLM Systems 10 &amp; 11: Accelerating Transformer Training and Inference
+        <a href="/posts/2026/10/3658107705/" target="_self">
+          DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1546113425/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/3658107705/" target="_self">
         <div>
-          0. Recap Transformer Architecture：  1. Accelerated GPU Computation for Transformer Training Overview:   对应下面将要介绍的 4 个优化手段：  Kernel Fusion：计算图级别优化，通过算子融合减少计算图节点。 Reduce synchronization：算子内优化
+          DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models arXiv 提交日期：11 Jan 2024 GitHub：DeepSeek-MoE 作者：    摘要  在大语言模型时代，混合专家（MoE）架构是在扩展模型参数规模时控制计算成本的一项极具前景的
         </div>
       </a>
 
@@ -671,8 +413,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:22" pubdate>
-              2026-10-17
+            <time datetime="2026-10-31 23:56" pubdate>
+              2026-10-31
             </time>
           </div>
         
@@ -706,7 +448,9 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/kernel/">#kernel</a>
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
+            
+              <a href="/tags/MoE/">#MoE</a>
             
           </div>
         
@@ -720,15 +464,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/10/1367290113/" target="_self">
-          LLM Systems 09: Decoding: Sampling, Beam Search and Speculative Decoding
+        <a href="/posts/2026/10/1842912647/" target="_self">
+          DeepSpeed-MoE: Advancing Mixture-of-Experts Inference and Training to Power Next-Generation AI Scale
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1367290113/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1842912647/" target="_self">
         <div>
-          0. Recap  Subword tokenization: Byte-Pair-Encoding  iteratively merging most frequent pairs of tokens  Information-theoretic vocabulary (VOLT)  solving entropy constrained optimal transport pr
+          DeepSpeed-MoE: Advancing Mixture-of-Experts Inference and Training to Power Next-Generation AI Scale arXiv 提交日期：14 Jan 2022（发表于 ICML 2022） 代码：DeepSpeed 作者：    摘要  随着当下超大密集模型（Dense Models）的
         </div>
       </a>
 
@@ -736,8 +480,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:22" pubdate>
-              2026-10-17
+            <time datetime="2026-10-31 23:56" pubdate>
+              2026-10-31
             </time>
           </div>
         
@@ -771,7 +515,9 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/Decoding/">#Decoding</a>
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
+            
+              <a href="/tags/MoE/">#MoE</a>
             
           </div>
         
@@ -785,15 +531,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/10/2166139914/" target="_self">
-          LLM Systems 08: Tokenization and Embedding
+        <a href="/posts/2026/10/2155851389/" target="_self">
+          Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/2166139914/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/2155851389/" target="_self">
         <div>
-          0. Recap  Pretraining: Mask-labeled recovery of random spans + next token prediction Multitask supervised fine-tuning with instruction templates Relative position instead of absolute position: Ro
+          Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity arXiv 发布日期：11 Jan 2021（发表于：Journal of Machine Learning Research 2022） 代码：t5x 作者：    摘要  在深度学习中，
         </div>
       </a>
 
@@ -801,8 +547,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-17 22:21" pubdate>
-              2026-10-17
+            <time datetime="2026-10-31 23:55" pubdate>
+              2026-10-31
             </time>
           </div>
         
@@ -836,7 +582,9 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/Tokenization/">#Tokenization</a>
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
+            
+              <a href="/tags/MoE/">#MoE</a>
             
           </div>
         
@@ -850,15 +598,15 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h1 class="index-header">
         
-        <a href="/posts/2026/10/287615401/" target="_self">
-          LLM Systems Assignment 3: Transformer Architecture
+        <a href="/posts/2026/10/4164788123/" target="_self">
+          GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding
         </a>
       </h1>
 
       
-      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/287615401/" target="_self">
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/4164788123/" target="_self">
         <div>
-          本次 homework 的任务是实现 Decoder-only 的 Transformer 模型，也就是 GPT-2，并在一个翻译任务数据集上进行模型训练。具体来说，包括以下几个子任务：  实现 CrossEntropy Loss 实现基础模块，包括 Linear/Dropout/LayerNorm1d/Embedding 实现 Transformer，包括：MultiHeadAtte
+          GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding arXiv 提交日期：30 Jun 2020（发表于 ICLR 2021） 作者：    摘要  神经网络规模扩展（Scaling） 在拥有海量训练数据和计算资源的许多现实机器学习应用中，对提升模型质量起到了至关重要的
         </div>
       </a>
 
@@ -866,8 +614,8 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2026-10-05 20:50" pubdate>
-              2026-10-05
+            <time datetime="2026-10-31 23:55" pubdate>
+              2026-10-31
             </time>
           </div>
         
@@ -901,11 +649,277 @@
             
               <a href="/tags/LLM-System/">#LLM System</a>
             
-              <a href="/tags/GPT/">#GPT</a>
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
             
-              <a href="/tags/Transformer/">#Transformer</a>
+              <a href="/tags/MoE/">#MoE</a>
             
-              <a href="/tags/minitorch/">#minitorch</a>
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/2026/10/2121259635/" target="_self">
+          Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/2121259635/" target="_self">
+        <div>
+          Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM arXiv 提交日期：9 Apr 2021 代码：Megatron-LM 作者：    摘要：  大语言模型在多项任务中均取得了当前最佳（SOTA）的准确率。然而，高效地训练这些模型面临着严峻挑战，原因在于： a) G
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2026-10-31 23:54" pubdate>
+              2026-10-31
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/CMU-11868/">#CMU 11868</a>
+            
+              <a href="/tags/LLM-System/">#LLM System</a>
+            
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
+            
+              <a href="/tags/3D-Parallel/">#3D Parallel</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/2026/10/2499370360/" target="_self">
+          Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/2499370360/" target="_self">
+        <div>
+          Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism arXiv 提交日期：17 Sep 2019（GPT 2 blog 发布约半年后，即：February 14, 2019 -&gt; 17 Sep 2019） 代码：Megatron-LM 作者：    摘要：
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2026-10-31 23:54" pubdate>
+              2026-10-31
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/CMU-11868/">#CMU 11868</a>
+            
+              <a href="/tags/LLM-System/">#LLM System</a>
+            
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
+            
+              <a href="/tags/TP/">#TP</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/2026/10/1410675755/" target="_self">
+          GPipe: Easy Scaling with Micro-Batch Pipeline Parallelism
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/1410675755/" target="_self">
+        <div>
+          GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism arXiv 提交日期：6 Nov 2018 作者：    摘要：  扩大深度神经网络的容量，已被证明是提升多种不同机器学习任务中模型质量的有效方法。在许多情况下，当模型容量增长并超出单个加速器的显存限制时，往往需要开发专门的算
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2026-10-31 23:54" pubdate>
+              2026-10-31
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/CMU-11868/">#CMU 11868</a>
+            
+              <a href="/tags/LLM-System/">#LLM System</a>
+            
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
+            
+              <a href="/tags/PP/">#PP</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/2026/10/4185046701/" target="_self">
+          LLM Systems 18: Memory Optimization in Distributed Training
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/posts/2026/10/4185046701/" target="_self">
+        <div>
+          1. Memory Consumption for LLM training DDP 与 MP 回顾：      DP  优点：  Good compute/communication efficiency  缺点：  Poor memory efficiency(Every device has one copy of model)   MP  优点：
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2026-10-31 23:53" pubdate>
+              2026-10-31
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/CMU-11868/">#CMU 11868</a>
+            
+              <a href="/tags/LLM-System/">#LLM System</a>
+            
+              <a href="/tags/Distributed-Training/">#Distributed Training</a>
+            
+              <a href="/tags/ZeRO/">#ZeRO</a>
             
           </div>
         
@@ -917,7 +931,7 @@
 
   <nav aria-label="navigation">
     <span class="pagination" id="pagination">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/#board">8</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/#board">10</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
     </span>
   </nav>
 

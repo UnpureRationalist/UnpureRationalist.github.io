@@ -1,0 +1,1485 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM arXiv 提交日期：9 Apr 2021 代码：Megatron-LM 作者：    摘要：  大语言模型在多项任务中均取得了当前最佳（SOTA）的准确率。然而，高效地训练这些模型面临着严峻挑战，原因在于： a) G">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/2121259635/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM arXiv 提交日期：9 Apr 2021 代码：Megatron-LM 作者：    摘要：  大语言模型在多项任务中均取得了当前最佳（SOTA）的准确率。然而，高效地训练这些模型面临着严峻挑战，原因在于： a) G">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004403760.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004428323.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004501265.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004517141.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004545082.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004610909.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004646286.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004704204.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004728008.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004749289.png">
+<meta property="article:published_time" content="2026-10-31T15:54:54.000Z">
+<meta property="article:modified_time" content="2026-11-02T16:48:36.210Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="Distributed Training">
+<meta property="article:tag" content="3D Parallel">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/2121259635/image-20261103004403760.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-31 23:54" pubdate>
+          2026年10月31日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          36 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/abs/2104.04473">Efficient Large-Scale
+Language Model Training on GPU Clusters Using Megatron-LM</a></li>
+<li>arXiv 提交日期：9 Apr 2021</li>
+<li>代码：<a
+target="_blank" rel="noopener" href="https://github.com/NVIDIA/Megatron-LM">Megatron-LM</a></li>
+<li>作者： <img src="/posts/2026/10/2121259635/image-20261103004403760.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004403760"> <br></li>
+</ul>
+<p><strong>摘要：</strong></p>
+<blockquote>
+<p>大语言模型在多项任务中均取得了当前最佳（SOTA）的准确率。然而，高效地训练这些模型面临着严峻挑战，原因在于：
+a) <strong>GPU
+显存容量有限</strong>，甚至在单台多卡服务器上也无法容纳超大模型； b)
+<strong>所需的计算量极其庞大</strong>，可能导致现实中不可接受的超长训练时间。</p>
+<p>因此，研究者们提出了张量并行（Tensor
+Parallelism）和流水线并行（Pipeline
+Parallelism）等新型模型并行技术。遗憾的是，朴素地使用这些方法在扩展至数千张
+GPU 规模时会出现严重的分散与扩展性瓶颈。</p>
+<p>在本文中，我们展示了如何将<strong>张量并行、流水线并行与数据并行深度融合（即
+3D 并行）</strong>，以成功扩展至数千张
+GPU。我们提出了一种创新的<strong>交错式流水线调度（Interleaved
+Pipelining
+Schedule）</strong>，在显存占用与现有方法相当的前提下，将吞吐量提升了
+<strong>10% 以上</strong>。</p>
+<p>我们的方法使我们能够在 <strong>3072 张 GPU</strong> 上，以
+<strong>502 PetaFLOP/s</strong>
+的总计算吞吐量（单卡算力利用率达到理论峰值的
+<strong>52%</strong>），成功对 <strong>1 万亿（1
+Trillion）参数</strong>的大模型进行了训练迭代。</p>
+</blockquote>
+<h2 id="introduction">1. Introduction</h2>
+<p>模型规模呈指数增长：</p>
+<img src="/posts/2026/10/2121259635/image-20261103004428323.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004428323">
+<p><br></p>
+<ul>
+<li>已有并行训练技术：DP/TP/PP</li>
+<li>本文要解决的问题：在给定批次大小（Batch
+Size）且保持严格优化器语义的前提下，应该如何组合各种并行技术，以最大化大语言模型的训练吞吐量？即：如何同时利用
+PP/TP/DP（3D Parallel）技术，以充分利用 GPU 计算能力训练大模型。</li>
+<li>3D Parallel 设置原则：
+<ul>
+<li>机内 TP</li>
+<li>机间 PP</li>
+<li>DP 扩展更多机器</li>
+</ul></li>
+<li>工程实现
+<ul>
+<li>高效 kernel</li>
+<li>设置 TP/PP 以减少通信（reduce the number of bytes sent over network
+links）</li>
+<li>通信优化</li>
+<li>硬件（GPU 与 机内/机间高速互联）</li>
+</ul></li>
+</ul>
+<h2 id="modes-of-parallelism">2. Modes of Parallelism</h2>
+<p>TP/PP 组合示意图：</p>
+<img src="/posts/2026/10/2121259635/image-20261103004501265.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004501265">
+<p><br></p>
+<h3 id="data-parallelism">2.1 Data Parallelism</h3>
+<ul>
+<li>PyTorch DDP
+<ul>
+<li>切分输入数据到不同 worker；</li>
+<li>backward 时对梯度进行 AllReduce 通信，以保证不同 replica
+权重相同；</li>
+<li>局限：要求模型可以放到一个 device；</li>
+</ul></li>
+</ul>
+<h3 id="pipeline-model-parallelism">2.2 Pipeline Model Parallelism</h3>
+<ul>
+<li>PP
+<ul>
+<li>模型不同层切分到不同 device；</li>
+<li>关键优化：
+<ul>
+<li>mini-batch 切分为 micro-batches；</li>
+<li>micro-batches 流水线执行，以减少 bubble；</li>
+<li>gradient checkpointing：减少激活值内存占用；</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>实现 PP 的核心：如何调度 micro-batch 的
+forward/backward？</strong></p>
+<h4 id="default-schedule-gpipe">2.2.1 Default Schedule: GPipe</h4>
+<ul>
+<li>GPipe 调度策略
+<ul>
+<li>先完成所有 micro-batches 的 forward；然后再进行所有 micro-batches 的
+backward。图示：</li>
+</ul></li>
+</ul>
+<img src="/posts/2026/10/2121259635/image-20261103004517141.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004517141">
+<p><br></p>
+<ul>
+<li>pipeline bubble（<span class="math inline">\(t_{pb}\)</span>）
+比例分析：
+<ul>
+<li>micro-batch 大小为 <span class="math inline">\(m\)</span> ；pipeline
+stage 数量为 <span class="math inline">\(p\)</span> ；一个 micro-batch
+forward/backward 耗时分别为 <span class="math inline">\(t_f\)</span> 和
+<span class="math inline">\(t_b\)</span> ；</li>
+<li>bubble 由 forward 时 <span class="math inline">\(p-1\)</span> 个
+stage 和 backward 时 <span class="math inline">\(p-1\)</span> 个 stage
+组成，总 bubble 耗时为 <span class="math inline">\(t_{pb} = \left( p-1
+\right) \cdot \left( t_f + t_b \right)\)</span> ；</li>
+<li>处理 <span class="math inline">\(m\)</span> 个 micro-batches
+理想耗时为 <span class="math inline">\(t_{id} = m \cdot \left( t_f + t_b
+\right)\)</span> ；</li>
+<li>则 <strong>bubble 比例</strong> 为：<span
+class="math inline">\(\text{Bubble time fraction (pipeline bubble size)}
+= \frac{t_{pb}}{t_{id}} = \frac{p-1}{m}\)</span> ；
+<ul>
+<li>注意：分母为理想耗时而非实际耗时，与 GPipe paper 和课程 sldies
+计算方式不同。</li>
+<li>micro-batch 数 <span class="math inline">\(m\)</span> 越大，则
+bubble 比例越低；但是内存占用随之升高。</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>GPipe 改进 -&gt; PipeDream-Flush schedule</strong></p>
+<p>如下图上半部分所示：</p>
+<img src="/posts/2026/10/2121259635/image-20261103004545082.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004545082">
+<p><br></p>
+<ul>
+<li>核心 Motivation：尽早开始 backward；</li>
+<li>流水线进入稳定状态后，每个 worker 执行 1F1B；</li>
+<li>激活值显存占用与 <span class="math inline">\(p\)</span>
+成正比，而不是 GPipe 的与 <span class="math inline">\(m\)</span>
+成正比，降低了峰值内存占用；</li>
+</ul>
+<h4 id="schedule-with-interleaved-stages">2.2.2 Schedule with
+Interleaved Stages</h4>
+<ul>
+<li>目的：减少 pipeline bubble 占比</li>
+<li>方法：把模型层按 chunk（若干连续层） 切分，一个 device
+不再放置连续的若干层；而是放置多个不连续的 chunk；</li>
+<li>forward/backward 调度如上图下半部分所示：
+<ul>
+<li>类似 1F1B 尽在开始 backward 以减少激活值峰值显存占用；</li>
+<li>要求 micro-batches 数量 <span class="math inline">\(m\)</span> 是 PP
+stage <span class="math inline">\(p\)</span> 的整数倍；</li>
+</ul></li>
+<li>气泡比例分析：
+<ul>
+<li>每个 device 有 <span class="math inline">\(v\)</span> 个 stages (or
+model chunks)；</li>
+<li>每个 stage 完成一个 micro-batch 耗时变为 <span
+class="math inline">\(\frac{t_{f}}{v}\)</span> 和 <span
+class="math inline">\(\frac{t_{b}}{v}\)</span> ；</li>
+<li>Pipeline bubble 耗时变为：<span class="math inline">\(t_{pb}^{int.}
+= \frac{(p-1) \cdot (t_f + t_b)}{v}\)</span> ；</li>
+<li>Bubble 占比变为：<span class="math inline">\(\text{Bubble time
+fraction (pipeline bubble size)} = \frac{t_{pb}^{int.}}{t_{id}} =
+\frac{1}{v} \cdot \frac{p-1}{m}\)</span> ；</li>
+</ul></li>
+<li>优缺点分析：
+<ul>
+<li>气泡比例降低；</li>
+<li>通信更多（增长 <span class="math inline">\(v\)</span>
+倍）；实现更复杂；</li>
+</ul></li>
+<li>与 TP 共同使用时的通信优化：
+<ul>
+<li>朴素实现：在节点内部开启 8-way 张量并行（TP=8）时，相邻 Stage 的 8
+张 GPU 在发送流水线激活值时，默认会重复发送 8 份完全相同的张量（因为 TP
+算完后输出已全量同步）。</li>
+<li>优化实现（<strong>Scatter-Gather</strong>）：
+<ul>
+<li><strong>发送端（Scatter）</strong>：发送方节点不重复发 8
+份全量数据，而是将该张量沿维度<strong>切成 8 等份（Scatter）</strong>，8
+张 GPU 分别利用各自独占的 IB 网卡向接收节点并行发送 <span
+class="math inline">\(\frac{1}{8}\)</span> 的分块。</li>
+<li><strong>接收端（Gather）</strong>：接收方节点收到 8
+份碎片后，通过节点内部高带宽的 NVLink 执行一次 <code>All-Gather</code>
+重新拼出完整张量。</li>
+</ul></li>
+<li>效果：
+<ul>
+<li>跨节点 InfiniBand 传输的数据量降为了原来的 <span
+class="math inline">\(\frac{1}{\text{TP}}\)</span>
+。大幅降低跨节点网络负担，对冲掉交错式调度带来的 <span
+class="math inline">\(v\)</span> 倍通信增加。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="tensor-model-parallelism">2.3 Tensor Model Parallelism</h3>
+<img src="/posts/2026/10/2121259635/image-20261103004610909.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004610909">
+<p><br></p>
+<ul>
+<li><em>略，见 Megatron-LM v1 paper 或课程 slides。</em></li>
+</ul>
+<h2 id="performance-analysis-of-parallelization-configurations">3.
+Performance Analysis of Parallelization Configurations</h2>
+<p>3D 并行的不同设置，其实是以下：</p>
+<ul>
+<li>显存占用；</li>
+<li>设备利用率；</li>
+<li>通信量；</li>
+</ul>
+<p>三个因素的取舍与权衡（tradeoffs）。</p>
+<p>本节针对 <strong>流水线气泡大小（pipeline bubble size）</strong>
+给出了相关的分析模型；同时，定性地描述了通信时间的表现行为，并给出了通信量的成本模型。</p>
+<h3 id="notation">3.1 Notation</h3>
+<ul>
+<li><span class="math inline">\((p, t, d)\)</span> 分别表示 PP/TP/DP
+设置大小；</li>
+<li><span class="math inline">\(n\)</span> 表示 GPU 数量，且 <span
+class="math inline">\(n = p \times t \times d\)</span> ；</li>
+<li><span class="math inline">\(B\)</span> 表示 global batch size；</li>
+<li><span class="math inline">\(b\)</span> 表示 micro-batch
+大小（决定了单次 forward/backward 输入大小和算子效率）；</li>
+<li><span class="math inline">\(m = \frac{1}{b} \cdot
+\frac{B}{d}\)</span> 表示每个流水线的 micro-batch
+数量（决定了流水线深度）。</li>
+</ul>
+<h3 id="tensor-and-pipeline-model-parallelism">3.2 Tensor and Pipeline
+Model Parallelism</h3>
+<p>假设 DP 设置为 1，即 <span class="math inline">\(d = 1\)</span>，则
+<span class="math inline">\(t \cdot p = n\)</span>
+。则流水线气泡比例关于 <span class="math inline">\(t\)</span>
+关系为：</p>
+<p><span class="math display">\[
+\frac{p-1}{m} = \frac{n/t -1}{m}
+\]</span></p>
+<ul>
+<li>当 <span class="math inline">\(B\)</span> 与 <span
+class="math inline">\(b\)</span> 与 <span
+class="math inline">\(d\)</span> （<span class="math inline">\(m =
+\frac{B}{b \cdot d}\)</span>） 固定时， <span
+class="math inline">\(t\)</span> 增加时，流水线气泡比例下降。</li>
+<li>通信量分析（受 <span class="math inline">\(p\)</span> 与 <span
+class="math inline">\(t\)</span> 影响）
+<ul>
+<li>PP 点对点通信
+<ul>
+<li>每两个连续 device 间一个 micro-batch 所需通信量为 <span
+class="math inline">\(bsh\)</span> ，其中 <span
+class="math inline">\(s\)</span> 为序列长度，<span
+class="math inline">\(h\)</span> 为隐藏层维度；</li>
+</ul></li>
+<li>TP AllReduce 通信
+<ul>
+<li>激活值 tensor shape 为 <span class="math inline">\([b,s,h]\)</span>
+，需要在 <span class="math inline">\(t\)</span> 个 device 进行 AllReduce
+通信，每层每个 micro-batch 所需通信量为 <span
+class="math inline">\(8bsh\frac{t-1}{t}\)</span> 。
+<ul>
+<li>forward/backward 各需要 2 次 AllReduce 通信，共 4 次；</li>
+<li>每次 AllReduce 通信量为 <span
+class="math inline">\(2bsh\frac{t-1}{t}\)</span> ；</li>
+</ul></li>
+<li>单个流水线 Stage（即单张 GPU）上分配的 Transformer 层数为 <span
+class="math inline">\(l_{stage}\)</span> ，则每个 device 每个
+micro-batch 的通信量为 <span class="math inline">\(l_{stage} \cdot
+\left( 8bsh\frac{t-1}{t} \right)\)</span> 。</li>
+</ul></li>
+<li><strong>结论：</strong>
+<ul>
+<li>TP 通信量远大于 PP；</li>
+<li>TP 设置不应超过单机 GPU 数量；</li>
+<li>单机设置 TP 后模型仍无法放置时，用 PP 进一步在不同机器间扩展。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="data-and-model-parallelism">3.3 Data and Model Parallelism</h3>
+<h4 id="pipeline-model-parallelism-1">3.3.1 Pipeline Model
+Parallelism</h4>
+<p>考虑 TP=1 即： <span class="math inline">\(t = 1\)</span>
+时，则每个流水线的 micro-batch 大小为 <span class="math inline">\(m =
+\frac{B}{d \cdot b} = \frac{b&#39;}{d}\)</span> ，其中 <span
+class="math inline">\(b&#39; = \frac{B}{b}\)</span> 。当有 <span
+class="math inline">\(n\)</span> 个 GPU 时，PP 大小 <span
+class="math inline">\(p = \frac{n}{t \cdot d} = \frac{n}{d}\)</span>
+。则流水线气泡比例为：</p>
+<p><span class="math display">\[
+\frac{p-1}{m} = \frac{n/d -1}{b&#39;/d} = \frac{n-d}{b&#39;}
+\]</span></p>
+<ul>
+<li>当 <span class="math inline">\(d\)</span> 增大时，<span
+class="math inline">\(n - d\)</span> 减小，流水线气泡比例降低；</li>
+<li><span class="math inline">\(d\)</span> <span
+class="math inline">\(n\)</span> <span
+class="math inline">\(b&#39;\)</span>
+取值变化时，流水线气泡比例如下图所示：</li>
+</ul>
+<img src="/posts/2026/10/2121259635/image-20261103004646286.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004646286">
+<p><br></p>
+<ul>
+<li>在模型能够放下的前提下，应该尽量增大 DP 大小；</li>
+<li>增加 global batch size <span class="math inline">\(B\)</span>
+时，<span class="math inline">\(b&#39; = \frac{B}{b}\)</span>
+增加，流水线气泡比例降低；同时 DP backward AllReduce
+梯度通信频率降低，进一步增加吞吐。</li>
+</ul>
+<h4 id="data-and-tensor-model-parallelism">3.3.2 Data and Tensor Model
+Parallelism</h4>
+<ul>
+<li>TP AllReduce 通信对每个 micro-batch 进行；</li>
+<li>DP AllReduce 通信只需要在整个 global batch 完成后进行一次；</li>
+<li><strong>结论</strong>：
+<ul>
+<li>设置 Model Parallel Size 为 <span class="math inline">\(M = t \cdot
+p\)</span> 以让模型参数、梯度、激活值、优化器状态能够在 GPU memory
+内放下；</li>
+<li>在此基础上使用 DP 扩展训练吞吐。</li>
+</ul></li>
+</ul>
+<h3 id="micro-batch-size">3.4 Micro-batch Size</h3>
+<p>Micro-batch 大小 <span class="math inline">\(b\)</span>
+也会影响训练吞吐，如下图所示：</p>
+<img src="/posts/2026/10/2121259635/image-20261103004704204.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004704204">
+<p><br></p>
+<ul>
+<li>micro-batch 增加让单卡训练吞吐增加 30+%；</li>
+</ul>
+<p><strong>问题：给定 3D Parallel 设置 <span class="math inline">\((p,
+t, d)\)</span> 和 global batch size 大小 <span
+class="math inline">\(B\)</span> ，该如何设置 micro-batch size <span
+class="math inline">\(b\)</span> ？</strong></p>
+<ul>
+<li>DP 通信量与 <span class="math inline">\(b\)</span> 无关；</li>
+<li>令 <span class="math inline">\(t_f(b)\)</span> 和 <span
+class="math inline">\(t_b(b)\)</span> 表示将 micro-batch size <span
+class="math inline">\(b\)</span> 映射为完成一个 micro-batch
+forward/backward 计算耗时的函数，则不考虑通信开销，完成整个 batch <span
+class="math inline">\(B\)</span> 耗时为（同上，<span
+class="math inline">\(b&#39; = \frac{B}{d}\)</span>）：</li>
+</ul>
+<p><span class="math display">\[
+\left( \frac{b&#39;}{b}+ p - 1 \right) \cdot \left( t_f(b) +
+t_b(b)  \right)
+\]</span></p>
+<ul>
+<li>micro-batch 大小 <span class="math inline">\(b\)</span> 同时影响：
+<ul>
+<li><strong>计算强度</strong></li>
+<li><strong>流水线气泡比例</strong></li>
+</ul></li>
+<li>固定 <span class="math inline">\((p, t) = (8, 8)\)</span>
+时，micro-batch size <span class="math inline">\(b\)</span>
+大小与训练吞吐关系如下图所示：</li>
+</ul>
+<img src="/posts/2026/10/2121259635/image-20261103004728008.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004728008">
+<p><br></p>
+<ul>
+<li>上图展示，<span class="math inline">\(b = 4\)</span>
+时吞吐最高；</li>
+<li><strong>结论</strong>：
+<ul>
+<li>最佳 micro-batch size <span class="math inline">\(b\)</span>
+的取值共同取决于：
+<ul>
+<li>模型的吞吐量与显存占用特性；</li>
+<li>流水线深度 <span class="math inline">\(p\)</span> ；</li>
+<li>数据并行大小 <span class="math inline">\(d\)</span> ；</li>
+<li>全局批次大小 <span class="math inline">\(B\)</span> ；</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="activation-recomputation">3.5 Activation Recomputation</h3>
+<ul>
+<li>Motivation：通过在反向传播紧邻发生前再次运行一次前向传播（此时仅需暂存给定流水线
+Stage
+的输入激活值，而无需保存要庞大得多的全量中间激活值），以<strong>增加计算量为代价来换取更低的显存占用</strong>；</li>
+<li>激活检查点的数量不会直接影响吞吐量，但会显著影响显存占用；</li>
+<li>理论分析：
+<ul>
+<li>设 <span class="math inline">\(A_{input}\)</span>
+为单层的输入激活值大小，<span
+class="math inline">\(A_{intermediate}\)</span>
+为单层的中间激活值大小。如果一个流水线 Stage 包含 <span
+class="math inline">\(l\)</span> 个 Transformer 层，且设置了 <span
+class="math inline">\(c\)</span> 个检查点，则总激活值显存占用为：<span
+class="math inline">\(c \cdot A_{input} + \frac{l}{c} \cdot
+A_{intermediate}\)</span> ；该函数的最小值在以下位置取得： <span
+class="math inline">\(c = \sqrt{l \cdot
+\left(\frac{A_{intermediate}}{A_{input}}\right)}\)</span> 。</li>
+</ul></li>
+<li>在实际工程中，通常对 <span
+class="math inline">\(A_{intermediate}\)</span>
+进行经验测量。在大多数情况下，每 1 或 2 个 Transformer
+层设置一个检查点是最优的。</li>
+</ul>
+<h4 id="activation-partitioning-sequence-parallelismsp">3.5.1 Activation
+Partitioning &amp; Sequence Parallelism(SP)</h4>
+<p><strong>TP 存在的问题</strong></p>
+<ul>
+<li><strong>非 GEMM 区域激活值显存冗余</strong>：传统张量并行仅切分了
+GEMM 矩阵乘法区（QKV 投影、Output Projection 及 MLP 线性层），而对于
+LayerNorm、Dropout、Residual Add 等非 GEMM
+逐元素（Element-wise）算子，TP 组内的所有 GPU 都会
+<strong>全量重复存储</strong> 其输入输出激活值，形状均为 <span
+class="math inline">\([B, S, H]\)</span> ；</li>
+<li><strong>长文本场景下的显存瓶颈</strong>：随着序列长度 <span
+class="math inline">\(S\)</span>
+的增加，这些未切分的重复激活值显存呈线性膨胀；即使开启了激活检查点（Activation
+Checkpointing），检查点处暂存的 LayerNorm
+输入激活值依然占据大量显存，成为限制上下文长度（Long Context）与引发 OOM
+的主要瓶颈。</li>
+</ul>
+<p><strong>引入 SP 后 TP 通信方式变化</strong></p>
+<ul>
+<li><strong>核心思想</strong>：利用 LayerNorm 和 Dropout
+在序列维度（Sequence Length, <span class="math inline">\(S\)</span>
+）上相互独立的特性，将非 GEMM 区域的激活值沿着 <span
+class="math inline">\(S\)</span> 维度均匀切分给 TP 组内的各卡（每卡处理
+<span class="math inline">\(\frac{S}{TP}\)</span> ）；</li>
+<li><strong>通信算子等价拆解（零额外通信开销）</strong>：利用恒等式
+<span class="math inline">\(\text{All-Reduce} = \text{Reduce-Scatter} +
+\text{All-Gather}\)</span>，将传统 TP 内部的通信算子进行了优雅替换：
+<ul>
+<li><strong>行并行（Row-Parallel）GEMM 结束时</strong>：将原有的
+<code>All-Reduce</code> 替换为
+<strong><code>Reduce-Scatter</code></strong>，在归一化求和的同时将激活值沿序列维度切分，各卡仅获得
+<span class="math inline">\([B, \frac{S}{TP}, H]\)</span>
+的局部激活值；</li>
+<li><strong>非 GEMM 区本地计算</strong>：各卡在本地独立执行 LayerNorm 与
+Dropout 计算；</li>
+<li><strong>列并行（Column-Parallel）GEMM 开始前</strong>：触发一次
+<strong><code>All-Gather</code></strong>，将 <span
+class="math inline">\([B, \frac{S}{TP}, H]\)</span> 重新拼回全量序列张量
+<span class="math inline">\([B, S, H]\)</span> 喂给 GEMM。</li>
+<li><em>注：总通信字节数与原 <code>All-Reduce</code>
+完全相同，实现了白嫖显存收益。</em></li>
+</ul></li>
+</ul>
+<p><strong>激活值显存节省分析</strong></p>
+<ul>
+<li><strong>非 GEMM 区域激活显存降低 <span
+class="math inline">\(\frac{1}{TP}\)</span></strong>：LayerNorm、Dropout
+以及残差连接的激活值显存占用从 <span class="math inline">\(O(B \cdot S
+\cdot H)\)</span> 降至 <span class="math inline">\(O(B \cdot
+\frac{S}{TP} \cdot H)\)</span>，显存开销缩减为原来的 <strong><span
+class="math inline">\(\frac{1}{TP}\)</span></strong>；</li>
+<li><strong>与激活重计算（Activation
+Recomputation）协同放大</strong>：重计算所需的 Checkpoint（如 LayerNorm
+输入张量）在 SP 下同样按 <span
+class="math inline">\(\frac{1}{TP}\)</span>
+切分存储，大幅降低了常驻显存；</li>
+<li><strong>算力与访存负载平摊</strong>：非 GEMM
+区域算子的本地计算量与内存访存量也同步降至 <span
+class="math inline">\(\frac{1}{TP}\)</span>，进一步提升了 Memory-bound
+算子的执行效率。</li>
+</ul>
+<p><strong>开启 SP 后 backward 流程</strong></p>
+<ul>
+<li><strong>自动求导的通信算子对偶</strong>：前向的
+<code>All-Gather</code> 在反向映射为 <code>Reduce-Scatter</code>；前向的
+<code>Reduce-Scatter</code> 在反向映射为 <code>All-Gather</code>；</li>
+<li><strong>反向传播计算与通信链条</strong>（按反向执行顺序）：
+<ol type="1">
+<li><strong>非 GEMM 区域反向</strong>：在本地针对切片激活值 <span
+class="math inline">\([B, \frac{S}{TP}, H]\)</span> 计算 LayerNorm /
+Dropout / 残差的梯度，得到切片梯度 <span
+class="math inline">\(\frac{\partial L}{\partial Y_{split}} \in [B,
+\frac{S}{TP}, H]\)</span>；</li>
+<li><strong>触发
+<code>All-Gather</code></strong>：将切片梯度拼回全量序列梯度 <span
+class="math inline">\(\frac{\partial L}{\partial Y_{full}} \in [B, S,
+H]\)</span>，准备喂给 Row-Parallel GEMM；</li>
+<li><strong>Row-Parallel GEMM 反向</strong>：计算 Output Projection /
+MLP 的梯度；</li>
+<li><strong>Self-Attention / GeLU 反向</strong>：在本地计算 Attention /
+激活函数的梯度；</li>
+<li><strong>Column-Parallel GEMM 反向</strong>：计算 QKV Projection /
+MLP 的梯度，得到对输入的全量梯度 <span
+class="math inline">\(\frac{\partial L}{\partial X_{full}} \in [B, S,
+H]\)</span>；</li>
+<li><strong>触发
+<code>Reduce-Scatter</code></strong>：对全量梯度进行跨卡规约求和，并沿
+<span class="math inline">\(S\)</span>
+维度切分，得到当前卡负责的切片梯度 <span
+class="math inline">\(\frac{\partial L}{\partial X_{split}} \in [B,
+\frac{S}{TP}, H]\)</span>，继续传给上一个 Transformer Block 的非 GEMM
+区域；</li>
+</ol></li>
+<li><strong>通信开销完全对称</strong>：反向传播同样包含 1 次
+<code>All-Gather</code> 与 1 次
+<code>Reduce-Scatter</code>（通信总字节数与传统 TP 1 次反向
+<code>All-Reduce</code>
+等价），整个前向+反向过程依然没有产生任何额外的通信 overhead。</li>
+</ul>
+<h2 id="implementation">4. Implementation</h2>
+<ul>
+<li>基于 PyTorch 实现；</li>
+<li>使用 NCCL 通信；</li>
+<li>做了通信/计算优化；</li>
+</ul>
+<h3 id="communication-optimizations">4.1 Communication
+Optimizations</h3>
+<img src="/posts/2026/10/2121259635/image-20261103004749289.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103004749289">
+<p><br></p>
+<ul>
+<li>利用 TP/PP 同时开启的特性，优化 PP 的 P2P 通信：
+<ul>
+<li>发送端进行 Scatter，以减少跨机 IB 通信量，避免冗余通信；</li>
+<li>接收端进行 AllGather，利用机内高速 NVLink 互联，提高通信速度；</li>
+</ul></li>
+</ul>
+<h3 id="computation-optimizations">4.2 Computation Optimizations</h3>
+<ul>
+<li>改变数据布局：<span class="math inline">\([b, s, a, h] \rightarrow
+[s, b, a, h]\)</span> ，其中 <span class="math inline">\(b, s, a,
+h\)</span> 分别表示 batch、sequence、attention heads 和 hidden dim。
+<ul>
+<li>转换后 layout <span class="math inline">\((b, a)\)</span>
+维度构成连续的 batch size （shape 可以看作三维： <span
+class="math inline">\([s, b \cdot a, h]\)</span> ，strides 为 <span
+class="math inline">\([b \cdot a \cdot h, h, 1]\)</span> ，则可以看作
+<span class="math inline">\(\text{leading\_stride} = b \cdot a \cdot
+h\)</span> 且 <span class="math inline">\(\text{batch\_stride} =
+h\)</span> 的 batched GEMM 操作 ） ，可以利用 strided batched GEMM
+接口，避免 transpose 操作高效执行 GEMM。</li>
+</ul></li>
+<li>使用 PyTorch JIT 为一连串逐元素操作生成了融合 Kernel（如
+<code>bias + GeLU</code> 以及 <code>bias + dropout + add</code>）。</li>
+<li>Softmax 组合算子融合：创建了两个自定义 CUDA
+Kernel，实现了缩放（Scale）、掩码（Mask）和 Softmax
+规约操作的融合：一个用于支持通用掩码（如 BERT 模型中的
+Mask），另一个用于支持隐式因果掩码（如 GPT 等自回归模型中的 Causal
+Masking）。</li>
+</ul>
+<h2 id="conclusion">5. Conclusion</h2>
+<ul>
+<li>3D Parallel
+<ul>
+<li>TP：机内
+<ul>
+<li>SP：减少开启 TP 时激活值显存占用</li>
+</ul></li>
+<li>PP：机间
+<ul>
+<li>1F1B</li>
+<li>interleaved（layer chunk）</li>
+<li>gradient checkpointing</li>
+</ul></li>
+<li>DP：扩展吞吐</li>
+</ul></li>
+<li>TP &amp; PP
+<ul>
+<li>Scatter + AllGather 通信优化</li>
+</ul></li>
+<li>Compute Optimization
+<ul>
+<li>micro-batch <span class="math inline">\(b\)</span>
+<ul>
+<li>计算强度</li>
+<li>PP bubble 比例</li>
+</ul></li>
+<li>kernel fuse：减少显存访问</li>
+</ul></li>
+</ul>
+<h3 id="附录transformer-flops-分析">附录：Transformer FLOPs 分析</h3>
+<h4 id="符号与基本法则定义">1. 符号与基本法则定义</h4>
+<ul>
+<li><strong>符号定义</strong>：
+<ul>
+<li><span class="math inline">\(l\)</span>：Transformer 层数（Number of
+layers）</li>
+<li><span class="math inline">\(h\)</span>：隐藏层维度（Hidden
+size）</li>
+<li><span class="math inline">\(s\)</span>：序列长度（Sequence
+length）</li>
+<li><span class="math inline">\(V\)</span>：词表大小（Vocabulary
+size）</li>
+<li><span class="math inline">\(B\)</span>：训练批次大小（Batch
+size）</li>
+</ul></li>
+<li><strong>矩阵乘法 FLOPs 基本法则</strong>：
+<ul>
+<li>形状为 <span class="math inline">\(m \times k\)</span>
+的矩阵与形状为 <span class="math inline">\(k \times n\)</span>
+的矩阵相乘（<span class="math inline">\(A_{m \times k} \times X_{k
+\times n}\)</span>），需要的浮点运算数为 <span class="math inline">\(2 m
+k n\)</span>（乘法与加法各算 1 次 FLOP）。</li>
+</ul></li>
+</ul>
+<h4 id="单个-transformer-block-前向传播-flops-拆解">2. 单个 Transformer
+Block 前向传播 FLOPs 拆解</h4>
+<h5 id="self-attention-模块">(1) Self-Attention 模块</h5>
+<ul>
+<li><strong>Q, K, V 线性投影</strong>：将维度 <span
+class="math inline">\(h\)</span> 映射为 Q、K、V 三个张量（总权重大小为
+<span class="math inline">\(3 \times h \times h\)</span>），计算量为
+<span class="math inline">\(6 B s h^2\)</span>。</li>
+<li><strong>Attention Score 计算 (</strong><span class="math inline">\(Q
+\cdot K^T\)</span><strong>)</strong>：计算 <span class="math inline">\(B
+\cdot a\)</span> 个 Head 的 <span class="math inline">\(s \times
+d_k\)</span> 与 <span class="math inline">\(d_k \times s\)</span>
+矩阵乘法（其中 <span class="math inline">\(a \cdot d_k =
+h\)</span>），计算量为 <span class="math inline">\(2 B s^2
+h\)</span>。</li>
+<li><strong>Attention 权重加权求和 (</strong><span
+class="math inline">\(\text{Softmax}(QK^T) \cdot
+V\)</span><strong>)</strong>：<span class="math inline">\(s \times
+s\)</span> 概率矩阵与 <span class="math inline">\(s \times d_k\)</span>
+的矩阵乘法，计算量为 <span class="math inline">\(2 B s^2
+h\)</span>。</li>
+<li><strong>输出线性投影（Output Projection）</strong>：线性映射 <span
+class="math inline">\(h \to h\)</span>，计算量为 <span
+class="math inline">\(2 B s h^2\)</span>。</li>
+<li><strong>Self-Attention 前向小计</strong>：<span
+class="math inline">\(6 B s h^2 + 2 B s^2 h + 2 B s^2 h + 2 B s h^2 =
+\mathbf{8 B s h^2 + 4 B s^2 h}\)</span>。</li>
+</ul>
+<h5 id="feed-forward-network-mlp-模块">(2) Feed-Forward Network (MLP)
+模块</h5>
+<ul>
+<li><strong>第一层升维 (</strong><span class="math inline">\(h \to
+4h\)</span><strong>)</strong>：<span class="math inline">\(2 \times B
+\times s \times h \times 4h = \mathbf{8 B s h^2}\)</span>。</li>
+<li><strong>第二层降维 (</strong><span class="math inline">\(4h \to
+h\)</span><strong>)</strong>：<span class="math inline">\(2 \times B
+\times s \times 4h \times h = \mathbf{8 B s h^2}\)</span>。</li>
+<li><strong>MLP 前向小计</strong>：<span class="math inline">\(8 B s h^2
++ 8 B s h^2 = \mathbf{16 B s h^2}\)</span>。</li>
+</ul>
+<h5 id="单层前向传播总和">(3) 单层前向传播总和</h5>
+<ul>
+<li>将 Self-Attention 与 MLP 模块相加： <span
+class="math inline">\(\text{Forward FLOPs per layer} = (8 B s h^2 + 4 B
+s^2 h) + 16 B s h^2 = \mathbf{24 B s h^2 + 4 B s^2 h}\)</span> 。</li>
+</ul>
+<h4 id="反向传播与激活重计算activation-recomputation的影响">3.
+反向传播与激活重计算（Activation Recomputation）的影响</h4>
+<ul>
+<li><strong>反向传播 (Backward
+Pass)</strong>：需要对输入张量和权重张量分别求导，所需的 FLOPs
+为前向传播的 <strong>2 倍</strong>。</li>
+<li><strong>激活重计算 (Activation
+Recomputation)</strong>：在前向传播丢弃中间激活值，在反向传播前额外执行一次<strong>前向传播</strong>。</li>
+<li><strong>总计算倍率</strong>：前向传播 (<span
+class="math inline">\(1\times\)</span>) + 反向传播 (<span
+class="math inline">\(2\times\)</span>) + 重计算前向 (<span
+class="math inline">\(1\times\)</span>) = <span class="math inline">\(4
+\times\)</span> <strong>前向 FLOPs</strong>。</li>
+<li><strong>单层 Transformer 完整训练 FLOPs</strong>： <span
+class="math inline">\(\text{FLOPs per layer} = 4 \times \left(24 B s h^2
++ 4 B s^2 h\right) = 96 B s h^2 \left(1 + \frac{s}{6h}\right)\)</span>
+。</li>
+</ul>
+<h4 id="logit-层language-model-head">4. Logit 层（Language Model
+Head）</h4>
+<ul>
+<li><strong>功能</strong>：将隐藏层特征 <span
+class="math inline">\(h\)</span> 映射到词表空间 <span
+class="math inline">\(V\)</span>。</li>
+<li><strong>前向传播</strong>：<span class="math inline">\(2 B s h
+V\)</span>。</li>
+<li><strong>反向传播</strong>：<span class="math inline">\(4 B s h
+V\)</span>（2倍前向）。</li>
+<li><strong>Logit 层总 FLOPs</strong>：<span class="math inline">\(2 B s
+h V + 4 B s h V = \mathbf{6 B s h V}\)</span>。</li>
+</ul>
+<h4 id="单次训练迭代iteration全量-flops-最终公式">5.
+单次训练迭代（Iteration）全量 FLOPs 最终公式</h4>
+<p>将 <span class="math inline">\(l\)</span> 个 Transformer 层与 Logit
+层累加，并提出公因式 <span class="math inline">\(96 B s l
+h^2\)</span>：</p>
+<p><span class="math inline">\(\mathbf{\text{Total FLOPs per iteration}
+= 96 B s l h^2 \left( 1 + \frac{s}{6h} + \frac{V}{16lh}
+\right)}\)</span> 。</p>
+<h4 id="实用估算近似工程经验推导">6. 实用估算近似（工程经验推导）</h4>
+<p>在大部分大语言模型配置中（如 <span class="math inline">\(h \ge
+2048\)</span>），<span class="math inline">\(\frac{s}{6h}\)</span> 与
+<span class="math inline">\(\frac{V}{16lh}\)</span>
+均极小（可忽略）。</p>
+<ul>
+<li><strong>单次 Iteration 计算量</strong>：<span
+class="math inline">\(\approx 96 B s l h^2\)</span>。</li>
+<li><strong>模型参数量</strong>：<span class="math inline">\(P \approx
+12 l h^2\)</span>。</li>
+<li><strong>训练</strong> <span class="math inline">\(T\)</span>
+<strong>个 Tokens 的总 FLOPs</strong>： 由于总迭代次数为 <span
+class="math inline">\(I = \frac{T}{B \cdot s}\)</span>，训练 <span
+class="math inline">\(T\)</span> 个 Tokens 所需的总浮点运算量可简化为：
+<span class="math inline">\(\text{Total Training FLOPs} \approx
+\mathbf{8 T P}\)</span> <em>(注：若不开启激活重计算，该数值约为 <span
+class="math inline">\(6 T P\)</span>。)</em></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/Distributed-Training/">#Distributed Training</a>
+      
+        <a href="/tags/3D-Parallel/">#3D Parallel</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM</div>
+      <div>https://arcsin2.cloud/posts/2026/10/2121259635/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月31日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/4164788123/" title="GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">GShard: Scaling Giant Models with Conditional Computation and Automatic Sharding</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/2499370360/" title="Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism">
+                        <span class="hidden-mobile">Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,1063 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/back.jpg">
+  <link rel="icon" href="/img/back.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="arcsin2">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="1. Memory Consumption for LLM training DDP 与 MP 回顾：      DP  优点：  Good compute&#x2F;communication efficiency  缺点：  Poor memory efficiency(Every device has one copy of model)   MP  优点：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLM Systems 18: Memory Optimization in Distributed Training">
+<meta property="og:url" content="https://arcsin2.cloud/posts/2026/10/4185046701/index.html">
+<meta property="og:site_name" content="arcsin2 的个人博客">
+<meta property="og:description" content="1. Memory Consumption for LLM training DDP 与 MP 回顾：      DP  优点：  Good compute&#x2F;communication efficiency  缺点：  Poor memory efficiency(Every device has one copy of model)   MP  优点：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003422013.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003432840.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003455062.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003515974.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003529215.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003547600.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003605514.png">
+<meta property="og:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003615059.png">
+<meta property="article:published_time" content="2026-10-31T15:53:20.000Z">
+<meta property="article:modified_time" content="2026-11-02T16:36:46.865Z">
+<meta property="article:author" content="arcsin2">
+<meta property="article:tag" content="CMU 11868">
+<meta property="article:tag" content="LLM System">
+<meta property="article:tag" content="Distributed Training">
+<meta property="article:tag" content="ZeRO">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://arcsin2.cloud/posts/2026/10/4185046701/image-20261103003422013.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLM Systems 18: Memory Optimization in Distributed Training - arcsin2 的个人博客</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"arcsin2.cloud","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>arcsin2&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                <span>友链</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/en/">
+                <i class="iconfont icon-icon_English"></i>
+                <span>English</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLM Systems 18: Memory Optimization in Distributed Training"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2026-10-31 23:53" pubdate>
+          2026年10月31日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          14 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LLM Systems 18: Memory Optimization in Distributed Training</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="memory-consumption-for-llm-training">1. Memory Consumption for
+LLM training</h2>
+<p>DDP 与 MP 回顾：</p>
+<img src="/posts/2026/10/4185046701/image-20261103003422013.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003422013">
+<p><br></p>
+<img src="/posts/2026/10/4185046701/image-20261103003432840.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003432840">
+<p><br></p>
+<ul>
+<li>DP
+<ul>
+<li>优点：
+<ul>
+<li>Good compute/communication efficiency</li>
+</ul></li>
+<li>缺点：
+<ul>
+<li>Poor memory efficiency(Every device has one copy of model)</li>
+</ul></li>
+</ul></li>
+<li>MP
+<ul>
+<li>优点：
+<ul>
+<li>Good memory efficiency</li>
+</ul></li>
+<li>缺点：
+<ul>
+<li>Poor compute/communication efficiency(5% of peak perf in training
+40B model with Megatron)</li>
+</ul></li>
+</ul></li>
+</ul>
+<p><strong>Memory Consumption in DDP (Mixed Precision)</strong></p>
+<p>设模型参数量为 <span class="math inline">\(N\)</span>，每个 GPU
+需要内存为 <span class="math inline">\(20N + \text{act}\)</span></p>
+<ul>
+<li>模型参数：<span class="math inline">\(2N\)</span> bytes</li>
+<li>激活值：<span class="math inline">\(b \times s \times h \times
+l\)</span></li>
+<li>反向传播梯度：<span class="math inline">\(2N\)</span> bytes</li>
+<li>优化器状态（以 Adam 为例）：<span class="math inline">\(N \times 4
+\times 4\)</span> ，包括：
+<ul>
+<li>参数、梯度、动量、方差</li>
+</ul></li>
+<li>示意图如下（DP=2）：</li>
+</ul>
+<img src="/posts/2026/10/4185046701/image-20261103003455062.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003455062">
+<p><br></p>
+<p><strong>Other Memory Usages in DDP</strong></p>
+<ul>
+<li>Temporary Buffers:
+<ul>
+<li>Storing intermediate results. Operations such as gradient
+all-reduce, or gradient norm computation tend to fuse all the gradients
+into a single flattened buffer before applying the operation in an
+effort to improve throughput.</li>
+</ul></li>
+<li>Memory Fragmentation</li>
+</ul>
+<p><strong>Common Approaches to Reduce Memory</strong></p>
+<ul>
+<li>ZeRO: Partition Optimizer States, Gradients, Parameters</li>
+<li>Reducing Activation Memory
+<ul>
+<li>Activation Checkpoint, Compression</li>
+</ul></li>
+<li>CPU Offload</li>
+<li>Memory Efficient Optimizer
+<ul>
+<li>Maintaining coarser-grained statistics of model parameters and
+gradients</li>
+</ul></li>
+</ul>
+<h2
+id="partitioning-and-reducing-the-memory-for-data-parallel-training">2.
+Partitioning and reducing the memory for data parallel training</h2>
+<p><strong>ZeRO - Zero Redundancy Optimizer</strong></p>
+<ul>
+<li>Key idea:
+<ul>
+<li>Eliminating data redundancy in DDP by partitioning the optimizer
+states (zero-1), gradients (zero-2), parameters (zero-3)</li>
+</ul></li>
+<li>Widely used for large language model training.
+<ul>
+<li>7B model memory: 120GB ➔ 30GB (with 4GPUs)</li>
+</ul></li>
+<li>Implemented in DeepSpeed.</li>
+</ul>
+<h3 id="partition-optimizer-states">2.1 Partition optimizer states</h3>
+<p>示意图如下：</p>
+<img src="/posts/2026/10/4185046701/image-20261103003515974.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003515974">
+<p><br></p>
+<ul>
+<li>切分优化器状态</li>
+<li>通信过程：
+<ul>
+<li>backward 时 ReduceScatter 获取 Reduce 后梯度分片；</li>
+<li>更新本地分片参数；</li>
+<li>AllGather 获取全部更新后参数；</li>
+</ul></li>
+</ul>
+<h3 id="partition-gradients">2.2 Partition gradients</h3>
+<ul>
+<li>Key idea:
+<ul>
+<li>Each GPU compute all parameter gradients for its data partition</li>
+<li>but <strong>only stores one partition of gradients instead of all
+gradients</strong>.</li>
+<li>Passing the gradients out of its responsibility to the GPU
+responsible for those gradients.</li>
+</ul></li>
+<li>Memory for gradients reduced by K times. (K=# of GPUs)</li>
+</ul>
+<p>示意图：</p>
+<img src="/posts/2026/10/4185046701/image-20261103003529215.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003529215">
+<p><br></p>
+<ul>
+<li>In backward pass, GPU 0,1,2 hold temporary buffers for the gradients
+that GPU 3 is responsible for (M3)</li>
+<li>GPU 0,1,2 pass the M3 gradients to GPU 3 (<code>ncclReduce</code>)
+<ul>
+<li>bucket（partition）级别的 <code>ncclReduce</code>，等价于全部
+gradients 级别的 ReduceScatter，通信量不变。</li>
+</ul></li>
+<li>Then GPU0, GPU1, GPU2 delete M3 gradients, GPU 3 keeps M3
+gradients.</li>
+<li>Continue backward pass: GPU 0,1,3 hold temporary buffers for the
+gradients that GPU 2 is responsible for (M2)</li>
+<li>...</li>
+</ul>
+<h3 id="partition-parameters">2.3 Partition parameters</h3>
+<p>示意图：</p>
+<img src="/posts/2026/10/4185046701/image-20261103003547600.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003547600">
+<p><br></p>
+<ul>
+<li>Partition parameters to K parts</li>
+<li>During forward, GPU0 send first params to other
+GPUs(<code>ncclBroadcast</code>)</li>
+<li>compute forward for first part layers</li>
+<li>GPU1,2,3 delete first part parameters, GPU0 still keep first part
+params</li>
+<li>Continue forward for next part, GPU1 send its params to other
+GPUs(<code>ncclBroadcast</code>), compute forward for second part
+layers</li>
+<li>...</li>
+<li>During backward, compute backward for 4th part layers. Reduce grads
+to GPU3 (same as ZeRO stage 2)</li>
+<li>GPU0,1,2 delete 4th part parameters and gradients</li>
+<li>Continue backward, GPU2 broadcast its parameters to GPU0, 1, 3. All
+GPUs perform backward to calculate local gradients for part 3</li>
+<li>...</li>
+</ul>
+<p><strong>Memory Consumption &amp; Communication Cost for
+ZeRO</strong></p>
+<table>
+
+<thead>
+<tr class="header">
+<th>阶段</th>
+<th>显存消耗公式</th>
+<th>通信开销变化</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Original DDP</strong></td>
+<td><span class="math inline">\(4N + MN\)</span></td>
+<td>基线（<span
+class="math inline">\(2N\)</span>，ReduceScatter+AllGather 各 <span
+class="math inline">\(N\)</span>）</td>
+</tr>
+<tr class="even">
+<td><strong>ZeRO-1</strong></td>
+<td><span class="math inline">\(4N + \frac{MN}{K}\)</span></td>
+<td>无额外通信总量（与 DDP 相同）</td>
+</tr>
+<tr class="odd">
+<td><strong>ZeRO-2</strong></td>
+<td><span class="math inline">\(2N + \frac{(2+M)N}{K}\)</span></td>
+<td>无额外通信总量（与 DDP 相同）</td>
+</tr>
+<tr class="even">
+<td><strong>ZeRO-3</strong></td>
+<td><span class="math inline">\(\frac{(4+M)N}{K}\)</span></td>
+<td><span class="math inline">\(3N\)</span>（fwd/bwd
+需要广播模型参数，加上梯度 ReduceScatter，共 <span
+class="math inline">\(3N\)</span>）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="other-memory-optimizations">3. Other memory optimizations</h2>
+<ul>
+<li>Partitioned Activation Checkpointing
+<ul>
+<li>结合 MP 切分激活值</li>
+</ul></li>
+<li>Constant Size Buffers (similar to Bucketing in PyTorch DDP)
+<ul>
+<li>Buffer is used in doing all-reduce to improve bandwidth.</li>
+<li>Modern implementations fuses all the parameters into a single
+buffer.</li>
+<li>ZeRO uses constant size buffers to be more efficient for a large
+model.</li>
+</ul></li>
+<li>Memory Defragmentation
+<ul>
+<li>Long-lived memory (Model parameters, Optimizer state): Store
+together</li>
+<li>Short-lived memory (Discarded activations)</li>
+</ul></li>
+<li>We can further improve by memory reuse as in LightSeq.</li>
+</ul>
+<p><strong>Reduce Communication in ZeRO DDP</strong></p>
+<ul>
+<li>Applying block-wise quantization technique to parameters during
+forward (broadcast params). FP16 ➔ INT 8.
+<ul>
+<li>zeropoint quantization</li>
+</ul></li>
+<li>Apply quantization during backward ReduceScatter, FP16➔ INT8 or
+INT4</li>
+<li>better partition parameters: maintain a full set of parameters on
+each node</li>
+</ul>
+<p><strong>Combining ZeRO with Pipeline Parallelism and Tensor
+Parallelism (3D Parallelism)</strong></p>
+<img src="/posts/2026/10/4185046701/image-20261103003605514.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003605514">
+<p><br> <img src="/posts/2026/10/4185046701/image-20261103003615059.png" srcset="/img/loading.gif" lazyload class="" title="image-20261103003615059"> <br></p>
+<ul>
+<li>PP 切分模型不同层</li>
+<li>单 Node 内进行 TP 切分</li>
+<li>利用 ZeRO 作用于 DP 维度
+<ul>
+<li>在不同 DP Rank 中处于相同位置（即处理相同模型层、相同张量分片）的
+GPU 之间（上图用带 "ZeRO" 标识的双向箭头连接），建立 ZeRO
+优化组，对其对应的优化器状态、梯度及参数进行分摊切片，从而大幅削减 DP
+维度的显存冗余。</li>
+</ul></li>
+</ul>
+<h2 id="conclusion">4. Conclusion</h2>
+<ul>
+<li>ZeRO : reducing memory footprint in distributed training
+<ul>
+<li>➔ enables training significantly larger models</li>
+</ul></li>
+<li>Key idea: partition optimizer states, gradients, and
+parameters.</li>
+<li>Pros:
+<ul>
+<li>Lower memory usages significantly.</li>
+<li>Scalable, flexible, easy-to-use.</li>
+</ul></li>
+<li>Cons:
+<ul>
+<li>Some stages introduce extra communication overhead, depending on
+infrastructure (PCI-E / NVLink)</li>
+</ul></li>
+</ul>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/ML-System/" class="category-chain-item">ML System</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CMU-11868/">#CMU 11868</a>
+      
+        <a href="/tags/LLM-System/">#LLM System</a>
+      
+        <a href="/tags/Distributed-Training/">#Distributed Training</a>
+      
+        <a href="/tags/ZeRO/">#ZeRO</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLM Systems 18: Memory Optimization in Distributed Training</div>
+      <div>https://arcsin2.cloud/posts/2026/10/4185046701/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>arcsin2</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2026年10月31日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2026/10/1410675755/" title="GPipe: Easy Scaling with Micro-Batch Pipeline Parallelism">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">GPipe: Easy Scaling with Micro-Batch Pipeline Parallelism</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/2026/10/4071970685/" title="LLM Systems 17: System for MoE Models">
+                        <span class="hidden-mobile">LLM Systems 17: System for MoE Models</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        总访问量 
+        <span id="busuanzi_value_site_pv"></span>
+         次
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        总访客数 
+        <span id="busuanzi_value_site_uv"></span>
+         人
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+    <!-- 备案信息 ICP for China -->
+    <div class="beian">
+  <span>
+    <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+      苏ICP备2021026429号-1
+    </a>
+  </span>
+  
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
